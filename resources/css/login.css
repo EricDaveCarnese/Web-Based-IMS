@@ -1,0 +1,307 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-image: url('/photos/IMS\ background_picture.png');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    background-size: cover;
+    backdrop-filter: blur(4px);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 1rem;
+}
+
+/* Main Container */
+.login-container {
+    position: relative;
+    width: 800px;
+    max-width: 95%;
+    height: 550px;
+    background-color: transparent;
+    border-radius: 32px;
+    box-shadow: 0 25px 50px 12px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+}
+
+/* Content Wrapper */
+.container-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+/* Left Panel - Welcome Message Area */
+.welcome-panel {
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(135deg, #0f2b3d 0%, #0a1e2c 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+}
+
+/* Right Panel - Form Area */
+.form-panel {
+    width: 50%;
+    height: 100%;
+    background-color: rgba(44, 110, 98);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+}
+
+/* REGISTER MODE - Swap panels */
+.login-container.register-mode .welcome-panel {
+    transform: translateX(100%);
+}
+
+.login-container.register-mode .form-panel {
+    transform: translateX(-100%);
+}
+
+/* Inner content containers with fade animation */
+.welcome-content {
+    max-width: 280px;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+.form-content {
+    width: 100%;
+    max-width: 320px;
+    position: relative;
+}
+
+/* Form containers with smooth fade/transition */
+.form-wrapper {
+    width: 100%;
+    transition: all 0.4s ease;
+}
+
+.login-form-wrapper {
+    display: block;
+    animation: fadeInUp 0.4s ease;
+}
+
+.register-form-wrapper {
+    display: none;
+    animation: fadeInUp 0.4s ease;
+}
+
+.login-container.register-mode .login-form-wrapper {
+    display: none;
+}
+
+.login-container.register-mode .register-form-wrapper {
+    display: block;
+    animation: fadeInUp 0.4s ease;
+}
+
+/* Welcome content text transition */
+.welcome-text-login,
+.welcome-text-register {
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.welcome-text-register {
+    display: none;
+}
+
+.login-container.register-mode .welcome-text-login {
+    display: none;
+}
+
+.login-container.register-mode .welcome-text-register {
+    display: block;
+    animation: fadeInUp 0.4s ease;
+}
+
+.welcome-text-login {
+    display: block;
+    animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOutDown {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* Icon and Logo */
+.welcome-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(58, 143, 126, 0.2);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2.5rem;
+    color: #3a8f7e;
+    border: 2px solid rgba(58, 143, 126, 0.5);
+}
+
+.welcome-panel h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+}
+
+.welcome-panel p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    opacity: 0.85;
+    margin-bottom: 2rem;
+}
+
+.switch-btn {
+    background: linear-gradient(180deg, rgb(38, 76, 100) 0%, rgb(30, 157, 164) 100%);
+    border: none;
+    padding: 12px 32px;
+    border-radius: 40px;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.switch-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(58, 143, 126, 0.3);
+}
+
+/* Form Styles */
+.form-content h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1.8rem;
+    text-align: center;
+}
+
+.input-box{
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+.input-box i{
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9bb4c2;
+    font-size: 1rem;
+}
+.input-box input {
+    width: 100%;
+    padding: 14px 18px 14px 48px;
+    border: 1.5px solid #e2e9f0;
+    border-radius: 28px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    background: #ffffff;
+    outline: none;
+}
+.input-box input:focus {
+    border-color: #3a8f7e;
+    box-shadow: 0 0 0 3px rgba(58, 143, 126, 0.1);
+}
+.input-box input::placeholder {
+    color: #98a5ad;
+    font-weight: 5;
+}
+
+.btn {
+    width: 100%;
+    background: linear-gradient(180deg, rgb(15, 43, 61) 0%, rgb(25, 110, 114) 100%);
+    border: none;
+    padding: 14px;
+    border-radius: 40px;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 43, 61);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login-container {
+        height: auto;
+        min-height: 600px;
+    }
+
+    .container-wrapper {
+        flex-direction: column;
+    }
+
+    .welcome-panel,
+    .form-panel {
+        width: 100%;
+        min-height: 300px;
+    }
+
+    .login-container.register-mode .welcome-panel {
+        transform: translateX(0);
+        order: 2;
+    }
+
+    .login-container.register-mode .form-panel {
+        transform: translateX(0);
+        order: 1;
+    }
+
+    .welcome-content {
+        max-width: 100%;
+    }
+}
