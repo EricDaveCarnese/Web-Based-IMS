@@ -730,7 +730,7 @@
             color: white;
         }
 
-        /* ==================== CUSTOM PAGINATION STYLES ==================== */
+        /* CUSTOM PAGINATION STYLES */
         .custom-pagination {
             display: flex;
             justify-content: center;
@@ -1131,7 +1131,9 @@
                 <p class="dashboard-sub">Manage your supplier information</p>
             </div>
             <div class="user-menu">
-                @php $pendingStockReportsCount = \App\Models\StockReport::where('status', 'pending')->where('notify_users', false)->count(); @endphp
+                @php 
+                    $pendingStockReportsCount = \App\Models\StockReport::where('status', 'pending')->where('notify_users', false)->count(); 
+                @endphp
                 <div class="notification-area">
                     <button class="notification-bell" id="notificationBell">
                         <i class="fas fa-bell"></i>
@@ -1140,13 +1142,30 @@
                         @endif
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-header"><i class="fas fa-exclamation-triangle"></i> Stock Alerts</div>
-                        <div class="notification-list" id="notificationList"><div class="loading-notifications">Loading...</div></div>
-                        <div class="notification-footer"><a href="{{ route('admin.stock.reports') }}">View All Reports</a></div>
+                        <div class="notification-header">
+                            <i class="fas fa-exclamation-triangle"></i> Stock Alerts
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="loading-notifications">Loading...</div>
+                        </div>
+                        <div class="notification-footer">
+                            <a href="{{ route('admin.stock.reports') }}">View All Reports</a>
+                        </div>
                     </div>
                 </div>
-                <div class="user-menu-container"><a href="#"><i class="fa-solid fa-user"></i><strong>{{ Auth::user()->fullname }}</strong></a></div>
-                <form action="{{ route('logout')}}" method="POST">@csrf<button type="submit" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></button></form>
+                <div class="user-menu-container">
+                    <a href="#">
+                        <i class="fa-solid fa-user"></i>
+                        <strong>{{ Auth::user()->fullname }}</strong>
+                    </a>
+                </div>
+                <form action="{{ route('logout')}}" method="POST">
+                    @csrf
+                    <button type="submit" class="logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -1207,9 +1226,13 @@
                                     placeholder="+63 912 345 6789" required
                                     onkeypress="return onlyNumbersAndAllowedChars(event)"
                                     oninput="validateContactNumber(this)">
-                            <button class="save-button" type="submit"><i class="fa-solid fa-circle-check"></i> Save</button>
+                            <button class="save-button" type="submit">
+                                <i class="fa-solid fa-circle-check"></i> Save
+                            </button>
                         </form>
-                        <button id="close_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Cancel</button>
+                        <button id="close_modal" class="cancel-button">
+                            <i class="fa-solid fa-circle-xmark"></i> Cancel
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1232,9 +1255,13 @@
                                     placeholder="+63 912 345 6789" required
                                     onkeypress="return onlyNumbersAndAllowedChars(event)"
                                     oninput="validateContactNumber(this)">
-                            <button class="save-button" type="submit"><i class="fa-solid fa-circle-check"></i> Update</button>
+                            <button class="save-button" type="submit">
+                                <i class="fa-solid fa-circle-check"></i> Update
+                            </button>
                         </form>
-                        <button id="close_edit_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Cancel</button>
+                        <button id="close_edit_modal" class="cancel-button">
+                            <i class="fa-solid fa-circle-xmark"></i> Cancel
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1255,16 +1282,16 @@
                         <tbody>
                             @forelse($suppliers as $supplier)
                             <tr>
-                                <td><strong><i class="fas fa-building"></i> {{ $supplier->supplier_name }}</strong></td>
-                                <td>{{ $supplier->email }}</span></td>
-                                <td>{{ $supplier->address }}</span></td>
-                                <td>{{ $supplier->contact_person ?? 'N/A' }}</span></span>
-                                <td>{{ $supplier->contact_number }}</span></span>
+                                <td>{{ $supplier->supplier_name }}</td>
+                                <td><span>{{ $supplier->email }}</span></td>
+                                <td><span>{{ $supplier->address }}</span></td>
+                                <td><span>{{ $supplier->contact_person ?? 'N/A' }}</span></td>
+                                <td><span>{{ $supplier->contact_number }}</span></td>
                                 <td>
                                     <button class="edit-button" data-supplier='@json($supplier)' onclick="editSupplier(this)">
                                         <i class="fas fa-edit"></i> Edit
                                     </button>
-                                    <form method="POST" action="{{ route('admin.supplier.delete', $supplier->id) }}" style="display: inline;" onsubmit="return confirm('⚠️ Delete supplier {{ addslashes($supplier->supplier_name) }}?\n\nThis will not delete products from this supplier, but they will become supplierless.\n\nThis action cannot be undone. Continue?')">
+                                    <form method="POST" action="{{ route('admin.supplier.delete', $supplier->id) }}" style="display: inline;" onsubmit="return confirm('Delete supplier {{ addslashes($supplier->supplier_name) }}?\n\nThis will not delete products from this supplier, but they will become supplierless.\n\nThis action cannot be undone. Continue?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="delete-button">
@@ -1495,13 +1522,13 @@
                 
                 html += '<div class="notification-item unread" data-id="' + notif.id + '" style="border-left: 3px solid ' + stockColor + ';">' +
                     '<div class="notification-title">' +
-                        '<strong><i class="fas fa-box"></i> ' + escapeHtml(notif.product_name) + '</strong>' +
+                        '<strong>' + escapeHtml(notif.product_name) + '</strong>' +
                         '<span class="notification-time">' + notif.time_ago + '</span>' +
                     '</div>' +
                     '<div class="notification-message">' +
-                        '<i class="fas fa-user"></i> Reported by: ' + escapeHtml(notif.user_name) + '<br>' +
-                        '<i class="fas fa-chart-line"></i> Current Stock: <strong style="color:' + stockColor + ';">' + notif.current_stock + '</strong> units (Min: ' + notif.min_stock_level + ')<br>' +
-                        '<small><i class="fas fa-comment"></i> ' + escapeHtml(notif.message.substring(0, 100)) + (notif.message.length > 100 ? '...' : '') + '</small>' +
+                        '<strong>Reported by: </strong>' + escapeHtml(notif.user_name) + '<br>' +
+                        '<strong>Current Stock: </strong> <strong' + stockColor + ';">' + notif.current_stock + '</strong> units (Min: ' + notif.min_stock_level + ')<br>' +
+                        '<small>' + escapeHtml(notif.message.substring(0, 100)) + (notif.message.length > 100 ? '...' : '') + '</small>' +
                     '</div>' +
                     '<div class="notification-buttons">' + actionButton + '<button class="btn-read" onclick="markAsRead(' + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button></div>' +
                 '</div>';

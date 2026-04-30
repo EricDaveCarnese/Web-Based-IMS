@@ -238,6 +238,21 @@
             max-height: 350px;
             overflow-y: auto;
         }
+        .notification-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .notification-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .notification-list::-webkit-scrollbar-thumb {
+            background: #2c6e62;
+            border-radius: 10px;
+        }
+        .notification-list {
+            scrollbar-width: thin;
+            scrollbar-color: #2c6e62 #f1f1f1;
+        }
         .notification-item {
             padding: 12px 15px;
             border-bottom: 1px solid #e2e8f0;
@@ -953,14 +968,70 @@
                         </button>
                     </div>
                 </form>
-                <form action="{{ route('admin.categories') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-folder-open"></i><span>Categories</span></button></div></form>
-                <form action="{{ route('admin.suppliers') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-warehouse"></i><span>Suppliers</span></button></div></form>
-                <form action="{{ route('admin.sales') }}" method="GET"><div class="nav-item"><button><i class="fas fa-chart-line"></i><span>Sales</span></button></div></form>
-                <form action="{{ route('admin.purchases') }}" method="GET"><div class="nav-item"><button><i class="fas fa-shopping-cart"></i><span>Purchases</span></button></div></form>
-                <form action="{{ route('admin.reports') }}" method="GET"><div class="nav-item"><button><i class="fas fa-file-alt"></i><span>Reports</span></button></div></form>
-                <form action="{{ route('admin.users') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-users"></i><span>Users</span></button></div></form>
-                <form action="{{ route('admin.logs') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-file-lines"></i><span>Log</span></button></div></form>
-                <form action="{{ route('admin.stock.reports') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-triangle-exclamation"></i><span>Stock Reports</span></button></div></form>
+                <form action="{{ route('admin.categories') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span>Categories</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('admin.suppliers') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fa-solid fa-warehouse"></i>
+                            <span>Suppliers</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('admin.sales') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fas fa-chart-line"></i>
+                            <span>Sales</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('admin.purchases') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Purchases</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('admin.reports') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fas fa-file-alt"></i>
+                            <span>Reports</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('admin.users') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fa-solid fa-users"></i>
+                            <span>Users</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('admin.logs') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span>Log</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('admin.stock.reports') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>Stock Reports</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -980,40 +1051,98 @@
                         @endif
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-header"><i class="fas fa-exclamation-triangle"></i> Stock Alerts</div>
-                        <div class="notification-list" id="notificationList"><div class="loading-notifications">Loading...</div></div>
-                        <div class="notification-footer"><a href="{{ route('admin.stock.reports') }}">View All Reports</a></div>
+                        <div class="notification-header">
+                            <i class="fas fa-exclamation-triangle"></i> Stock Alerts
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="loading-notifications">Loading...</div>
+                        </div>
+                        <div class="notification-footer">
+                            <a href="{{ route('admin.stock.reports') }}">View All Reports</a>
+                        </div>
                     </div>
                 </div>
-                <div class="user-menu-container"><a href="#"><i class="fa-solid fa-user"></i><strong>{{ Auth::user()->fullname }}</strong></a></div>
-                <form action="{{ route('logout')}}" method="POST">@csrf<button type="submit" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>Logout</button></form>
+                <div class="user-menu-container">
+                    <a href="#">
+                        <i class="fa-solid fa-user"></i>
+                        <strong>{{ Auth::user()->fullname }}</strong>
+                    </a>
+                </div>
+                <form action="{{ route('logout')}}" method="POST">@csrf
+                    <button type="submit" class="logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i>Logout
+                    </button>
+                </form>
             </div>
         </div>
 
-        @if(session('success'))<div class="alert-success">{{ session('success') }}<button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button></div>@endif
-        @if(session('error'))<div class="alert-error">{{ session('error') }}<button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button></div>@endif
+        @if(session('success'))
+            <div class="alert-success">{{ session('success') }}
+                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert-error">{{ session('error') }}
+                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            </div>
+        @endif
 
-        <div id="categoryData" class="hidden-data" data-categories='@json($categoryDistribution ?? [])'></div>
+        <div id="categoryData" class="hidden-data" data-categories='@json($categoryDistribution ?? [])'>
+        </div>
         <div id="salesChartData" class="hidden-data" data-sales='@json($salesData ?? [])'></div>
 
         <div class="stats">
-            <div class="stats-container"><h3>Total Products</h3><div class="stat-number">{{ $totalProducts ?? 0 }}</div><div class="stat-sub">{{ $lowStockProductsCount ?? 0 }} low stock items</div></div>
-            <div class="stats-container"><h3>Sales Today</h3><div class="stat-number">₱{{ number_format($todaySalesAmount ?? 0, 2) }}</div><div class="stat-sub">today's transactions</div></div>
-            <div class="stats-container"><h3>Total Sales</h3><div class="stat-number">₱{{ number_format($totalSales ?? 0, 2) }}</div><div class="stat-sub">all sales (completed + pending)</div></div>
-            <div class="stats-container"><h3>Completed Sales</h3><div class="stat-number">₱{{ number_format($completedSales ?? 0, 2) }}</div><div class="stat-sub">paid & completed</div></div>
-            <div class="stats-container"><h3>Pending Sales</h3><div class="stat-number">₱{{ number_format($pendingSales ?? 0, 2) }}</div><div class="stat-sub">awaiting payment</div></div>
-            <div class="stats-container"><h3>Active Users</h3><div class="stat-number">{{ \App\Models\UserManagement::count() }}</div><div class="stat-sub">system users</div></div>
+            <div class="stats-container">
+                <h3>Total Products</h3>
+                <div class="stat-number">{{ $totalProducts ?? 0 }}</div>
+                <div class="stat-sub">{{ $lowStockProductsCount ?? 0 }} low stock items</div>
+            </div>
+            <div class="stats-container">
+                <h3>Sales Today</h3>
+                <div class="stat-number">₱{{ number_format($todaySalesAmount ?? 0, 2) }}</div>
+                <div class="stat-sub">today's transactions</div>
+            </div>
+            <div class="stats-container">
+                <h3>Total Sales</h3>
+                <div class="stat-number">₱{{ number_format($totalSales ?? 0, 2) }}</div>
+                <div class="stat-sub">all sales (completed + pending)</div>
+            </div>
+            <div class="stats-container">
+                <h3>Completed Sales</h3>
+                <div class="stat-number">₱{{ number_format($completedSales ?? 0, 2) }}</div>
+                <div class="stat-sub">paid & completed</div>
+            </div>
+            <div class="stats-container">
+                <h3>Pending Sales</h3>
+                <div class="stat-number">₱{{ number_format($pendingSales ?? 0, 2) }}</div>
+                <div class="stat-sub">awaiting payment</div>
+            </div>
+            <div class="stats-container">
+                <h3>Active Users</h3>
+                <div class="stat-number">{{ \App\Models\UserManagement::count() }}</div>
+                <div class="stat-sub">system users</div>
+            </div>
         </div>
 
         <div class="dashboard-row">
             <div class="sales-performance-card">
-                <div class="sales-performance-header"><i class="fas fa-chart-line"></i><h3>Sales Performance & Forecasting</h3></div>
-                <div class="sales-performance-body"><canvas id="salesPerformanceChart"></canvas></div>
+                <div class="sales-performance-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Sales Performance & Forecasting</h3>
+                </div>
+                <div class="sales-performance-body">
+                    <canvas id="salesPerformanceChart"></canvas>
+                </div>
             </div>
             <div class="stock-card">
-                <div class="stock-header"><i class="fas fa-chart-pie"></i><h3>Stock by Category</h3></div>
+                <div class="stock-header">
+                    <i class="fas fa-chart-pie"></i>
+                    <h3>Stock by Category</h3>
+                </div>
                 <div class="stock-content">
-                    <div class="pie-chart-section"><canvas id="stockChart"></canvas></div>
+                    <div class="pie-chart-section">
+                        <canvas id="stockChart"></canvas>
+                    </div>
                     <div class="categories-list" id="categoriesList"></div>
                 </div>
             </div>
@@ -1036,22 +1165,54 @@
             <div class="table-container">
                 <table class="record-table">
                     <thead>
-                        <tr><th>Date & Time</th><th>Type</th><th>Product</th><th>Category</th><th>Qty</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Type</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Qty</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody id="transactionsTableBody">
                         @forelse($recentTransactions ?? [] as $transaction)
                         <tr>
-                            <td>{{ $transaction->date ? (method_exists($transaction->date, 'format') ? $transaction->date->format('M j, Y g:i A') : $transaction->date) : 'N/A' }}</span>
-                            <td><span class="badge {{ $transaction->type == 'Sale' ? 'badge-sale' : 'badge-purchase' }}">{{ $transaction->type }}</span></span>
-                            <td>{{ $transaction->product }}</span>
-                            <td>{{ $transaction->category }}</span>
-                            <td>{{ $transaction->quantity }}</span>
-                            <td>₱{{ number_format($transaction->amount, 2) }}</span>
-                            <td>@if($transaction->status == 'pending')<span class="badge-warning">Pending</span>@elseif($transaction->status == 'completed')<span class="badge-success">Completed</span>@else<span class="badge" style="background:#f8d7da; color:#721c24;">Canceled</span>@endif</span>
-                            <td><button class="view-details-btn" onclick="viewTransactionDetails('{{ $transaction->type }}', '{{ $transaction->reference_id ?? ',' }}')"><i class="fas fa-eye"></i> View</button></span>
+                            <td>
+                                {{ $transaction->date ? (method_exists($transaction->date, 'format') ? $transaction->date->format('M j, Y g:i A') : $transaction->date) : 'N/A' }}
+                            </td>
+                            <td>
+                                <span class="badge {{ $transaction->type == 'Sale' ? 'badge-sale' : 'badge-purchase' }}">
+                                    {{ $transaction->type }}
+                                </span>
+                            </td>
+                            <td>{{ $transaction->product }}</td>
+                            <td>{{ $transaction->category }}</td>
+                            <td>{{ $transaction->quantity }}</td>
+                            <td>₱{{ number_format($transaction->amount, 2) }}</td>
+                            <td>
+                                @if($transaction->status == 'pending')
+                                    <span class="badge-warning">Pending</span>
+                                @elseif($transaction->status == 'completed')
+                                    <span class="badge-success">Completed</span>
+                                @else
+                                    <span class="badge" style="background:#f8d7da; color:#721c24;">Canceled</span>
+                                @endif
+                            </td>
+                            <td>
+                                <button class="view-details-btn" onclick="viewTransactionDetails('{{ $transaction->type }}', '{{ $transaction->reference_id ?? ',' }}')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
                         </tr>
                         @empty
-                        <tr><td colspan="8" style="text-align:center; padding:40px;"><i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i><p>No transactions found</p></span></tr>
+                        <tr>
+                            <td colspan="8" style="text-align:center; padding:40px;">
+                                <i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i>
+                                <p>No transactions found</p>
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -1062,26 +1223,119 @@
         </div>
     </div>
 
-    <!-- Sale Details Modal -->
-    <div class="modal-container" id="saleDetailsModal">
-        <div class="modal"><div class="modal-header"><h2><i class="fa-solid fa-receipt"></i> Sale Details #<span id="sale_detail_id"></span></h2></div>
-        <div class="modal-body"><div class="sale-info"><strong>Cashier:</strong> <span id="sale_cashier"></span><br><strong>Date &amp; Time:</strong> <span id="sale_date_display"></span><br><strong>Status:</strong> <span id="sale_status_display"></span></div>
-        <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span></h4>
-        <div style="overflow-x:auto;"><table class="details-table"><thead><tr><th>#</th><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Subtotal</th></tr></thead>
-        <tbody id="sale_items_table"><tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr></tbody>
-        <tfoot><tr><td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td><td style="text-align:right"><strong id="sale_total">₱0.00</strong></td></tr></tfoot></table></div>
-        <button id="close_sale_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Close</button></div></div>
-    </div>
+        <!-- Sale Details Modal -->
+        <div class="modal-container" id="saleDetailsModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>
+                        <i class="fa-solid fa-receipt"></i> Sale Details #
+                        <span id="sale_detail_id"></span>
+                    </h2>
+                </div>
+            <div class="modal-body">
+                <div class="sale-info">
+                    <strong>Cashier:</strong>
+                        <span id="sale_cashier"></span>
+                    <br>
+                    <strong>Date &amp; Time:</strong>
+                        <span id="sale_date_display"></span>
+                    <br>
+                    <strong>Status:</strong>
+                        <span id="sale_status_display"></span>
+                </div>
+            <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: 
+                <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span>
+            </h4>
+            <div style="overflow-x:auto;">
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th style="text-align:center">Qty</th>
+                            <th style="text-align:right">Unit Price</th>
+                            <th style="text-align:right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sale_items_table">
+                        <tr class="spinner-row">
+                            <td colspan="5">
+                                <i class="fas fa-spinner fa-spin"></i> Loading…
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
+                            <td style="text-align:right">
+                                <strong id="sale_total">₱0.00</strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    <button id="close_sale_modal" class="cancel-button">
+        <i class="fa-solid fa-circle-xmark"></i> Close
+    </button>
+</div>
 
     <!-- Purchase Details Modal -->
     <div class="modal-container" id="purchaseDetailsModal">
-        <div class="modal"><div class="modal-header"><h2><i class="fa-solid fa-truck"></i> Purchase Order #<span id="purchase_id"></span></h2></div>
-        <div class="modal-body"><div class="purchase-info"><strong>Supplier:</strong> <span id="purchase_supplier"></span><br><strong>Date:</strong> <span id="purchase_date"></span><br><strong>Batch #:</strong> <span id="purchase_batch"></span><br><strong>Status:</strong> <span id="purchase_status"></span></div>
-        <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Purchased:</h4>
-        <div style="overflow-x:auto;"><table class="details-table"><thead><tr><th>#</th><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Cost Price</th><th style="text-align:right">Total</th></tr></thead>
-        <tbody id="purchase_items_table"><tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr></tbody>
-        <tfoot><tr><td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td><td style="text-align:right"><strong id="purchase_total">₱0.00</strong></td></tr></tfoot></table></div>
-        <button id="close_purchase_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Close</button></div></div>
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-truck"></i> Purchase Order #
+                    <span id="purchase_id"></span>
+                </h2>
+            </div>
+        <div class="modal-body">
+            <div class="purchase-info">
+                <strong>Supplier:</strong>
+                    <span id="purchase_supplier"></span>
+                <br>
+                <strong>Date:</strong>
+                    <span id="purchase_date"></span>
+                <br>
+                    <strong>Batch #:</strong>
+                <span id="purchase_batch"></span>
+                <br>
+                    <strong>Status:</strong>
+                <span id="purchase_status"></span>
+            </div>
+            <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Purchased:</h4>
+            <div style="overflow-x:auto;">
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th style="text-align:center">Qty</th>
+                            <th style="text-align:right">Cost Price</th>
+                            <th style="text-align:right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchase_items_table">
+                        <tr class="spinner-row">
+                            <td colspan="5">
+                                <i class="fas fa-spinner fa-spin"></i> Loading…
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
+                            <td style="text-align:right">
+                                <strong id="purchase_total">₱0.00</strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <button id="close_purchase_modal" class="cancel-button">
+                <i class="fa-solid fa-circle-xmark"></i> Close
+            </button>
+        </div>
+    </div>
     </div>
 
     <div id="suggestionData" style="display:none;" data-suggestions='@json(array_unique(array_merge(\App\Models\Product::pluck("product_name")->toArray(), \App\Models\StockReport::distinct()->pluck("user_name")->toArray())))'></div>
@@ -1166,7 +1420,8 @@
             document.getElementById('sale_date_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('sale_status_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('sale_total').textContent = '₱0.00';
-            document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...<\/td><\/tr>';
+            document.getElementById('sale_items_table').innerHTML =
+            '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...</td></tr>';
             fetch('/admin/sale/details/' + id, { method: 'GET', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, credentials: 'same-origin' })
             .then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
             .then(function(sale) {
@@ -1181,21 +1436,21 @@
                 var totalUnits = 0;
                 for (var i = 0; i < details.length; i++) totalUnits += details[i].quantity;
                 document.getElementById('sale_items_count').innerHTML = '(' + details.length + ' product type' + (details.length !== 1 ? 's' : '') + ', ' + totalUnits + ' unit' + (totalUnits !== 1 ? 's' : '') + ')';
-                if (details.length === 0) { document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found<\/td><\/tr>'; return; }
+                if (details.length === 0) { document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>'; return; }
                 var html = '';
                 for (var i = 0; i < details.length; i++) {
                     var item = details[i];
                     html += '<tr>'
-                        + '<td>' + (i + 1) + '<\/td>'
-                        + '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '<\/td>'
-                        + '<td style="text-align:center">' + item.quantity + '<\/td>'
-                        + '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>'
-                        + '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>'
-                        + '<\/tr>';
+                        + '<td>' + (i + 1) + '</td>'
+                        + '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '</td>'
+                        + '<td style="text-align:center">' + item.quantity + '</td>'
+                        + '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>'
+                        + '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>'
+                        + '</tr>';
                 }
                 document.getElementById('sale_items_table').innerHTML = html;
             })
-            .catch(function(err) { console.error('Sale details error:', err); document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading sale details: ' + err.message + '<\/td><\/tr>'; });
+            .catch(function(err) { console.error('Sale details error:', err); document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading sale details: ' + err.message + '</td></tr>'; });
         }
 
         function viewPurchaseDetails(id) {
@@ -1260,12 +1515,12 @@
             for (var i = 0; i < items.length; i++) {
                 var item = items[i];
                 itemsHtml += '<tr>' +
-                    '<td>' + (i + 1) + '<\/td>' +
-                    '<td>' + escapeHtml(item.product_name || 'N/A') + '<\/td>' +
-                    '<td style="text-align:center">' + (item.quantity || 0) + '<\/td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.total || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                '<\/tr>';
+                    '<td>' + (i + 1) + '</td>' +
+                    '<td>' + escapeHtml(item.product_name || 'N/A') + '</td>' +
+                    '<td style="text-align:center">' + (item.quantity || 0) + '</td>' +
+                    '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                    '<td style="text-align:right">₱' + parseFloat(item.total || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                '</tr>';
             }
             document.getElementById('purchase_items_table').innerHTML = itemsHtml;
         }
@@ -1274,7 +1529,7 @@
     })
     .catch(function(err) { 
         console.error('Purchase details error:', err); 
-        document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading purchase details: ' + err.message + '<\/td><\/tr>'; 
+        document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading purchase details: ' + err.message + '</td></tr>'; 
     });
 }
 
@@ -1379,7 +1634,7 @@
                 
                 html += '<div class="notification-item unread" data-id="' + notif.id + '">' +
                     '<div class="notification-title"><strong>' + escapeHtml(notif.product_name) + '</strong><span class="notification-time">' + notif.time_ago + '</span></div>' +
-                    '<div class="notification-message">Reported by: ' + escapeHtml(notif.user_name) + '<br>Current Stock: ' + notif.current_stock + ' units (Min: ' + notif.min_stock_level + ')<br><small>' + escapeHtml(notif.message.substring(0, 100)) + (notif.message.length > 100 ? '...' : '') + '</small></div>' +
+                    '<div class="notification-message"><strong>Reported by: </strong>' + escapeHtml(notif.user_name) + '<br><strong>Current Stock: </strong>' + notif.current_stock + ' units (Min: ' + notif.min_stock_level + ')<br><small>' + escapeHtml(notif.message.substring(0, 100)) + (notif.message.length > 100 ? '...' : '') + '</small></div>' +
                     '<div class="notification-buttons">' + actionButton + '<button class="btn-read" onclick="markAsRead(' + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button></div>' +
                 '</div>';
             }
