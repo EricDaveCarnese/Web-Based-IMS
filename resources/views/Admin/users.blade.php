@@ -606,60 +606,60 @@
             opacity: 1;
         }
         .password-match-error {
-    color: #dc3545;
-    font-size: 12px;
-    margin-top: -8px;
-    margin-bottom: 10px;
-    padding: 6px 12px;
-    background: rgba(220, 53, 69, 0.08);
-    border-radius: 8px;
-    border-left: 3px solid #dc3545;
-    display: none;
-    align-items: center;
-    gap: 6px;
-}
-.password-match-error.show {
-    display: flex;
-}
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: -8px;
+            margin-bottom: 10px;
+            padding: 6px 12px;
+            background: rgba(220, 53, 69, 0.08);
+            border-radius: 8px;
+            border-left: 3px solid #dc3545;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+        .password-match-error.show {
+            display: flex;
+        }
 
         /* Password Field Styles */
-.password-field {
-    position: relative;
-    margin-bottom: 15px;
-}
-.password-field input {
-    width: 100%;
-    padding: 12px 45px 12px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 25px;
-    font-size: 14px;
-    background: white;
-    transition: all 0.3s ease;
-}
-.password-field input:focus {
-    border-color: rgb(44, 110, 98);
-    box-shadow: 0 0 0 3px rgba(44, 110, 98, 0.1);
-    outline: none;
-}
-.toggle-password {
-    position: absolute;
-    right: 15px;
-    top: 40%;
-    transform: translateY(-60%);
-    cursor: pointer;
-    color: #6c757d;
-    transition: color 0.3s ease;
-    font-size: 16px;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-}
-.toggle-password:hover {
-    color: #2c6e62;
-}
+        .password-field {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .password-field input {
+            width: 100%;
+            padding: 12px 45px 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        .password-field input:focus {
+            border-color: rgb(44, 110, 98);
+            box-shadow: 0 0 0 3px rgba(44, 110, 98, 0.1);
+            outline: none;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 40%;
+            transform: translateY(-60%);
+            cursor: pointer;
+            color: #6c757d;
+            transition: color 0.3s ease;
+            font-size: 16px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+        }
+        .toggle-password:hover {
+            color: #2c6e62;
+        }
         .password-match-error {
             color: #ff6b6b;
             font-size: 11px;
@@ -699,10 +699,17 @@
             border-radius: 15px;
             animation: modalSlideIn 0.3s ease;
         }
-        @keyframes modalSlideIn {
-            from { transform: translateY(-30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        @keyframes 
+            modalSlideIn {
+                from { 
+                    transform: translateY(-30px); 
+                    opacity: 0; 
+                }
+                to { 
+                    transform: translateY(0); 
+                    opacity: 1; 
+                }
+            }
         .modal-header {
             color: rgb(151, 205, 200);
             margin-bottom: 20px;
@@ -787,60 +794,174 @@
 
         /* Responsive Design */
         @media (max-width: 1200px) {
-            .user-table, .user-container, .alert-success, .alert-error { margin: 20px 30px; }
+            .user-table, .user-container, .alert-success, .alert-error { 
+                margin: 20px 30px; 
+            }
         }
         @media (max-width: 1000px) {
-            .sidebar { width: 90px; padding: 1rem 0.5rem; }
-            .brand h2, .nav-menu button span { display: none; }
-            .main-content { margin-left: 90px; }
-            .brand { justify-content: center; }
-            .nav-menu button { justify-content: center; padding: 10px; }
-            .page-title h1 { font-size: 1.3rem; }
+            .sidebar { 
+                width: 90px; 
+                padding: 1rem 0.5rem; 
+            }
+            .brand h2, .nav-menu button span { 
+                display: none; 
+            }
+            .main-content { 
+                margin-left: 90px; 
+            }
+            .brand { 
+                justify-content: center; 
+            }
+            .nav-menu button { 
+                justify-content: center; 
+                padding: 10px; 
+            }
+            .page-title h1 { 
+                font-size: 1.3rem; 
+            }
         }
         @media (max-width: 860px) {
-            .user-container { margin: 20px 20px; flex-direction: column; align-items: stretch; }
-            .search-container { max-width: 100%; }
-            .user-table { margin: 20px 20px; padding: 1rem; }
-            .table-container { max-height: 400px; }
-            .alert-success, .alert-error { margin: 20px 20px; }
-            .topheader { padding: 15px; }
-            .page-title { margin-left: 15px; }
-            .user-menu { margin-right: 15px; }
-            .record-table th, .record-table td { padding: 10px 8px; font-size: 0.8rem; }
-            .edit-button, .delete-button { padding: 4px 10px; font-size: 11px; }
+            .user-container { 
+                margin: 20px 20px; 
+                flex-direction: column; 
+                align-items: stretch; 
+            }
+            .search-container { 
+                max-width: 100%; 
+            }
+            .user-table { 
+                margin: 20px 20px; 
+                padding: 1rem; 
+            }
+            .table-container { 
+                max-height: 400px; 
+            }
+            .alert-success, .alert-error { 
+                margin: 20px 20px; 
+            }
+            .topheader { 
+                padding: 15px; 
+            }
+            .page-title { 
+                margin-left: 15px; 
+            }
+            .user-menu { 
+                margin-right: 15px; 
+            }
+            .record-table th, .record-table td { 
+                padding: 10px 8px; 
+                font-size: 0.8rem; 
+            }
+            .edit-button, .delete-button { 
+                padding: 4px 10px; 
+                font-size: 11px; 
+            }
         }
         @media (max-width: 768px) {
-            .sidebar { width: 70px; padding: 1rem 0.3rem; }
-            .main-content { margin-left: 70px; }
-            .brand-icon { width: 35px; height: 35px; font-size: 18px; }
-            .nav-menu button { font-size: 14px; padding: 8px; }
-            .page-title h1 { font-size: 1.2rem; }
-            .modal-header h2 { font-size: 1.2rem; }
-            .role { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .sidebar { 
+                width: 70px; 
+                padding: 1rem 0.3rem; 
+            }
+            .main-content { 
+                margin-left: 70px; 
+            }
+            .brand-icon { 
+                width: 35px; 
+                height: 35px; 
+                font-size: 18px; 
+            }
+            .nav-menu button { 
+                font-size: 14px; 
+                padding: 8px; 
+            }
+            .page-title h1 { 
+                font-size: 1.2rem; 
+            }
+            .modal-header h2 { 
+                font-size: 1.2rem; 
+            }
+            .role { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 10px; 
+            }
         }
         @media (max-width: 480px) {
-            .user-container, .user-table, .alert-success, .alert-error { margin: 15px 15px; padding: 0.8rem; }
-            .alert-success, .alert-error { padding: 10px 35px 10px 15px; font-size: 13px; }
-            .record-table th, .record-table td { font-size: 0.7rem; padding: 8px 6px; }
-            .badge-primary, .badge-secondary { font-size: 9px; padding: 2px 6px; }
-            .edit-button, .delete-button { padding: 3px 8px; font-size: 9px; margin: 0 2px; }
-            .modal { max-width: 95%; padding: 15px; }
-            .modal input, .modal select { padding: 10px 12px; font-size: 13px; }
-            .save-button, .cancel-button { padding: 10px; font-size: 14px; }
-            .search-input { padding: 10px 14px; font-size: 13px; }
-            .search-btn { width: 40px; height: 40px; }
-            .new-user { padding: 8px 16px; font-size: 14px; }
-            .logout-btn { padding: 8px 16px; font-size: 12px; }
-            .user-menu-container a { padding-inline-start: 10px; padding-inline-end: 10px; font-size: 12px; }
+            .user-container, .user-table, .alert-success, .alert-error { 
+                margin: 15px 15px; 
+                padding: 0.8rem; 
+            }
+            .alert-success, .alert-error { 
+                padding: 10px 35px 10px 15px; 
+                font-size: 13px; 
+            }
+            .record-table th, .record-table td { 
+                font-size: 0.7rem; 
+                padding: 8px 6px; 
+            }
+            .badge-primary, .badge-secondary { 
+                font-size: 9px; 
+                padding: 2px 6px; 
+            }
+            .edit-button, .delete-button { 
+                padding: 3px 8px; 
+                font-size: 9px; 
+                margin: 0 2px; 
+            }
+            .modal { 
+                max-width: 95%; 
+                padding: 15px; 
+            }
+            .modal input, .modal select { 
+                padding: 10px 12px; 
+                font-size: 13px; 
+            }
+            .save-button, .cancel-button { 
+                padding: 10px; 
+                font-size: 14px; 
+            }
+            .search-input { 
+                padding: 10px 14px; 
+                font-size: 13px; 
+            }
+            .search-btn { 
+                width: 40px;
+                height: 40px; 
+            }
+            .new-user { 
+                padding: 8px 16px; 
+                font-size: 14px; 
+            }
+            .logout-btn { 
+                padding: 8px 16px; 
+                font-size: 12px; 
+            }
+            .user-menu-container a { 
+                padding-inline-start: 10px; 
+                padding-inline-end: 10px; 
+                font-size: 12px; 
+            }
         }
         @media (orientation: landscape) and (max-height: 500px) {
-            .sidebar { height: auto; min-height: 100vh; }
-            .table-container { max-height: 250px; }
-            .modal { max-height: 90vh; overflow-y: auto; }
+            .sidebar { 
+                height: auto; 
+                min-height: 100vh; 
+            }
+            .table-container { 
+                max-height: 250px; 
+            }
+            .modal { 
+                max-height: 90vh; 
+                overflow-y: auto; 
+            }
         }
         @media (max-height: 600px) {
-            .table-container { max-height: 300px; }
-            .user-table { margin: 15px 20px; }
+            .table-container { 
+                max-height: 300px; 
+            }
+            .user-table { 
+                margin: 15px 20px; 
+            }
         }
     </style>
 </head>
@@ -848,20 +969,92 @@
 <body>
     <div class="sidebar">
         <div class="brand">
-            <div class="brand-icon"><i class="fa-solid fa-box"></i></div>
+            <div class="brand-icon">
+                <i class="fa-solid fa-box"></i>
+            </div>
             <h2 class="title">Inventory MS</h2>
         </div>
         <div class="nav-menu">
-            <form action="{{ route('admin.dashboard')}}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-chart-column"></i><span>Dashboard</span></button></div></form>
-            <form action="{{ route('admin.products') }}" method="GET"><div class="nav-item"><button><i class="fas fa-cubes"></i><span>Products</span></button></div></form>
-            <form action="{{ route('admin.categories') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-folder-open"></i><span>Categories</span></button></div></form>
-            <form action="{{ route('admin.suppliers') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-warehouse"></i><span>Suppliers</span></button></div></form>
-            <form action="{{ route('admin.sales') }}" method="GET"><div class="nav-item"><button><i class="fas fa-chart-line"></i><span>Sales</span></button></div></form>
-            <form action="{{ route('admin.purchases') }}" method="GET"><div class="nav-item"><button><i class="fas fa-shopping-cart"></i><span>Purchases</span></button></div></form>
-            <form action="{{ route('admin.reports') }}" method="GET"><div class="nav-item"><button><i class="fas fa-file-alt"></i><span>Reports</span></button></div></form>
-            <form action="{{ route('admin.users') }}" method="GET"><div class="nav-item active"><button><i class="fas fa-users"></i><span>Users</span></button></div></form>
-            <form action="{{ route('admin.logs') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-file-lines"></i><span>Log</span></button></div></form>
-            <form action="{{ route('admin.stock.reports') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-triangle-exclamation"></i><span>Stock Reports</span></button></div></form>
+            <form action="{{ route('admin.dashboard')}}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-chart-column"></i>
+                        <span>Dashboard</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.products') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fas fa-cubes"></i>
+                        <span>Products</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.categories') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-folder-open"></i>
+                        <span>Categories</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.suppliers') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-warehouse"></i>
+                        <span>Suppliers</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.sales') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fas fa-chart-line"></i>
+                        <span>Sales</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.purchases') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Purchases</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.reports') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fas fa-file-alt"></i>
+                        <span>Reports</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.users') }}" method="GET">
+                <div class="nav-item active">
+                    <button>
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.logs') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-file-lines"></i>
+                        <span>Log</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.stock.reports') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Stock Reports</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -872,7 +1065,9 @@
                 <p>Manage system users and their access levels</p>
             </div>
             <div class="user-menu">
-                @php $pendingStockReportsCount = \App\Models\StockReport::where('status', 'pending')->where('notify_users', false)->count(); @endphp
+                @php 
+                    $pendingStockReportsCount = \App\Models\StockReport::where('status', 'pending')->where('notify_users', false)->count(); 
+                @endphp
                 <div class="notification-area">
                     <button class="notification-bell" id="notificationBell">
                         <i class="fas fa-bell"></i>
@@ -881,18 +1076,43 @@
                         @endif
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-header"><i class="fas fa-exclamation-triangle"></i> Stock Alerts</div>
-                        <div class="notification-list" id="notificationList"><div class="loading-notifications">Loading...</div></div>
-                        <div class="notification-footer"><a href="{{ route('admin.stock.reports') }}">View All Reports</a></div>
+                        <div class="notification-header">
+                            <i class="fas fa-exclamation-triangle"></i> Stock Alerts
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="loading-notifications">Loading...</div>
+                        </div>
+                        <div class="notification-footer">
+                            <a href="{{ route('admin.stock.reports') }}">View All Reports</a>
+                        </div>
                     </div>
                 </div>
-                <div class="user-menu-container"><a href="#"><i class="fa-solid fa-user"></i><strong>{{ Auth::user()->fullname }}</strong></a></div>
-                <form action="{{ route('logout')}}" method="POST">@csrf<button type="submit" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></button></form>
+                <div class="user-menu-container">
+                    <a href="#">
+                        <i class="fa-solid fa-user"></i>
+                        <strong>{{ Auth::user()->fullname }}</strong>
+                    </a>
+                </div>
+                <form action="{{ route('logout')}}" method="POST">
+                    @csrf
+                    <button type="submit" class="logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </div>
         </div>
 
-        @if(session('success'))<div class="alert-success">{{ session('success') }}<button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button></div>@endif
-        @if(session('error'))<div class="alert-error">{{ session('error') }}<button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button></div>@endif
+        @if(session('success'))
+            <div class="alert-success">{{ session('success') }}
+                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert-error">{{ session('error') }}
+                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            </div>
+        @endif
 
         <div id="userData" style="display: none;" data-users='@json($allUsers ?? [])'></div>
         <div id="suggestionData" style="display:none;" data-suggestions='@json(array_unique(array_merge(\App\Models\Product::pluck("product_name")->toArray(), \App\Models\StockReport::distinct()->pluck("user_name")->toArray())))'></div>
@@ -902,98 +1122,139 @@
                 <div class="search-container">
                     <div class="search-wrapper">
                         <input type="text" id="searchInput" class="search-input" placeholder="Search users by name or email..." autocomplete="off" value="{{ request('search') }}">
-                        <button class="search-btn" onclick="performSearch()"><i class="fas fa-search"></i></button>
+                        <button class="search-btn" onclick="performSearch()">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
                     <div id="autocompleteDropdown" class="autocomplete-dropdown"></div>
                 </div>
                 <div class="right">
-                    <div class="recordcount"><span class="count">Total Users: </span><strong>{{ $users->total() }}</strong></div>
-                    <div class="add-button"><button id="open_modal" class="new-user"><i class="fas fa-plus"></i> Add User</button></div>
+                    <div class="recordcount">
+                        <span class="count">Total Users: </span>
+                        <strong>{{ $users->total() }}</strong>
+                    </div>
+                    <div class="add-button">
+                        <button id="open_modal" class="new-user">
+                            <i class="fas fa-plus"></i> Add User
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Add User Modal with Confirm Password -->
-<div class="modal-container" id="modal_container">
-    <div class="modal">
-        <div class="modal-header"><h2><i class="fa-solid fa-user-plus"></i> Add New User</h2></div>
-        <div class="modal-body">
-            <form method="POST" id="addUserForm" action="{{ route('admin.user.store') }}">
-                @csrf
-                <input type="text" name="fullname" placeholder="Full Name" required/>
-                <input type="email" name="email" placeholder="Email" required/>
-                
-                <div class="password-field">
-                    <input type="password" name="password" id="add_password" placeholder="Password" required/>
-                    <i class="fas fa-eye-slash toggle-password" data-target="add_password"></i>
+            <div class="modal-container" id="modal_container">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h2><i class="fa-solid fa-user-plus"></i> Add New User</h2>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" id="addUserForm" action="{{ route('admin.user.store') }}">
+                            @csrf
+                            <input type="text" name="fullname" placeholder="Full Name" required/>
+                            <input type="email" name="email" placeholder="Email" required/>
+                            
+                            <div class="password-field">
+                                <input type="password" name="password" id="add_password" placeholder="Password" required/>
+                                <i class="fas fa-eye-slash toggle-password" data-target="add_password"></i>
+                            </div>
+                            
+                            <div class="password-field">
+                                <input type="password" name="password_confirmation" id="add_password_confirm" placeholder="Confirm Password" required/>
+                                <i class="fas fa-eye-slash toggle-password" data-target="add_password_confirm"></i>
+                            </div>
+                            <div class="password-match-error" id="add_password_error">
+                                <i class="fas fa-exclamation-circle"></i> Passwords do not match!
+                            </div>
+                            
+                            <div class="role">
+                                <label>
+                                    <input type="radio" name="role" value="admin" required/> 
+                                    <i class="fa-solid fa-user-tie"></i> Admin
+                                </label>
+                                <label>
+                                    <input type="radio" name="role" value="user" required/> 
+                                    <i class="fa-solid fa-user"></i> User
+                                </label>
+                            </div>
+                            <button class="save-button" type="submit" id="add_user_submit">
+                                <i class="fa-solid fa-circle-check"></i> Save User
+                            </button>
+                        </form>
+                        <button id="close_modal" class="cancel-button">
+                            <i class="fa-solid fa-circle-xmark"></i> Cancel
+                        </button>
+                    </div>
                 </div>
-                
-                <div class="password-field">
-                    <input type="password" name="password_confirmation" id="add_password_confirm" placeholder="Confirm Password" required/>
-                    <i class="fas fa-eye-slash toggle-password" data-target="add_password_confirm"></i>
-                </div>
-                <div class="password-match-error" id="add_password_error">
-                    <i class="fas fa-exclamation-circle"></i> Passwords do not match!
-                </div>
-                
-                <div class="role">
-                    <label><input type="radio" name="role" value="admin" required/> <i class="fa-solid fa-user-tie"></i> Admin</label>
-                    <label><input type="radio" name="role" value="user" required/> <i class="fa-solid fa-user"></i> User</label>
-                </div>
-                <button class="save-button" type="submit" id="add_user_submit"><i class="fa-solid fa-circle-check"></i> Save User</button>
-            </form>
-            <button id="close_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Cancel</button>
-        </div>
-    </div>
-</div>
+            </div>
 
             <!-- Edit User Modal with Confirm Password -->
-<div class="modal-container" id="edit_modal_container">
-    <div class="modal">
-        <div class="modal-header"><h2><i class="fa-solid fa-user-edit"></i> Edit User</h2></div>
-        <div class="modal-body">
-            <form method="POST" id="editUserForm">
-                @csrf
-                @method('PUT')
-                <input type="text" id="edit_fullname" name="fullname" placeholder="Full Name" required/>
-                <input type="email" id="edit_email" name="email" placeholder="Email" required/>
-                
-                <div class="password-field">
-                    <input type="password" name="password" id="edit_password" placeholder="New Password (leave blank to keep current)"/>
-                    <i class="fas fa-eye-slash toggle-password" data-target="edit_password"></i>
+            <div class="modal-container" id="edit_modal_container">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h2><i class="fa-solid fa-user-edit"></i> Edit User</h2>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" id="editUserForm">
+                            @csrf
+                            @method('PUT')
+                            <input type="text" id="edit_fullname" name="fullname" placeholder="Full Name" required/>
+                            <input type="email" id="edit_email" name="email" placeholder="Email" required/>
+                            <div class="password-field">
+                                <input type="password" name="password" id="edit_password" placeholder="New Password (leave blank to keep current)"/>
+                                <i class="fas fa-eye-slash toggle-password" data-target="edit_password"></i>
+                            </div>
+                            <div class="password-field">
+                                <input type="password" name="password_confirmation" id="edit_password_confirm" placeholder="Confirm New Password"/>
+                                <i class="fas fa-eye-slash toggle-password" data-target="edit_password_confirm"></i>
+                            </div>
+                            <div class="password-match-error" id="edit_password_error">
+                                <i class="fas fa-exclamation-circle"></i> Passwords do not match!
+                            </div>
+                            
+                            <div class="role">
+                                <label>
+                                    <input type="radio" name="role" value="admin" id="edit_role_admin"/> 
+                                    <i class="fa-solid fa-user-tie"></i> Admin
+                                </label>
+                                <label>
+                                    <input type="radio" name="role" value="user" id="edit_role_user"/> 
+                                    <i class="fa-solid fa-user"></i> User
+                                </label>
+                            </div>
+                            <button class="save-button" type="submit" id="edit_user_submit">
+                                <i class="fa-solid fa-circle-check"></i> Update User
+                            </button>
+                        </form>
+                        <button id="close_edit_modal" class="cancel-button">
+                            <i class="fa-solid fa-circle-xmark"></i> Cancel
+                        </button>
+                    </div>
                 </div>
-                
-                <div class="password-field">
-                    <input type="password" name="password_confirmation" id="edit_password_confirm" placeholder="Confirm New Password"/>
-                    <i class="fas fa-eye-slash toggle-password" data-target="edit_password_confirm"></i>
-                </div>
-                <div class="password-match-error" id="edit_password_error">
-                    <i class="fas fa-exclamation-circle"></i> Passwords do not match!
-                </div>
-                
-                <div class="role">
-                    <label><input type="radio" name="role" value="admin" id="edit_role_admin"/> <i class="fa-solid fa-user-tie"></i> Admin</label>
-                    <label><input type="radio" name="role" value="user" id="edit_role_user"/> <i class="fa-solid fa-user"></i> User</label>
-                </div>
-                <button class="save-button" type="submit" id="edit_user_submit"><i class="fa-solid fa-circle-check"></i> Update User</button>
-            </form>
-            <button id="close_edit_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Cancel</button>
-        </div>
-    </div>
-</div>
+            </div>
 
             <div class="user-table">
                 <div class="table-container">
                     <table class="record-table">
                         <thead>
-                            <tr><th>Full Name</th><th>Email</th><th>Role</th><th>Created Date</th><th>Actions</th></tr>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Created Date</th>
+                                <th>Actions</th>
+                            </tr>
                         </thead>
                         <tbody>
                             @forelse ($users as $user)
                             <tr>
                                 <td><strong>{{ $user->fullname }}</strong></td>
                                 <td>{{ $user->email }}</td>
-                                <td><span class="{{ $user->role == 'admin' ? 'badge-primary' : 'badge-secondary' }}"><i class="fas {{ $user->role == 'admin' ? 'fa-user-tie' : 'fa-user' }}"></i> {{ ucfirst($user->role) }}</span></span></td>
-                                <td>{{ $user->created_at->format('Y-m-d') }}</span>
+                                <td>
+                                    <span class="{{ $user->role == 'admin' ? 'badge-primary' : 'badge-secondary' }}"><i class="fas {{ $user->role == 'admin' ? 'fa-user-tie' : 'fa-user' }}"></i> {{ ucfirst($user->role) }}</span>
+                                </td>
+                                <td>
+                                    <span>{{ $user->created_at->format('Y-m-d') }}</span>
+                                </td>
                                 <td>
                                     @if (Auth::id() != $user->id)
                                         <button class="edit-button" onclick='editUser("{{ $user->id }}", "{{ addslashes($user->fullname) }}", "{{ $user->email }}", "{{ $user->role }}")'>
@@ -1001,15 +1262,23 @@
                                         </button>
                                         <form method="POST" action="{{ route('admin.user.delete', $user->id) }}" style="display: inline;" onsubmit="return confirm('Delete user {{ addslashes($user->fullname) }}?')">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="delete-button"><i class="fa-solid fa-trash"></i> Delete</button>
+                                            <button type="submit" class="delete-button">
+                                                <i class="fa-solid fa-trash"></i> Delete</button>
                                         </form>
                                     @else
-                                        <span style="color: gray; font-size: 12px;"><i class="fa-solid fa-user-check"></i> Current User</span>
+                                        <span style="color: gray; font-size: 12px;">
+                                            <i class="fa-solid fa-user-check"></i> Current User
+                                        </span>
                                     @endif
-                                </span>
+                                </td>
                             </tr>
                             @empty
-                            <tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-users-slash" style="font-size: 48px; color: #ccc;"></i><p>No users found</p></span></tr>
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-users-slash" style="font-size: 48px; color: #ccc;"></i>
+                                    <p>No users found</p>
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -1338,19 +1607,32 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
         }
         
         function markAsRead(reportId) {
-            if (confirm('Mark this report as read?')) {
-                fetch('{{ route("admin.stock.report.read") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ report_id: reportId })
-                }).then(response => response.json()).then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Failed to mark as read');
+            fetch('{{ route("admin.stock.report.read") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ report_id: reportId })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
+                    if (item) {
+                        item.style.opacity = '0';
+                        item.style.transition = 'opacity 0.3s ease';
+                        setTimeout(function() {
+                            item.remove();
+                            var list = document.getElementById('notificationList');
+                            if (list && list.querySelectorAll('.notification-item').length === 0) {
+                                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
+                            }
+                        }, 300);
                     }
-                }).catch(error => { console.error('Error:', error); alert('An error occurred'); });
-            }
+                    fetchNotifications();
+                } else {
+                    alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(function(error) { console.error('Error:', error); });
         }
         
         function createPurchaseOrder(productId, productName, reportId) {

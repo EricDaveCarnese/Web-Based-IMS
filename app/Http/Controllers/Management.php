@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Hash;
 
 class Management extends Controller
 {
-    // ==================== ACTIVITY LOG HELPER ====================
     private function logActivity($action, $module, $description, $oldData = null, $newData = null)
     {
         try {
@@ -34,7 +33,6 @@ class Management extends Controller
                 'ip_address'  => request()->ip(),
             ]);
         } catch (\Exception $e) {
-            // Silently fail - don't break the app if logging fails
         }
     }
     
@@ -44,7 +42,6 @@ class Management extends Controller
         return false;
     }
     
-    // Check if there's ALREADY ANY report for this product (system or user)
     $existingReport = StockReport::where('product_id', $product->id)
         ->whereIn('status', ['pending', 'read', 'ordered'])
         ->first();
@@ -53,7 +50,6 @@ class Management extends Controller
         return false;
     }
     
-    // Create ONE admin alert only
     $adminUser = UserManagement::where('role', 'admin')->first();
     
     StockReport::create([
@@ -72,20 +68,16 @@ class Management extends Controller
     return true;
 }
     
-    // ==================== ADMIN DASHBOARD ====================
     public function adminDashboard()
 {
-    // ===== AUTO CREATE LOW STOCK ALERTS ON EVERY PAGE LOAD =====
     $this->checkAndSyncLowStockAlerts();
     $lowStockProducts = Product::whereColumn('quantity', '<=', 'min_stock_level')->get();
     
     foreach ($lowStockProducts as $product) {
-        // Check if there's ALREADY a pending, read, or ordered report for this product
         $existingReport = StockReport::where('product_id', $product->id)
             ->whereIn('status', ['pending', 'read', 'ordered'])
             ->first();
         
-        // Only create if NO existing report exists
         if (!$existingReport) {
             $adminUser = UserManagement::where('role', 'admin')->first();
             
@@ -104,7 +96,6 @@ class Management extends Controller
         }
     }
     
-    // ===== AUTO REMOVE ALERTS FOR RESTOCKED PRODUCTS =====
     $restockedProducts = Product::whereColumn('quantity', '>', 'min_stock_level')->get();
     foreach ($restockedProducts as $product) {
         StockReport::where('product_id', $product->id)
@@ -113,7 +104,6 @@ class Management extends Controller
             ->delete();
     }
     
-    // ===== STATISTICS =====
     $totalProducts = Product::count();
     $lowStockProductsCount = Product::whereColumn('quantity', '<=', 'min_stock_level')->count();
     $todaySalesAmount = Sale::whereDate('sale_date', today())->sum('total_amount');
@@ -122,17 +112,14 @@ class Management extends Controller
     $pendingSales = Sale::where('status', 'pending')->sum('total_amount');
     $pendingStockReports = StockReport::where('status', 'pending')->where('notify_users', false)->count();
     
-    // ===== RECENT TRANSACTIONS WITH PAGINATION =====
     $perPage = 15;
     $currentPage = request()->get('page', 1);
     
-    // Get today's sales with reference IDs
     $todayStart = today()->startOfDay();
     $todayEnd = today()->endOfDay();
     
     $allTransactions = collect();
     
-    // Get today's sales with reference IDs
     $todaySalesRecords = Sale::with(['saleDetails.product.category', 'user'])
         ->whereBetween('sale_date', [$todayStart, $todayEnd])
         ->latest()
@@ -154,7 +141,6 @@ class Management extends Controller
         }
     }
     
-    // Get today's purchases with reference IDs
     $todayPurchases = Purchase::with(['purchaseDetails.product.category', 'supplier'])
         ->whereBetween('purchase_date', [$todayStart, $todayEnd])
         ->latest()
@@ -176,10 +162,8 @@ class Management extends Controller
         }
     }
     
-    // Sort by date (newest first)
     $allTransactions = $allTransactions->sortByDesc('date')->values();
     
-    // Apply search filter if present
     $search = request()->get('search', '');
     if (!empty($search)) {
         $allTransactions = $allTransactions->filter(function ($transaction) use ($search) {
@@ -187,8 +171,7 @@ class Management extends Controller
                    stripos($transaction->category, $search) !== false;
         });
     }
-    
-    // Apply status filter if present
+
     $statusFilter = request()->get('status', '');
     if (!empty($statusFilter) && $statusFilter !== 'all') {
         $allTransactions = $allTransactions->filter(function ($transaction) use ($statusFilter) {
@@ -196,7 +179,6 @@ class Management extends Controller
         });
     }
     
-    // Paginate the transactions manually
     $totalTransactions = $allTransactions->count();
     $recentTransactions = new \Illuminate\Pagination\LengthAwarePaginator(
         $allTransactions->slice(($currentPage - 1) * $perPage, $perPage)->values(),
@@ -206,13 +188,10 @@ class Management extends Controller
         ['path' => request()->url(), 'query' => request()->query()]
     );
     
-    // ===== LOW STOCK ITEMS FOR DISPLAY =====
     $lowStockItems = Product::whereColumn('quantity', '<=', 'min_stock_level')->take(5)->get();
     
-    // ===== CATEGORY DISTRIBUTION =====
     $categoryDistribution = Category::withCount('products')->get();
     
-    // ===== SALES DATA FOR CHART =====
     $salesData = Sale::selectRaw('MONTH(sale_date) as month, SUM(total_amount) as total')
         ->whereYear('sale_date', date('Y'))
         ->where('status', 'completed')
@@ -234,10 +213,8 @@ class Management extends Controller
         'salesData'
     ));
 }
-    // ==================== ADMIN PRODUCTS ====================
     public function adminProducts()
 {
-    // Auto-create low stock alerts when viewing products page
     $this->checkAndSyncLowStockAlerts();
     $lowStockProducts = Product::whereColumn('quantity', '<=', 'min_stock_level')->get();
     
@@ -264,7 +241,6 @@ class Management extends Controller
         }
     }
     
-    // Rest of your existing adminProducts code...
     $search = request('search');
     $status = request('status');
     $query = Product::with(['category', 'supplier'])->whereNull('deleted_at');
@@ -330,12 +306,10 @@ class Management extends Controller
         $oldQuantity = $product->quantity;
         $damageReportId = $request->input('damage_report_id');
 
-        // Only update fields that were actually submitted
         $updateData = [
             'quantity' => $request->quantity,
         ];
 
-        // In normal edit mode (not damage mode), update all fields
         if (!$damageReportId) {
             $updateData['product_name']    = $request->product_name;
             $updateData['description']     = $request->description;
@@ -348,44 +322,40 @@ class Management extends Controller
         $product->update($updateData);
         $quantityReduced = $oldQuantity - $product->quantity;
 
-        // Handle damage report resolution
         if ($damageReportId) {
-    $damageReport = StockReport::find($damageReportId);
-    if ($damageReport && in_array($damageReport->status, ['pending', 'read'])) {
-        $damageReport->status = 'resolved';
-        $damageReport->admin_response = "Stock reduced by {$quantityReduced} units due to damage report on " . now()->format('M j, Y g:i A');
-        $damageReport->save();
+            $damageReport = StockReport::find($damageReportId);
+            if ($damageReport && in_array($damageReport->status, ['pending', 'read'])) {
+                $damageReport->status = 'resolved';
+                $damageReport->admin_response = "Stock reduced by {$quantityReduced} units due to damage report on " . now()->format('M j, Y g:i A');
+                $damageReport->save();
 
-        // Notify ALL users — no date-scoped duplicate check
-        $allUsers = UserManagement::where('role', 'user')->get();
-        foreach ($allUsers as $user) {
-            // Check only: has this user already gotten a DAMAGE RESOLVED notice for THIS product?
-            $alreadyNotified = StockReport::where('user_id', $user->id)
-                ->where('product_id', $product->id)
-                ->where('notify_users', true)
-                ->where('status', 'pending')
-                ->where('message', 'like', '%DAMAGE RESOLVED%')
-                ->exists();                          // ← exists() not first()
+                $allUsers = UserManagement::where('role', 'user')->get();
+                foreach ($allUsers as $user) {
+                    $alreadyNotified = StockReport::where('user_id', $user->id)
+                        ->where('product_id', $product->id)
+                        ->where('notify_users', true)
+                        ->where('status', 'pending')
+                        ->where('message', 'like', '%DAMAGE RESOLVED%')
+                        ->exists();
 
-            if (!$alreadyNotified) {
-                StockReport::create([
-                    'user_id'         => $user->id,
-                    'user_name'       => $user->fullname,
-                    'product_id'      => $product->id,
-                    'product_name'    => $product->product_name,
-                    'current_stock'   => $product->quantity,
-                    'min_stock_level' => $product->min_stock_level,
-                    'message'         => " DAMAGE RESOLVED: Admin has processed the damage report for '{$product->product_name}'. Stock reduced by {$quantityReduced} units. Current stock: {$product->quantity} units.",
-                    'status'          => 'pending',   // pending = unread = shows in bell
-                    'user_notified'   => false,
-                    'notify_users'    => true,         // ← this is what getUserNotificationsBell() queries
-                ]);
+                    if (!$alreadyNotified) {
+                        StockReport::create([
+                            'user_id'         => $user->id,
+                            'user_name'       => $user->fullname,
+                            'product_id'      => $product->id,
+                            'product_name'    => $product->product_name,
+                            'current_stock'   => $product->quantity,
+                            'min_stock_level' => $product->min_stock_level,
+                            'message'         => " DAMAGE RESOLVED: Admin has processed the damage report for '{$product->product_name}'. Stock reduced by {$quantityReduced} units. Current stock: {$product->quantity} units.",
+                            'status'          => 'pending',  
+                            'user_notified'   => false,
+                            'notify_users'    => true,   
+                        ]);
+                    }
+                }
             }
         }
-    }
-}
 
-        // Check low stock after update
         if ($product->quantity <= $product->min_stock_level) {
             $this->createAutomaticLowStockAlert($product);
         } else {
@@ -416,9 +386,6 @@ public function deleteProduct($id)
     try {
         $product = Product::findOrFail($id);
         
-        // Prevent deleting if product is the current user's? (if applicable)
-        
-        // Check if product has related stock reports
         $stockReportsCount = StockReport::where('product_id', $id)->count();
         
         if ($stockReportsCount > 0) {
@@ -428,7 +395,6 @@ public function deleteProduct($id)
             );
         }
         
-        // Check if product has related sale details
         $saleDetailsCount = SaleDetail::where('product_id', $id)->count();
         
         if ($saleDetailsCount > 0) {
@@ -437,7 +403,6 @@ public function deleteProduct($id)
             );
         }
         
-        // Check if product has related purchase details
         $purchaseDetailsCount = PurchaseDetail::where('product_id', $id)->count();
         
         if ($purchaseDetailsCount > 0) {
@@ -446,10 +411,8 @@ public function deleteProduct($id)
             );
         }
         
-        // Store product data for logging before deletion
         $productData = $product->toArray();
         
-        // Soft delete and record who deleted it
         $product->deleted_by = Auth::id();
         $product->deleted_at = now();
         $product->save();
@@ -461,7 +424,6 @@ public function deleteProduct($id)
             null
         );
         
-        // Perform soft delete
         $product->delete();
         
         return redirect()->route('admin.products')->with('success', 
@@ -475,7 +437,6 @@ public function deleteProduct($id)
     }
 }
     
-    // ==================== ADMIN CATEGORIES ====================
     public function adminCategories()
     {
         $search = request('search');
@@ -516,7 +477,6 @@ public function deleteProduct($id)
         'category_name' => 'required|unique:categories,category_name,' . $id,
     ]);
 
-    // Store old data BEFORE updating
     $oldData = $category->toArray();
     
     $category->update($request->all());
@@ -550,7 +510,6 @@ public function deleteProduct($id)
         return redirect()->route('admin.categories')->with('success', 'Category deleted successfully!');
     }
 
-    // ==================== ADMIN SUPPLIERS ====================
     public function adminSuppliers()
     {
         $search = request('search');
@@ -615,7 +574,6 @@ public function deleteProduct($id)
         'contact_number.min' => 'The contact number must contain at least 7 digits.',
     ]);
 
-    // Store old data BEFORE updating
     $oldData = $supplier->toArray();
 
     $supplier->update([
@@ -655,7 +613,6 @@ public function deleteProduct($id)
         return redirect()->route('admin.suppliers')->with('success', 'Supplier deleted successfully!');
     }
 
-    // ==================== ADMIN SALES ====================
     public function adminSales()
     {
         $products = Product::all();
@@ -685,7 +642,6 @@ public function deleteProduct($id)
 
     public function storeSale(Request $request)
 {
-    // ---- Multi-item payload (sent by the JS cart) ----
     if ($request->has('items')) {
         $request->validate([
             'items'                => 'required|array|min:1',
@@ -700,7 +656,6 @@ public function deleteProduct($id)
             $grandTotal   = 0;
             $itemsToSave  = [];
  
-            // --- Validate stock and compute totals first ---
             foreach ($request->items as $item) {
                 $product = Product::findOrFail($item['product_id']);
  
@@ -723,7 +678,6 @@ public function deleteProduct($id)
                 ];
             }
  
-            // --- Create one Sale ---
             $sale = Sale::create([
                 'user_id'      => Auth::id(),
                 'sale_date'    => now(),
@@ -733,7 +687,6 @@ public function deleteProduct($id)
  
             $lowStockAlerts = [];
  
-            // --- Create SaleDetails + update stock ---
             foreach ($itemsToSave as $entry) {
                 $product = $entry['product'];
  
@@ -791,7 +744,6 @@ public function deleteProduct($id)
         }
     }
  
-    // ---- Single-item payload (legacy / admin form POST) ----
     $request->validate([
         'product_id'     => 'required|exists:products,id',
         'quantity'       => 'required|integer|min:1',
@@ -894,7 +846,6 @@ public function deleteProduct($id)
                 $product->quantity -= $detail->quantity;
                 $product->save();
                 
-                // AFTER updating stock, check if it's now low stock
                 if ($product->quantity <= $product->min_stock_level) {
                     $alertCreated = $this->createAutomaticLowStockAlert($product);
                     if ($alertCreated) {
@@ -949,7 +900,6 @@ public function deleteProduct($id)
     ]);
 }
 
-    // ==================== ADMIN PURCHASES ====================
     public function adminPurchases()
 {
     $search = request('search');
@@ -968,7 +918,6 @@ public function deleteProduct($id)
     $products = Product::all();
     $allSuppliers = Supplier::select('id', 'supplier_name')->get();
     
-    // Get all purchases for autocomplete suggestions
     $allPurchases = Purchase::select('id', 'batch_number')->with('supplier')->orderBy('id', 'desc')->get()->map(function($purchase) {
         return [
             'batch_number' => $purchase->batch_number,
@@ -993,7 +942,6 @@ public function deleteProduct($id)
 
     try {
         $product = Product::findOrFail($request->product_id);
-        // NEW FORMAT: PO-A1B2 (no date, just PO- + 4 random chars)
         $batchNumber = 'PO-' . strtoupper(substr(uniqid(), -4));
         $priceDifference = null;
         $originalProductPrice = $product->price;
@@ -1020,7 +968,6 @@ public function deleteProduct($id)
             'cost_price'  => $request->cost_price,
         ]);
 
-        // Link to stock report if applicable
         $reportId = $request->input('report_id');
         if ($reportId) {
             $report = StockReport::find($reportId);
@@ -1065,7 +1012,6 @@ public function deleteProduct($id)
         return redirect()->back()->with('error', 'Failed to create purchase order: ' . $e->getMessage());
     }
 }
-    // ==================== USER NOTIFICATIONS METHODS ====================
 public function getUserNotifications(Request $request)
 {
     $userId = Auth::id();
@@ -1094,7 +1040,6 @@ public function getUserNotificationsBell()
         ->where('notify_users', true)
         ->count();
 
-    // Bell only shows PENDING (unread) notifications
     $recentNotifications = StockReport::where('user_id', $userId)
         ->where('notify_users', true)
         ->where('status', 'pending')
@@ -1144,7 +1089,6 @@ public function markUserNotificationAsRead(Request $request)
 
     return response()->json(['success' => false]);
 }
-// Mark user notification as received (acknowledge)
 public function markUserNotificationAsReceived(Request $request)
 {
     $notification = StockReport::where('id', $request->notification_id)
@@ -1161,7 +1105,6 @@ public function markUserNotificationAsReceived(Request $request)
     
     return response()->json(['success' => false]);
 }
-// Get unread count for notification bell
 public function getUserUnreadCount()
 {
     $count = StockReport::where('user_id', Auth::id())
@@ -1236,43 +1179,66 @@ public function getUserUnreadCount()
     }
 }
     public function cancelPurchase($id)
-    {
-        DB::beginTransaction();
+{
+    DB::beginTransaction();
+    try {
+        $purchase = Purchase::findOrFail($id);
 
-        try {
-            $purchase = Purchase::findOrFail($id);
-
-            if ($purchase->status != 'pending') {
-                return redirect()->back()->with('error', 'This purchase order is already completed or canceled.');
-            }
-
-            if ($purchase->due_date && \Carbon\Carbon::parse($purchase->due_date)->isFuture()) {
-                $dueDateFormatted = \Carbon\Carbon::parse($purchase->due_date)->format('M j, Y');
-                return redirect()->back()->with('error',
-                    "Cannot cancel this order yet. Cancellation is only available after the due date: {$dueDateFormatted}"
-                );
-            }
-
-            $purchase->status = 'canceled';
-            $purchase->save();
-
-            $this->logActivity(
-                'cancel', 'purchase',
-                'Canceled purchase order #' . $purchase->id .
-                ' (' . $purchase->batch_number . ')'
-            );
-
-            DB::commit();
-
-            return redirect()->route('admin.purchases')->with('success', 'Purchase order canceled successfully.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to cancel purchase: ' . $e->getMessage());
+        if ($purchase->status != 'pending') {
+            return redirect()->back()->with('error', 'This purchase order is already completed or canceled.');
         }
-    }
 
-    // ==================== ADMIN REPORTS ====================
+        if ($purchase->due_date && \Carbon\Carbon::parse($purchase->due_date)->isFuture()) {
+            $dueDateFormatted = \Carbon\Carbon::parse($purchase->due_date)->format('M j, Y');
+            return redirect()->back()->with('error',
+                "Cannot cancel this order yet. Cancellation is only available after the due date: {$dueDateFormatted}"
+            );
+        }
+
+        $purchase->status = 'canceled';
+        $purchase->save();
+
+        foreach ($purchase->purchaseDetails as $detail) {
+            $product = Product::find($detail->product_id);
+            if ($product && $product->quantity <= $product->min_stock_level) {
+                StockReport::where('product_id', $product->id)
+                    ->where('user_name', 'System (Auto Alert)')
+                    ->where('status', 'ordered')
+                    ->delete();
+
+                StockReport::where('purchase_id', $purchase->id)
+                    ->where('notify_users', false)
+                    ->update(['status' => 'pending', 'purchase_id' => null]);
+
+                StockReport::create([
+                    'user_id'         => Auth::id(),
+                    'user_name'       => 'System (Auto Alert)',
+                    'product_id'      => $product->id,
+                    'product_name'    => $product->product_name,
+                    'current_stock'   => $product->quantity,
+                    'min_stock_level' => $product->min_stock_level,
+                    'message'         => "PO CANCELLED - RESTOCK NEEDED: Purchase Order #{$purchase->id} for '{$product->product_name}' was cancelled. Current stock: {$product->quantity} units (Min: {$product->min_stock_level}). Please create a new purchase order!",
+                    'status'          => 'pending',
+                    'user_notified'   => false,
+                    'notify_users'    => false,
+                ]);
+            }
+        }
+
+        $this->logActivity(
+            'cancel', 'purchase',
+            'Canceled purchase order #' . $purchase->id .
+            ' (' . $purchase->batch_number . ')'
+        );
+
+        DB::commit();
+        return redirect()->route('admin.purchases')->with('success', 'Purchase order canceled. Low stock alert re-created for affected products.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->back()->with('error', 'Failed to cancel purchase: ' . $e->getMessage());
+    }
+}
     public function adminReports()
     {
         return view('Admin.reports');
@@ -1290,7 +1256,6 @@ public function getUserUnreadCount()
     
     $transactions = collect();
     
-    // Get Sales transactions
     if ($reportType == 'sales' || $reportType == 'all') {
         $salesQuery = Sale::with(['saleDetails.product.category', 'user'])
             ->whereBetween('sale_date', [$startDate, $endDate]);
@@ -1303,7 +1268,6 @@ public function getUserUnreadCount()
         
         foreach ($sales as $sale) {
             foreach ($sale->saleDetails as $detail) {
-                // Apply search filter
                 $productName = $detail->product->product_name ?? 'N/A';
                 $categoryName = $detail->product->category->category_name ?? 'N/A';
                 
@@ -1319,14 +1283,13 @@ public function getUserUnreadCount()
                     'quantity' => $detail->quantity,
                     'amount' => $detail->subtotal,
                     'status' => $sale->status,
-                    'reference_id' => $sale->id,  // IMPORTANT: Add the sale ID
+                    'reference_id' => $sale->id, 
                     'reference_type' => 'sale'
                 ]);
             }
         }
     }
     
-    // Get Purchase transactions
     if ($reportType == 'purchases' || $reportType == 'all') {
         $purchasesQuery = Purchase::with(['purchaseDetails.product.category', 'supplier'])
             ->whereBetween('purchase_date', [$startDate, $endDate]);
@@ -1354,22 +1317,19 @@ public function getUserUnreadCount()
                     'quantity' => $detail->quantity,
                     'amount' => $detail->quantity * $detail->cost_price,
                     'status' => $purchase->status,
-                    'reference_id' => $purchase->id,  // IMPORTANT: Add the purchase ID
+                    'reference_id' => $purchase->id,
                     'reference_type' => 'purchase'
                 ]);
             }
         }
     }
     
-    // Sort by date (newest first)
     $transactions = $transactions->sortByDesc('date')->values();
     
-    // Calculate statistics (without pagination for accurate totals)
     $totalRevenue = $transactions->where('type', 'Sale')->sum('amount');
     $totalTransactions = $transactions->count();
     $avgTransaction = $totalTransactions > 0 ? $totalRevenue / $totalTransactions : 0;
     
-    // Get top product
     $productSales = [];
     foreach ($transactions as $transaction) {
         if ($transaction->type == 'Sale') {
@@ -1382,11 +1342,9 @@ public function getUserUnreadCount()
     }
     $topProduct = !empty($productSales) ? array_keys($productSales, max($productSales))[0] : '—';
     
-    // Get low stock products
     $lowStockProducts = Product::whereColumn('quantity', '<=', 'min_stock_level')
         ->get(['product_name', 'quantity', 'min_stock_level']);
     
-    // Monthly sales for chart
     $monthlySales = Sale::whereBetween('sale_date', [$startDate, $endDate])
         ->where('status', 'completed')
         ->selectRaw('MONTH(sale_date) as month, SUM(total_amount) as total')
@@ -1400,7 +1358,6 @@ public function getUserUnreadCount()
         $monthlySalesData[$sale->month - 1] = (float)$sale->total;
     }
     
-    // Category distribution
     $categories = Category::with('products')->get();
     $categoryLabels = [];
     $categoryValues = [];
@@ -1417,7 +1374,6 @@ public function getUserUnreadCount()
         }
     }
     
-    // Paginate the transactions
     $paginatedTransactions = $transactions->forPage($page, $perPage)->values();
     
     return response()->json([
@@ -1444,7 +1400,6 @@ public function getUserUnreadCount()
     ]);
 }
     
-    // ==================== ADMIN USERS ====================
     public function adminUsers()
     {
         $search = request('search');
@@ -1498,7 +1453,6 @@ public function getUserUnreadCount()
         'role'     => 'required|in:admin,user',
     ]);
 
-    // Store old data BEFORE updating
     $oldData = $user->only(['fullname', 'email', 'role']);
     
     $user->fullname = $request->fullname;
@@ -1539,7 +1493,6 @@ public function getUserUnreadCount()
         return redirect()->route('admin.users')->with('success', 'User deleted successfully!');
     }
 
-    // ==================== ACTIVITY LOGS ====================
     public function logs(Request $request)
 {
     $search = $request->search;
@@ -1570,7 +1523,6 @@ public function getUserUnreadCount()
     return view('Admin.logs', compact('logs', 'totalRecords'));
 }
 
-    // ==================== USER DASHBOARD ====================
     public function userDashboard()
 {
     $totalProducts = Product::count();
@@ -1608,7 +1560,6 @@ public function getUserUnreadCount()
 
     $allTransactions = $allTransactions->sortByDesc('date')->values();
 
-    // Wrap in a proper paginator so currentPage() / lastPage() work in blade
     $recentTransactions = new \Illuminate\Pagination\LengthAwarePaginator(
         $allTransactions->forPage($currentPage, $perPage)->values(),
         $allTransactions->count(),
@@ -1703,7 +1654,6 @@ public function getUserUnreadCount()
         return view('Users.purchases', compact('purchases', 'suppliers', 'products', 'allSuppliers'));
     }
 
-    // ==================== STOCK REPORTS ====================
     public function reportOutOfStock(Request $request)
 {
     $request->validate([
@@ -1713,7 +1663,6 @@ public function getUserUnreadCount()
 
     $product = Product::findOrFail($request->product_id);
     
-    // Check if there's ALREADY a System Auto Alert report for this product
     $existingSystemReport = StockReport::where('product_id', $product->id)
         ->where('user_name', 'System (Auto Alert)')
         ->whereIn('status', ['pending', 'read', 'ordered'])
@@ -1726,7 +1675,6 @@ public function getUserUnreadCount()
         ]);
     }
     
-    // Check if user already reported this product
     $existingUserReport = StockReport::where('product_id', $product->id)
         ->where('user_id', Auth::id())
         ->whereIn('status', ['pending', 'read'])
@@ -1805,7 +1753,6 @@ public function getUserUnreadCount()
     $search = request('search');
     $status = request('status');
     
-    // This query should include System (Auto Alert) reports
     $query = StockReport::where('notify_users', false)
         ->orderBy('created_at', 'desc');
     
@@ -1825,7 +1772,6 @@ public function getUserUnreadCount()
     
     return view('Admin.stock_reports', compact('reports'));
 }
-    // ==================== USER NOTIFICATIONS ====================
     public function userNotifications()
     {
         $notifications = StockReport::where('user_id', Auth::id())
@@ -1845,7 +1791,6 @@ public function getUserUnreadCount()
         return response()->json(['success' => true]);
     }
 
-    // ==================== PURCHASE DETAILS ====================
     public function getPurchaseDetails($id)
 {
     $purchase = Purchase::with(['supplier', 'purchaseDetails.product.category'])->find($id);
@@ -1854,7 +1799,6 @@ public function getUserUnreadCount()
         return response()->json(['error' => 'Purchase order not found'], 404);
     }
 
-    // Build items array from ALL purchase details
     $items = [];
     $totalAmount = 0;
     
@@ -1879,7 +1823,6 @@ public function getUserUnreadCount()
         }
     }
 
-    // Return both formats for compatibility
     $firstItem = $items[0] ?? null;
     
     return response()->json([
@@ -1898,12 +1841,9 @@ public function getUserUnreadCount()
         'price_drop' => $priceDrop,
     ]);
 }
-    // Add this method to check and remove alerts when stock is no longer low
 private function removeLowStockAlertWhenRestocked($product)
 {
-    // Check if product is no longer low on stock
     if ($product->quantity > $product->min_stock_level) {
-        // Find and delete pending automatic alerts for this product
         $deleted = StockReport::where('product_id', $product->id)
             ->where('user_name', 'System (Auto Alert)')
             ->where('status', 'pending')
@@ -1923,18 +1863,15 @@ private function removeLowStockAlertWhenRestocked($product)
 }
 private function notifyUsersAboutOrder($stockReport, $purchase)
 {
-    // Get all users
     $users = UserManagement::where('role', 'user')->get();
     
     foreach ($users as $user) {
-        // Check if user already has a notification for this product
         $existingNotification = StockReport::where('user_id', $user->id)
             ->where('product_id', $stockReport->product_id)
             ->where('notify_users', true)
             ->whereIn('status', ['pending', 'read'])
             ->first();
         
-        // Only create if no existing pending notification
         if (!$existingNotification) {
             StockReport::create([
                 'user_id' => $user->id,
@@ -1965,7 +1902,6 @@ public function reportDamage(Request $request)
     $product = Product::findOrFail($request->product_id);
     $damageQuantity = $request->damage_quantity ?? 1;
     
-    // Check if there's already a pending damage report
     $pendingDamageReport = StockReport::where('product_id', $request->product_id)
         ->where('message', 'like', '%DAMAGE REPORT%')
         ->where('status', 'pending')
@@ -1978,7 +1914,6 @@ public function reportDamage(Request $request)
         ]);
     }
 
-    // Create notification for admin with CLEAR quantity information
     $adminUser = UserManagement::where('role', 'admin')->first();
     
 if ($adminUser) {
@@ -2012,7 +1947,6 @@ if ($adminUser) {
 }
 public function getStockReportNotifications()
 {
-    // First sync alerts
     $this->checkAndSyncLowStockAlerts();
     
     $reports = StockReport::where('status', 'pending')
@@ -2049,7 +1983,6 @@ public function getStockReportNotifications()
     ]);
 }
 
-// Add helper method
 private function extractDamageQuantity($message)
 {
     if (preg_match('/(\d+)\s+damaged/i', $message, $matches)) {
@@ -2100,8 +2033,8 @@ public function getProductData($id)
                 'price' => $product->price,
                 'quantity' => $product->quantity,
                 'min_stock_level' => $product->min_stock_level,
-                'category_id' => $product->category_id,  // MAKE SURE THIS IS INCLUDED
-                'supplier_id' => $product->supplier_id,  // MAKE SURE THIS IS INCLUDED
+                'category_id' => $product->category_id,  
+                'supplier_id' => $product->supplier_id,  
                 'category_name' => $product->category ? $product->category->category_name : null,
                 'supplier_name' => $product->supplier ? $product->supplier->supplier_name : null
             ]
@@ -2116,13 +2049,11 @@ public function forceCreateLowStockAlerts()
     $createdCount = 0;
     
     foreach ($lowStockProducts as $product) {
-        // Delete any existing pending alerts for this product first
         StockReport::where('product_id', $product->id)
             ->where('user_name', 'System (Auto Alert)')
             ->where('status', 'pending')
             ->delete();
         
-        // Create fresh alert
         $adminUser = UserManagement::where('role', 'admin')->first();
         
         StockReport::create([
@@ -2147,10 +2078,9 @@ public function forceCreateLowStockAlerts()
         'products' => $lowStockProducts->pluck('product_name')
     ]);
 }
-// ==================== GET USER SALE DETAILS ====================
+
 public function getUserSaleDetails($id)
 {
-    // Allow admins to also call this endpoint without errors
     $sale = Sale::with(['user', 'saleDetails.product'])->find($id);
  
     if (!$sale) {
@@ -2179,6 +2109,7 @@ public function getUserSaleDetails($id)
         }),
     ]);
 }
+
 public function processUserPayment(Request $request, $id)
 {
     DB::beginTransaction();
@@ -2232,51 +2163,46 @@ public function processUserPayment(Request $request, $id)
 }
 private function checkAndSyncLowStockAlerts()
 {
-    // Get all products that are low on stock
     $lowStockProducts = Product::whereColumn('quantity', '<=', 'min_stock_level')->get();
     
     foreach ($lowStockProducts as $product) {
-        // Check if there's already a pending auto alert for this product
         $existingAlert = StockReport::where('product_id', $product->id)
             ->where('user_name', 'System (Auto Alert)')
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'read', 'ordered'])  
             ->first();
         
         if ($existingAlert) {
-            // Update existing alert with current stock info
             if ($existingAlert->current_stock != $product->quantity) {
                 $existingAlert->current_stock = $product->quantity;
-                $existingAlert->message = ($product->quantity == 0) 
-                    ? "⚠️ OUT OF STOCK ALERT: {$product->product_name} is completely out of stock! Current stock: 0 units. Minimum required: {$product->min_stock_level} units. Immediate restock needed!"
-                    : "⚠️ LOW STOCK ALERT: {$product->product_name} has reached critical low stock level. Current stock: {$product->quantity} units. Minimum required: {$product->min_stock_level} units. Please restock soon!";
+                $existingAlert->message = ($product->quantity == 0)
+                    ? "OUT OF STOCK ALERT: {$product->product_name} is completely out of stock! Current stock: 0 units. Minimum required: {$product->min_stock_level} units. Immediate restock needed!"
+                    : "LOW STOCK ALERT: {$product->product_name} has reached critical low stock level. Current stock: {$product->quantity} units. Minimum required: {$product->min_stock_level} units. Please restock soon!";
                 $existingAlert->save();
             }
         } else {
-            // Create new alert
             $adminUser = UserManagement::where('role', 'admin')->first();
             StockReport::create([
-                'user_id' => $adminUser ? $adminUser->id : 1,
-                'user_name' => 'System (Auto Alert)',
-                'product_id' => $product->id,
-                'product_name' => $product->product_name,
-                'current_stock' => $product->quantity,
+                'user_id'         => $adminUser ? $adminUser->id : 1,
+                'user_name'       => 'System (Auto Alert)',
+                'product_id'      => $product->id,
+                'product_name'    => $product->product_name,
+                'current_stock'   => $product->quantity,
                 'min_stock_level' => $product->min_stock_level,
-                'message' => ($product->quantity == 0) 
-                    ? "⚠️ OUT OF STOCK ALERT: {$product->product_name} is completely out of stock! Current stock: 0 units. Minimum required: {$product->min_stock_level} units. Immediate restock needed!"
-                    : "⚠️ LOW STOCK ALERT: {$product->product_name} has reached critical low stock level. Current stock: {$product->quantity} units. Minimum required: {$product->min_stock_level} units. Please restock soon!",
-                'status' => 'pending',
-                'user_notified' => false,
-                'notify_users' => false,
+                'message'         => ($product->quantity == 0)
+                    ? "OUT OF STOCK ALERT: {$product->product_name} is completely out of stock! Current stock: 0 units. Minimum required: {$product->min_stock_level} units. Immediate restock needed!"
+                    : "LOW STOCK ALERT: {$product->product_name} has reached critical low stock level. Current stock: {$product->quantity} units. Minimum required: {$product->min_stock_level} units. Please restock soon!",
+                'status'          => 'pending',
+                'user_notified'   => false,
+                'notify_users'    => false,
             ]);
         }
     }
     
-    // Remove alerts for products that are no longer low stock
     $restockedProducts = Product::whereColumn('quantity', '>', 'min_stock_level')->get();
     foreach ($restockedProducts as $product) {
         StockReport::where('product_id', $product->id)
             ->where('user_name', 'System (Auto Alert)')
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'read']) 
             ->delete();
     }
 }

@@ -763,6 +763,10 @@
             background: #2c6e62; 
             border-radius: 10px; 
         }
+        .table-container {
+            scrollbar-width: thin;
+            scrollbar-color: #2c6e62 #f1f1f1;
+        }
         .badge-success { 
             background: #28a745; 
             color: white; 
@@ -1967,9 +1971,7 @@
         }
     }
 
-    // ================================================================
     //  NOTIFICATION FUNCTIONS
-    // ================================================================
     function fetchNotifications() {
         fetch('/admin/stock-reports/notifications', {
             method: 'GET',
@@ -2034,14 +2036,31 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
             body: JSON.stringify({ report_id: reportId })
-        }).then(function(response) { return response.json(); }).then(function(data) {
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
             if (data.success) {
-                showUniformAlert('Report marked as read', 'success');
+                // Remove item from bell dropdown immediately
+                var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transition = 'opacity 0.3s ease';
+                    setTimeout(function() {
+                        item.remove();
+                        // Check if dropdown is now empty
+                        var list = document.getElementById('notificationList');
+                        if (list && list.querySelectorAll('.notification-item').length === 0) {
+                            list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
+                        }
+                    }, 300);
+                }
+                // Refresh bell count
                 fetchNotifications();
             } else {
-                showUniformAlert('Failed to mark as read', 'error');
+                alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
             }
-        }).catch(function(error) { console.error('Error:', error); });
+        })
+        .catch(function(error) { console.error('Error:', error); });
     }
     
     function createPurchaseOrder(productId, productName, reportId) {
@@ -2077,9 +2096,7 @@
         if (dropdown) dropdown.classList.remove('show'); 
     });
     
-    // ================================================================
     //  INITIALIZE
-    // ================================================================
     document.addEventListener('DOMContentLoaded', function() {
         renderPagination();
         fetchNotifications();

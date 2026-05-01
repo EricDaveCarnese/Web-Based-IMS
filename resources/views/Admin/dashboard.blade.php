@@ -1662,16 +1662,35 @@
         }
         
         function markAsRead(reportId) {
-            if (confirm('Mark this report as read?')) {
-                fetch('{{ route("admin.stock.report.read") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ report_id: reportId })
-                }).then(function(response) { return response.json(); }).then(function(data) {
-                    if (data.success) { location.reload(); }
-                    else { alert('Failed to mark as read'); }
-                }).catch(function(error) { console.error('Error:', error); alert('An error occurred'); });
-            }
+            fetch('{{ route("admin.stock.report.read") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ report_id: reportId })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    // Remove item from bell dropdown immediately
+                    var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
+                    if (item) {
+                        item.style.opacity = '0';
+                        item.style.transition = 'opacity 0.3s ease';
+                        setTimeout(function() {
+                            item.remove();
+                            // Check if dropdown is now empty
+                            var list = document.getElementById('notificationList');
+                            if (list && list.querySelectorAll('.notification-item').length === 0) {
+                                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
+                            }
+                        }, 300);
+                    }
+                    // Refresh bell count
+                    fetchNotifications();
+                } else {
+                    alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(function(error) { console.error('Error:', error); });
         }
         
         function createPurchaseOrder(productId, productName, reportId) {

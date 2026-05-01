@@ -686,41 +686,47 @@
             box-shadow: 0 4px 12px rgba(255, 255, 255, 0.259);
         }
 
-        /* Pagination */
-        .pagination-container {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .pagination {
-            display: inline-flex;
-            gap: 5px;
-            list-style: none;
-            padding: 0;
-            flex-wrap: wrap;
+        /* Custom Pagination */
+        .custom-pagination {
+            display: flex;
             justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
         }
-        .pagination li {
-            display: inline-block;
-        }
-        .pagination a, .pagination span {
-            padding: 8px 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
+        .custom-pagination a,
+        .custom-pagination span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 4px;
             text-decoration: none;
-            color: rgb(44, 110, 98);
-            border: 1px solid #ddd;
-            transition: all 0.3s;
-            display: inline-block;
+            font-size: 14px;
+            border-radius: 4px;
         }
-        .pagination a:hover {
-            background: rgb(44, 110, 98);
-            color: white;
-            border-color: rgb(44, 110, 98);
+        .custom-pagination a {
+            color: #4a5568;
+            background: transparent;
+            transition: all 0.2s;
         }
-        .pagination .active span {
-            background: rgb(44, 110, 98);
+        .custom-pagination a:hover {
+            background: #2c6e62;
             color: white;
-            border-color: rgb(44, 110, 98);
+        }
+        .custom-pagination .page-active {
+            background: #2c6e62;
+            color: white;
+        }
+        .custom-pagination .page-disabled {
+            color: #cbd5e0;
+            cursor: default;
+        }
+        .custom-pagination .page-dots {
+            color: #a0aec0;
+            cursor: default;
         }
 
         /* Responsive Design */
@@ -1098,7 +1104,7 @@
                                     @else
                                         <span class="badge-danger"><i class="fas fa-times-circle"></i> Canceled</span>
                                     @endif
-                                </span>
+                                </td>
                                 <td>
                                     @if($purchase->status == 'pending')
                                         <form method="POST" action="{{ route('user.purchase.complete', $purchase->id) }}" style="display: inline;">
@@ -1116,22 +1122,23 @@
                                             <i class="fas fa-ban"></i> Canceled
                                         </span>
                                     @endif
-                                </span>
+                                </td>
                             </tr>
                             @empty
                             <tr>
                                 <td colspan="6" style="text-align: center; padding: 40px;">
                                     <i class="fas fa-shopping-cart" style="font-size: 48px; color: #ccc;"></i>
                                     <p style="margin-top: 10px;">No purchase orders found</p>
-                                </span>
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-                <div class="pagination-container">
-                    {{ $purchases->appends(request()->query())->links() }}
-                </div>
+                <!-- Custom Pagination -->
+            <div class="pagination-container" id="customPagination"></div>
+            <input type="hidden" id="currentPage" value="{{ $purchases->currentPage() }}">
+            <input type="hidden" id="lastPage" value="{{ $purchases->lastPage() }}">
             </div>
         </div>
     </div>

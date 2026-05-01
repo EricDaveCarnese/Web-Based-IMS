@@ -857,72 +857,200 @@
             animation: slideInRight 0.3s ease;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        @keyframes 
+            slideInRight {
+                from { 
+                    transform: translateX(100%); 
+                    opacity: 0; 
+                }
+                to { 
+                    transform: translateX(0); 
+                    opacity: 1; 
+                }
         }
 
         /* Responsive */
         @media (max-width: 1200px) {
-            .stats { margin: 20px 30px; gap: 20px; }
-            .dashboard-row { margin: 0 30px 20px 30px; }
-            .sales-record { margin: 0 30px 30px 30px; }
+            .stats { 
+                margin: 20px 30px; 
+                gap: 20px;
+            }
+            .dashboard-row { 
+                margin: 0 30px 20px 30px; 
+            }
+            .sales-record { 
+                margin: 0 30px 30px 30px; 
+            }
         }
         @media (max-width: 1000px) {
-            .sidebar { width: 90px; padding: 1rem 0.5rem; }
-            .brand h2, .nav-menu button span { display: none; }
-            .main-content { margin-left: 90px; }
-            .brand { justify-content: center; }
-            .nav-menu button { justify-content: center; padding: 10px; }
-            .page-title { margin-left: 20px; }
-            .page-title h1 { font-size: 1.3rem; }
+            .sidebar { 
+                width: 90px; 
+                padding: 1rem 0.5rem; 
+            }
+            .brand h2, .nav-menu button span { 
+                display: none; 
+            }
+            .main-content { 
+                margin-left: 90px; 
+            }
+            .brand { 
+                justify-content: center; 
+            }
+            .nav-menu button { 
+                justify-content: center; 
+                padding: 10px; 
+            }
+            .page-title { 
+                margin-left: 20px; 
+            }
+            .page-title h1 { 
+                font-size: 1.3rem; 
+            }
         }
         @media (max-width: 860px) {
-            .stats { margin: 20px 20px; grid-template-columns: repeat(2, 1fr); }
-            .dashboard-row { margin: 0 20px 20px 20px; flex-direction: column; }
-            .sales-performance-card { width: 100%; }
-            .dashboard-row .stock-card { min-width: auto; width: 100%; }
-            .sales-record { margin: 0 20px 30px 20px; padding: 1rem; }
-            .sales-performance-body { height: 280px; }
-            .stock-content { flex-direction: column; }
-            .pie-chart-section { width: 200px; height: 200px; }
-            .categories-list { max-height: 200px; width: 100%; }
-            .table-container { max-height: 300px; }
-            .topheader { padding: 15px; }
-            .page-title { margin-left: 15px; }
-            .user-menu { margin-right: 15px; }
-            .record-table th, .record-table td { padding: 10px 8px; font-size: 0.8rem; }
-            .search-filter-bar input { width: 100%; }
+            .stats { 
+                margin: 20px 20px; 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+            .dashboard-row { 
+                margin: 0 20px 20px 20px; 
+                flex-direction: column; 
+            }
+            .sales-performance-card { 
+                width: 100%; 
+            }
+            .dashboard-row .stock-card { 
+                min-width: auto; 
+                width: 100%; 
+            }
+            .sales-record { 
+                margin: 0 20px 30px 20px; 
+                padding: 1rem; 
+            }
+            .sales-performance-body { 
+                height: 280px; 
+            }
+            .stock-content { 
+                flex-direction: column; 
+            }
+            .pie-chart-section { 
+                width: 200px; 
+                height: 200px; 
+            }
+            .categories-list {
+
+                max-height: 200px; 
+                width: 100%; 
+            }
+            .table-container { 
+                max-height: 300px; 
+            }
+            .topheader { 
+                padding: 15px; 
+            }
+            .page-title { 
+                margin-left: 15px; 
+            }
+            .user-menu { 
+                margin-right: 15px; 
+            }
+            .record-table th, .record-table td { 
+                padding: 10px 8px; 
+                font-size: 0.8rem; 
+            }
+            .search-filter-bar input { 
+                width: 100%; 
+            }
         }
         @media (max-width: 768px) {
-            .sidebar { width: 70px; padding: 1rem 0.3rem; }
-            .main-content { margin-left: 70px; }
-            .brand-icon { width: 35px; height: 35px; font-size: 18px; }
-            .nav-menu button { font-size: 14px; padding: 8px; }
-            .page-title h1 { font-size: 1.2rem; }
-            .stat-number { font-size: 22px; }
-            .stats-container h3 { font-size: 11px; }
-            .record-title h3 { font-size: 1rem; }
+            .sidebar { 
+                width: 70px; 
+                padding: 1rem 0.3rem; 
+            }
+            .main-content { 
+                margin-left: 70px; 
+            }
+            .brand-icon { 
+                width: 35px;
+                height: 35px; 
+                font-size: 18px; 
+            }
+            .nav-menu button { 
+                font-size: 14px; 
+                padding: 8px; 
+            }
+            .page-title h1 { 
+                font-size: 1.2rem; 
+            }
+            .stat-number { 
+                font-size: 22px; 
+            }
+            .stats-container h3 { 
+                font-size: 11px; 
+            }
+            .record-title h3 { 
+                font-size: 1rem; 
+            }
         }
         @media (max-width: 550px) {
-            .stats { grid-template-columns: 1fr; }
+            .stats { 
+                grid-template-columns: 1fr; 
+            }
         }
         @media (max-width: 480px) {
-            .stats { margin: 15px 15px; grid-template-columns: 1fr; }
-            .dashboard-row { margin: 0 15px 15px 15px; }
-            .sales-record { margin: 0 15px 20px 15px; padding: 0.8rem; }
-            .record-table th, .record-table td { font-size: 0.7rem; padding: 8px 6px; }
-            .badge { padding: 2px 8px; font-size: 0.65rem; }
-            .sales-performance-body { height: 220px; }
-            .pie-chart-section { width: 160px; height: 160px; }
-            .category-item { padding: 8px 10px; }
-            .category-name { font-size: 11px; }
-            .topheader { padding: 10px; }
-            .user-menu { gap: 10px; }
-            .logout-btn { padding: 8px 16px; font-size: 12px; }
-            .record-title { flex-direction: column; align-items: flex-start; }
-            .search-filter-bar { width: 100%; }
-            .notification-dropdown { width: 300px; right: -50px; }
+            .stats { 
+                margin: 15px 15px; 
+                grid-template-columns: 1fr; 
+            }
+            .dashboard-row { 
+                margin: 0 15px 15px 15px; 
+            }
+            .sales-record { 
+                margin: 0 15px 20px 15px; 
+                padding: 0.8rem; 
+            }
+            .record-table th, .record-table td { 
+                font-size: 0.7rem; 
+                padding: 8px 6px; 
+            }
+            .badge { 
+                padding: 2px 8px; 
+                font-size: 0.65rem; 
+            }
+            .sales-performance-body { 
+                height: 220px; 
+            }
+            .pie-chart-section { 
+                width: 160px; 
+                height: 160px; 
+            }
+            .category-item { 
+                padding: 8px 10px; 
+            }
+            .category-name { 
+                font-size: 11px; 
+            }
+            .topheader { 
+                padding: 10px; 
+            }
+            .user-menu { 
+                gap: 10px; 
+            }
+            .logout-btn { 
+                padding: 8px 16px; 
+                font-size: 12px; 
+            }
+            .record-title { 
+                flex-direction: column; 
+                align-items: flex-start; 
+            }
+            .search-filter-bar { 
+                width: 100%; 
+            }
+            .notification-dropdown { 
+                width: 300px; 
+                right: -50px; 
+            }
         }
     </style>
 </head>
@@ -930,14 +1058,44 @@
     <div class="main">
         <div class="sidebar">
             <div class="brand">
-                <div class="brand-icon"><i class="fa-solid fa-box"></i></div>
+                <div class="brand-icon">
+                    <i class="fa-solid fa-box"></i>
+                </div>
                 <div><h2 class="title">Inventory MS</h2></div>
             </div>
             <div class="nav-menu">
-                <form action="{{ route('user.dashboard')}}" method="GET"><div class="nav-item active"><button><i class="fa-solid fa-chart-column"></i><span>Dashboard</span></button></div></form>
-                <form action="{{ route('user.products') }}" method="GET"><div class="nav-item"><button><i class="fas fa-cubes"></i><span>Products</span></button></div></form>
-                <form action="{{ route('user.sales') }}" method="GET"><div class="nav-item"><button><i class="fas fa-chart-line"></i><span>Sales</span></button></div></form>
-                <form action="{{ route('user.purchases') }}" method="GET"><div class="nav-item"><button><i class="fas fa-shopping-cart"></i><span>Purchases</span></button></div></form>
+                <form action="{{ route('user.dashboard')}}" method="GET">
+                    <div class="nav-item active">
+                        <button>
+                            <i class="fa-solid fa-chart-column"></i>
+                            <span>Dashboard</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('user.products') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fas fa-cubes"></i>
+                            <span>Products</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('user.sales') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fas fa-chart-line"></i>
+                            <span>Sales</span>
+                        </button>
+                    </div>
+                </form>
+                <form action="{{ route('user.purchases') }}" method="GET">
+                    <div class="nav-item">
+                        <button>
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Purchases</span>
+                        </button>
+                    </div>
+                </form>
                 <form action="{{ route('user.notifications') }}" method="GET">
                     <div class="nav-item">
                         <button type="submit" class="button">
@@ -986,45 +1144,89 @@
                 </div>
                 
                 <div class="user-menu-container">
-                    <a href="#"><i class="fa-solid fa-user"></i><strong>{{ Auth::user()->fullname }}</strong></a>
+                    <a href="#">
+                        <i class="fa-solid fa-user"></i>
+                        <strong>{{ Auth::user()->fullname }}</strong>
+                    </a>
                 </div>
                 <form action="{{ route('logout')}}" method="POST">
                     @csrf
                     <div class="logout-container">
-                        <button type="submit" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></button>
+                        <button type="submit" class="logout-btn">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Logout</span>
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
 
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}<button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button></div>
+            <div class="alert-success">{{ session('success') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">{{ session('error') }}<button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button></div>
+            <div class="alert-error">{{ session('error') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            </div>
         @endif
 
         <div id="categoryData" class="hidden-data" data-categories='@json($categoryDistribution ?? [])'></div>
         <div id="salesChartData" class="hidden-data" data-sales='@json($salesData ?? [])'></div>
 
         <div class="stats">
-            <div class="stats-container"><h3>Total Products</h3><div class="stat-number">{{ $totalProducts ?? 0 }}</div><div class="stat-sub">{{ $lowStockProducts ?? 0 }} low stock items</div></div>
-            <div class="stats-container"><h3>Sales Today</h3><div class="stat-number">₱{{ number_format($todaySales ?? 0, 2) }}</div><div class="stat-sub">today's transactions</div></div>
-            <div class="stats-container"><h3>Total Sales</h3><div class="stat-number">₱{{ number_format($totalSales ?? 0, 2) }}</div><div class="stat-sub">all sales (completed + pending)</div></div>
-            <div class="stats-container"><h3>Completed Sales</h3><div class="stat-number">₱{{ number_format($completedSales ?? 0, 2) }}</div><div class="stat-sub">paid & completed</div></div>
-            <div class="stats-container"><h3>Pending Sales</h3><div class="stat-number">₱{{ number_format($pendingSales ?? 0, 2) }}</div><div class="stat-sub">awaiting payment</div></div>
-            <div class="stats-container"><h3>Active Users</h3><div class="stat-number">{{ \App\Models\UserManagement::count() }}</div><div class="stat-sub">system users</div></div>
+            <div class="stats-container">
+                <h3>Total Products</h3>
+                <div class="stat-number">{{ $totalProducts ?? 0 }}</div>
+                <div class="stat-sub">{{ $lowStockProducts ?? 0 }} low stock items</div>
+            </div>
+            <div class="stats-container">
+                <h3>Sales Today</h3>
+                <div class="stat-number">₱{{ number_format($todaySales ?? 0, 2) }}</div>
+                <div class="stat-sub">today's transactions</div>
+            </div>
+            <div class="stats-container">
+                <h3>Total Sales</h3>
+                <div class="stat-number">₱{{ number_format($totalSales ?? 0, 2) }}</div>
+                <div class="stat-sub">all sales (completed + pending)</div>
+            </div>
+            <div class="stats-container">
+                <h3>Completed Sales</h3>
+                <div class="stat-number">₱{{ number_format($completedSales ?? 0, 2) }}</div>
+                <div class="stat-sub">paid & completed</div>
+            </div>
+            <div class="stats-container">
+                <h3>Pending Sales</h3>
+                <div class="stat-number">₱{{ number_format($pendingSales ?? 0, 2) }}</div>
+                <div class="stat-sub">awaiting payment</div>
+            </div>
+            <div class="stats-container">
+                <h3>Active Users</h3>
+                <div class="stat-number">{{ \App\Models\UserManagement::count() }}</div>
+                <div class="stat-sub">system users</div>
+            </div>
         </div>
 
         <div class="dashboard-row">
             <div class="sales-performance-card">
-                <div class="sales-performance-header"><i class="fas fa-chart-line"></i><h3>Sales Performance & Forecasting</h3></div>
-                <div class="sales-performance-body"><canvas id="salesPerformanceChart"></canvas></div>
+                <div class="sales-performance-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Sales Performance & Forecasting</h3>
+                </div>
+                <div class="sales-performance-body">
+                    <canvas id="salesPerformanceChart"></canvas>
+                </div>
             </div>
             <div class="stock-card">
-                <div class="stock-header"><i class="fas fa-chart-pie"></i><h3>Stock by Category</h3></div>
+                <div class="stock-header">
+                    <i class="fas fa-chart-pie"></i>
+                    <h3>Stock by Category</h3>
+                </div>
                 <div class="stock-content">
-                    <div class="pie-chart-section"><canvas id="stockChart"></canvas></div>
+                    <div class="pie-chart-section">
+                        <canvas id="stockChart"></canvas>
+                    </div>
                     <div class="categories-list" id="categoriesList"></div>
                 </div>
             </div>
@@ -1047,28 +1249,53 @@
             <div class="table-container">
                 <table class="record-table">
                     <thead>
-                        <tr><th>Date & Time</th><th>Type</th><th>Product</th><th>Category</th><th>Qty</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Type</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Qty</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody id="transactionsTableBody">
                         @forelse($recentTransactions ?? [] as $transaction)
                         <tr>
-                            <td>{{ $transaction->date ? (method_exists($transaction->date, 'format') ? $transaction->date->format('M j, Y g:i A') : $transaction->date) : 'N/A' }}</span>
-                            <td><span class="badge {{ $transaction->type == 'Sale' ? 'badge-sale' : 'badge-purchase' }}">{{ $transaction->type }}</span></span>
-                            <td>{{ $transaction->product }}</span>
-                            <td>{{ $transaction->category }}</span>
-                            <td>{{ $transaction->quantity }}</span>
-                            <td>₱{{ number_format($transaction->amount, 2) }}</span>
-                            <td>@if($transaction->status == 'pending')<span class="badge-warning">Pending</span>@elseif($transaction->status == 'completed')<span class="badge-success">Completed</span>@else<span class="badge" style="background:#f8d7da; color:#721c24;">Canceled</span>@endif</span>
+                            <td>{{ $transaction->date ? (method_exists($transaction->date, 'format') ? $transaction->date->format('M j, Y g:i A') : $transaction->date) : 'N/A' }} 
+                            </td>
+                            <td>
+                                <span class="badge {{ $transaction->type == 'Sale' ? 'badge-sale' : 'badge-purchase' }}">{{ $transaction->type }}</span>
+                            </td>
+                            <td>{{ $transaction->product }}</td>
+                            <td>{{ $transaction->category }}</td>
+                            <td>{{ $transaction->quantity }}</td>
+                            <td>₱{{ number_format($transaction->amount, 2) }}</td>
+                            <td>
+                                @if($transaction->status == 'pending')
+                                    <span class="badge-warning">Pending</span>
+                                @elseif($transaction->status == 'completed')
+                                    <span class="badge-success">Completed</span>
+                                @else
+                                    <span class="badge" style="background:#f8d7da; color:#721c24;">Canceled</span>
+                                @endif
+                            </td>
                             <td>
                                 @if($transaction->type == 'Sale')
                                     <button class="view-details-btn" data-sale-id="{{ $transaction->reference_id ?? '' }}" onclick="viewSaleDetails(this.getAttribute('data-sale-id'))">
                                         <i class="fas fa-eye"></i> View
                                     </button>
                                 @endif
-                            </span>
+                            </td>
                         </tr>
                         @empty
-                            <td><td colspan="8" style="text-align:center; padding:40px;"><i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i><p>No transactions found</p></span></tr>
+                        <tr>
+                            <td colspan="8" style="text-align:center; padding:40px;">
+                                <i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i>
+                                <p>No transactions found</p>
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -1083,7 +1310,9 @@
     <div class="modal-container" id="saleDetailsModal">
         <div class="modal">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-receipt"></i> Sale Details #<span id="sale_detail_id"></span></h2>
+                <h2><i class="fa-solid fa-receipt"></i> Sale Details #
+                    <span id="sale_detail_id"></span>
+                </h2>
             </div>
             <div class="modal-body">
                 <div class="sale-info">
@@ -1091,23 +1320,38 @@
                     <strong>Date &amp; Time:</strong> <span id="sale_date_display"></span><br>
                     <strong>Status:</strong> <span id="sale_status_display"></span>
                 </div>
-                <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span></h4>
+                <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: 
+                    <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span>
+                </h4>
                 <div style="overflow-x:auto;">
                     <table class="details-table">
                         <thead>
-                            <tr><th>#</th><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Subtotal</th></tr>
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th style="text-align:center">Qty</th>
+                                <th style="text-align:right">Unit Price</th>
+                                <th style="text-align:right">Subtotal</th>
+                            </tr>
                         </thead>
                         <tbody id="sale_items_table">
-                            <tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading…<\/td><\/tr>
+                            <tr class="spinner-row">
+                                <td colspan="5">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading…
+                                </td>
+                            </tr>
                         </tbody>
                         <tfoot>
-                            <tr><td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:<\/td>
-                            <td style="text-align:right"><strong id="sale_total">₱0.00<\/strong><\/td>
+                            <tr>
+                                <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
+                                <td style="text-align:right"><strong id="sale_total">₱0.00</strong></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
-                <button id="close_sale_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Close</button>
+                <button id="close_sale_modal" class="cancel-button">
+                    <i class="fa-solid fa-circle-xmark"></i> Close
+                </button>
             </div>
         </div>
     </div>
@@ -1437,7 +1681,6 @@ document.addEventListener('click', function(e) {
 });
 
 fetchUserNotifications();
-// Auto-refresh every 30 seconds (dashboard only needs this, harmless on others)
 setInterval(fetchUserNotifications, 30000);
     </script>
 </body>

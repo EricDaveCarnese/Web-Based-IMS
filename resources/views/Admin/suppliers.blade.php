@@ -1380,7 +1380,7 @@
                     var s = matches[i];
                     var highlightedName = s.supplier_name.replace(new RegExp('(' + query + ')', 'gi'), '<strong>$1</strong>');
                     var escapedName = s.supplier_name.replace(/'/g, "\\'");
-                    html += '<div class="autocomplete-item" onclick="selectSupplier(\'' + escapedName + '\')"><div><i class="fas fa-building"></i> ' + highlightedName + '</div></div>';
+                    html += '<div class="autocomplete-item" onclick="selectSupplier(\'' + escapedName + '\')"><div> ' + highlightedName + '</div></div>';
                 }
                 autocompleteDropdown.innerHTML = html;
                 autocompleteDropdown.classList.add('show');
@@ -1427,7 +1427,7 @@
             });
         }
         
-        // ==================== MODAL CONTROLS ====================
+        //MODAL CONTROLS 
         var open_modal = document.getElementById('open_modal');
         var modal_container = document.getElementById('modal_container');
         var close_modal = document.getElementById('close_modal');
@@ -1436,7 +1436,7 @@
         if (close_modal) close_modal.onclick = function() { modal_container.classList.remove('show'); };
         if (modal_container) modal_container.onclick = function(e) { if (e.target === modal_container) modal_container.classList.remove('show'); };
 
-        // ==================== EDIT SUPPLIER ====================
+        //EDIT SUPPLIER 
         var edit_modal_container = document.getElementById('edit_modal_container');
         var close_edit_modal = document.getElementById('close_edit_modal');
 
@@ -1454,7 +1454,7 @@
         if (close_edit_modal) close_edit_modal.onclick = function() { edit_modal_container.classList.remove('show'); };
         if (edit_modal_container) edit_modal_container.onclick = function(e) { if (e.target === edit_modal_container) edit_modal_container.classList.remove('show'); };
 
-        // ==================== NOTIFICATION DROPDOWN FUNCTIONS ====================
+        // NOTIFICATION DROPDOWN FUNCTIONS
         function showToast(message, bgColor) {
             var existing = document.querySelector('.toast-message');
             if (existing) existing.remove();
@@ -1541,14 +1541,31 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                 body: JSON.stringify({ report_id: reportId })
-            }).then(function(response) { return response.json(); }).then(function(data) {
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
                 if (data.success) {
-                    showToast('Report marked as read', '#28a745');
+                    // Remove item from bell dropdown immediately
+                    var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
+                    if (item) {
+                        item.style.opacity = '0';
+                        item.style.transition = 'opacity 0.3s ease';
+                        setTimeout(function() {
+                            item.remove();
+                            // Check if dropdown is now empty
+                            var list = document.getElementById('notificationList');
+                            if (list && list.querySelectorAll('.notification-item').length === 0) {
+                                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
+                            }
+                        }, 300);
+                    }
+                    // Refresh bell count
                     fetchNotifications();
                 } else {
-                    alert('Failed to mark as read');
+                    alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
                 }
-            }).catch(function(error) { console.error('Error:', error); alert('An error occurred'); });
+            })
+            .catch(function(error) { console.error('Error:', error); });
         }
         
         function createPurchaseOrder(productId, productName, reportId) {
@@ -1579,7 +1596,7 @@
         }
         document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
         
-        // ==================== CUSTOM PAGINATION ====================
+        //CUSTOM PAGINATION 
         function renderPagination() {
             var currentPage = parseInt(document.getElementById('currentPage').value);
             var lastPage = parseInt(document.getElementById('lastPage').value);

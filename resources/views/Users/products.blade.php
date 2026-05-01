@@ -1037,7 +1037,9 @@
 <body>
     <div class="sidebar">
         <div class="brand">
-            <div class="brand-icon"><i class="fa-solid fa-box"></i></div>
+            <div class="brand-icon">
+                <i class="fa-solid fa-box"></i>
+            </div>
             <h2 class="title">Inventory MS</h2>
         </div>
         <div class="nav-menu">
@@ -1208,7 +1210,11 @@
                             <td><span style="font-size: 13px;">{{ $product->category->category_name ?? 'N/A' }}</span></td>
                             <td><span class="price-cell">₱{{ number_format($product->price, 2) }}</span></td>
                             <td><span class="stock-quantity">{{ $product->quantity }} units</span></td>
-                            <td><span class="stock-alert"><i class="fas fa-bell"></i> {{ $product->min_stock_level }} units</span></td>
+                            <td>
+                                <span class="stock-alert">
+                                    <i class="fas fa-bell"></i> {{ $product->min_stock_level }} units
+                                </span>
+                            </td>
                             <td>
                                 <span>
                                     @if($product->quantity <= $product->min_stock_level && $product->quantity > 0)

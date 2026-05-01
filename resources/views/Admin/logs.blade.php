@@ -173,152 +173,99 @@
         }
 
         /* Notification Bell Styles */
-.notification-area {
-    position: relative;
-    display: inline-block;
-    margin-right: 15px;
-}
-.notification-bell {
-    background: linear-gradient(180deg, rgb(15, 43, 61) 0%, rgb(25, 110, 114) 100%);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
-.notification-bell:hover { transform: scale(1.05); }
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #dc3545;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.notification-dropdown {
-    position: absolute;
-    top: 50px;
-    right: 0;
-    width: 380px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    display: none;
-    z-index: 1000;
-    max-height: 500px;
-    overflow: hidden;
-}
-.notification-dropdown.show {
-    display: block;
-    animation: slideDown 0.3s ease;
-}
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.notification-header {
-    background: linear-gradient(135deg, rgb(15, 43, 61) 0%, rgb(25, 110, 114) 100%);
-    color: white;
-    padding: 12px 15px;
-    font-weight: 600;
-}
-.notification-list {
-    max-height: 350px;
-    overflow-y: auto;
-}
-.notification-item {
-    padding: 12px 15px;
-    border-bottom: 1px solid #e2e8f0;
-}
-.notification-item.unread {
-    background: #e8f5e9;
-    border-left: 3px solid #28a745;
-}
-.notification-title {
-    font-weight: 600;
-    color: #1e3a38;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-}
-.notification-message {
-    font-size: 12px;
-    color: #6c757d;
-    margin-bottom: 8px;
-}
-.notification-time {
-    font-size: 10px;
-    color: #9ca3af;
-}
-.notification-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-.btn-order {
-    background: #28a745;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 11px;
-    cursor: pointer;
-    border: none;
-}
-.btn-read {
-    background: #6c757d;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 11px;
-    cursor: pointer;
-    border: none;
-}
-.btn-edit-damage {
-    background: #fd7e14;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 11px;
-    cursor: pointer;
-    border: none;
-}
-.notification-footer {
-    padding: 10px 15px;
-    text-align: center;
-    border-top: 1px solid #e2e8f0;
-    background: #f8fafc;
-}
-.notification-footer a {
-    color: #2c6e62;
-    text-decoration: none;
-    font-size: 12px;
-}
-.no-notifications {
-    padding: 30px;
-    text-align: center;
-    color: #9ca3af;
-}
-.resolved-badge {
-    background: #28a745;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 11px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
+        .notification-area {
+            position: relative;
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .notification-bell {
+            background: linear-gradient(180deg, rgb(15, 43, 61) 0%, rgb(25, 110, 114) 100%);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .notification-bell:hover { transform: scale(1.05); }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .notification-dropdown {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 380px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            display: none;
+            z-index: 1000;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notification-header {
+            background: linear-gradient(135deg, rgb(15, 43, 61) 0%, rgb(25, 110, 114) 100%);
+            color: white;
+            padding: 12px 15px;
+            font-weight: 600;
+        }
+        .notification-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .notification-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .notification-item.unread {
+            background: #e8f5e9;
+            border-left: 3px solid #28a745;
+        }
+        .notification-title {
+            font-weight: 600;
+            color: #1e3a38;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .notification-message {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        .notification-time {
+            font-size: 10px;
+            color: #9ca3af;
+        }
+        .notification-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
         .btn-order {
             background: #28a745;
             color: white;
@@ -362,8 +309,59 @@
             text-align: center;
             color: #9ca3af;
         }
-
-        /* Logs Container */
+        .resolved-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-order {
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-read {
+            background: #6c757d;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-edit-damage {
+            background: #fd7e14;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            cursor: pointer;
+            border: none;
+        }
+        .notification-footer {
+            padding: 10px 15px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .notification-footer a {
+            color: #2c6e62;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .no-notifications {
+            padding: 30px;
+            text-align: center;
+            color: #9ca3af;
+        }
         .logs-container {
             margin: 20px 50px;
             background: white;
@@ -372,7 +370,6 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         }
 
-        /* Options Section */
         .logs-options {
             display: flex;
             justify-content: space-between;
@@ -425,7 +422,6 @@
             transform: scale(1.05);
         }
 
-        /* Autocomplete Dropdown */
         .autocomplete-dropdown {
             position: absolute;
             top: 100%;
@@ -486,7 +482,6 @@
             box-shadow: 0 0 0 3px rgba(44, 110, 98, 0.1);
         }
 
-        /* Clear Filters Button */
         .clear-btn {
             background: linear-gradient(180deg, rgb(15, 43, 61) 0%, rgb(25, 110, 114) 100%);
             border: none;
@@ -506,7 +501,6 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        /* Record Count Badge */
         .record-count {
             background: #2c6e62;
             color: white;
@@ -519,7 +513,6 @@
             gap: 8px;
         }
 
-        /* Scrollable Table Container */
         .table-wrapper { 
             overflow-x: auto; 
             max-height: 500px; 
@@ -594,18 +587,105 @@
             color: white;
         }
         
-        /* Badge Styles */
-        .badge-create { background: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-update { background: #ffc107; color: #212529; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-delete { background: #dc3545; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-login { background: #17a2b8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-logout { background: #6c757d; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-report { background: #fd7e14; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-payment { background: #20c997; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-complete { background: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-register { background: #6f42c1; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-receive { background: #0000ba; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-cancel { background: #dc3545; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-create { 
+            background: #28a745; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-update { 
+            background: #ffc107; 
+            color: #212529; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-delete { 
+            background: #dc3545; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-login { 
+            background: #17a2b8; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-logout { 
+            background: #6c757d; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-report { 
+            background: #fd7e14; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-payment { 
+            background: #20c997; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-complete { 
+            background: #28a745; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-register { 
+            background: #6f42c1; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-receive { 
+            background: #0000ba; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .badge-cancel { 
+            background: #dc3545; 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
 
         /* Pagination */
         .custom-pagination {
@@ -650,8 +730,14 @@
             cursor: default;
         }
         @media (max-width: 640px) {
-            .custom-pagination { gap: 4px; }
-            .custom-pagination a, .custom-pagination span { min-width: 28px; height: 28px; font-size: 12px; }
+            .custom-pagination { 
+                gap: 4px; 
+            }
+            .custom-pagination a, .custom-pagination span { 
+                min-width: 28px; 
+                height: 28px; 
+                font-size: 12px; 
+            }
         }
 
         .no-results {
@@ -662,68 +748,224 @@
 
         /* Responsive Design */
         @media (max-width: 1200px) {
-            .logs-container { margin: 20px 30px; }
+            .logs-container { 
+                margin: 20px 30px; 
+            }
         }
         @media (max-width: 1000px) {
-            .sidebar { width: 90px; padding: 1rem 0.5rem; }
-            .brand h2, .nav-menu button span { display: none; }
-            .main-content { margin-left: 90px; }
-            .brand { justify-content: center; }
-            .nav-menu button { justify-content: center; padding: 10px; }
-            .page-title { margin-left: 20px; }
-            .page-title h1 { font-size: 1.3rem; }
+            .sidebar { 
+                width: 90px; 
+                padding: 1rem 0.5rem; 
+            }
+            .brand h2, .nav-menu button span { 
+                display: none; 
+            }
+            .main-content { 
+                margin-left: 90px; 
+            }
+            .brand { 
+                justify-content: center; 
+            }
+            .nav-menu button { 
+                justify-content: center; 
+                padding: 10px; 
+            }
+            .page-title { 
+                margin-left: 20px; 
+            }
+            .page-title h1 { 
+                font-size: 1.3rem; 
+            }
         }
         @media (max-width: 860px) {
-            .logs-container { margin: 20px; }
-            .logs-options { flex-direction: column; align-items: stretch; }
-            .search-container { max-width: 100%; }
-            .filter-container { justify-content: space-between; }
-            .filter-dropdown { flex: 1; }
-            .clear-btn { width: 100%; justify-content: center; }
-            .log-table th, .log-table td { font-size: 12px; padding: 8px; }
-            .topheader { padding: 15px; }
-            .page-title { margin-left: 15px; }
-            .user-menu { margin-right: 15px; }
+            .logs-container { 
+                margin: 20px; 
+            }
+            .logs-options { 
+                flex-direction: column; 
+                align-items: stretch; 
+            }
+            .search-container { 
+                max-width: 100%; 
+            }
+            .filter-container { 
+                justify-content: space-between; 
+            }
+            .filter-dropdown { 
+                flex: 1; 
+            }
+            .clear-btn { 
+                width: 100%; 
+                justify-content: center; 
+            }
+            .log-table th, .log-table td { 
+                font-size: 12px; 
+                padding: 8px; 
+            }
+            .topheader { 
+                padding: 15px; 
+            }
+            .page-title { 
+                margin-left: 15px; 
+            }
+            .user-menu { 
+                margin-right: 15px; 
+            }
         }
         @media (max-width: 768px) {
-            .sidebar { width: 70px; padding: 1rem 0.3rem; }
-            .main-content { margin-left: 70px; }
-            .brand-icon { width: 35px; height: 35px; font-size: 18px; }
-            .nav-menu button { font-size: 14px; padding: 8px; }
-            .page-title h1 { font-size: 1.2rem; }
-            .page-title p { font-size: 11px; }
+            .sidebar { 
+                width: 70px; 
+                padding: 1rem 0.3rem; 
+            }
+            .main-content { 
+                margin-left: 70px; 
+            }
+            .brand-icon { 
+                width: 35px; 
+                height: 35px; 
+                font-size: 18px; 
+            }
+            .nav-menu button { 
+                font-size: 14px; 
+                padding: 8px; 
+            }
+            .page-title h1 { 
+                font-size: 1.2rem; 
+            }
+            .page-title p { 
+                font-size: 11px; 
+            }
         }
         @media (max-width: 480px) {
-            .logs-container { margin: 15px; padding: 0.8rem; }
-            .log-table th, .log-table td { font-size: 10px; padding: 6px; }
-            .badge-create, .badge-update, .badge-delete, .badge-login, .badge-logout, .badge-report { font-size: 9px; padding: 2px 6px; }
-            .pagination a, .pagination span { padding: 5px 8px; font-size: 11px; }
-            .filter-container { flex-direction: column; }
-            .filter-dropdown { width: 100%; }
-            .topheader { padding: 10px; }
-            .user-menu { gap: 10px; }
-            .logout-btn { padding: 8px 16px; font-size: 12px; }
-            .user-menu-container a { padding-inline-start: 10px; padding-inline-end: 10px; font-size: 12px; }
+            .logs-container { 
+                margin: 15px; 
+                padding: 0.8rem; 
+            }
+            .log-table th, .log-table td { 
+                font-size: 10px; 
+                padding: 6px; 
+            }
+            .badge-create, .badge-update, .badge-delete, .badge-login, .badge-logout, .badge-report { 
+                font-size: 9px; 
+                padding: 2px 6px; 
+            }
+            .pagination a, .pagination span { 
+                padding: 5px 8px; 
+                font-size: 11px; 
+            }
+            .filter-container { 
+                flex-direction: column; 
+            }
+            .filter-dropdown { 
+                width: 100%; 
+            }
+            .topheader { 
+                padding: 10px; 
+            }
+            .user-menu { 
+                gap: 10px; 
+            }
+            .logout-btn { 
+                padding: 8px 16px; 
+                font-size: 12px; 
+            }
+            .user-menu-container a { 
+                padding-inline-start: 10px; 
+                padding-inline-end: 10px; 
+                font-size: 12px; 
+            }
         }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="brand">
-            <div class="brand-icon"><i class="fa-solid fa-box"></i></div>
+            <div class="brand-icon">
+                <i class="fa-solid fa-box"></i>
+            </div>
             <div><h2 class="title">Inventory MS</h2></div>
         </div>
         <div class="nav-menu">
-            <form action="{{ route('admin.dashboard')}}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-chart-column"></i><span>Dashboard</span></button></div></form>
-            <form action="{{ route('admin.products') }}" method="GET"><div class="nav-item"><button><i class="fas fa-cubes"></i><span>Products</span></button></div></form>
-            <form action="{{ route('admin.categories') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-folder-open"></i><span>Categories</span></button></div></form>
-            <form action="{{ route('admin.suppliers') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-warehouse"></i><span>Suppliers</span></button></div></form>
-            <form action="{{ route('admin.sales') }}" method="GET"><div class="nav-item"><button><i class="fas fa-chart-line"></i><span>Sales</span></button></div></form>
-            <form action="{{ route('admin.purchases') }}" method="GET"><div class="nav-item"><button><i class="fas fa-shopping-cart"></i><span>Purchases</span></button></div></form>
-            <form action="{{ route('admin.reports') }}" method="GET"><div class="nav-item"><button><i class="fas fa-file-alt"></i><span>Reports</span></button></div></form>
-            <form action="{{ route('admin.users') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-users"></i><span>Users</span></button></div></form>
-            <form action="{{ route('admin.logs') }}" method="GET"><div class="nav-item active"><button><i class="fa-solid fa-file-lines"></i><span>Log</span></button></div></form>
-            <form action="{{ route('admin.stock.reports') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-triangle-exclamation"></i><span>Stock Reports</span></button></div></form>
+            <form action="{{ route('admin.dashboard')}}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-chart-column"></i>
+                        <span>Dashboard</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.products') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fas fa-cubes"></i>
+                        <span>Products</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.categories') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-folder-open"></i>
+                        <span>Categories</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.suppliers') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-warehouse"></i>
+                        <span>Suppliers</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.sales') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fas fa-chart-line"></i>
+                        <span>Sales</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.purchases') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Purchases</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.reports') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fas fa-file-alt"></i>
+                        <span>Reports</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.users') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-users"></i>
+                        <span>Users</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.logs') }}" method="GET">
+                <div class="nav-item active">
+                    <button>
+                        <i class="fa-solid fa-file-lines"></i>
+                        <span>Log</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('admin.stock.reports') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Stock Reports</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -739,21 +981,38 @@
                         ->where('notify_users', false)
                         ->count(); 
                 @endphp
-<div class="notification-area">
-    <button class="notification-bell" id="notificationBell">
-        <i class="fas fa-bell"></i>
-        @if($pendingStockReportsCount > 0)
-            <span class="notification-badge">{{ $pendingStockReportsCount }}</span>
-        @endif
-    </button>
-    <div class="notification-dropdown" id="notificationDropdown">
-        <div class="notification-header"><i class="fas fa-exclamation-triangle"></i> Stock Alerts</div>
-        <div class="notification-list" id="notificationList"><div class="loading-notifications">Loading...</div></div>
-        <div class="notification-footer"><a href="{{ route('admin.stock.reports') }}">View All Reports</a></div>
-    </div>
-</div>
-                <div class="user-menu-container"><a href="#"><i class="fa-solid fa-user"></i><strong>{{ Auth::user()->fullname }}</strong></a></div>
-                <form action="{{ route('logout')}}" method="POST">@csrf<button type="submit" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></button></form>
+                <div class="notification-area">
+                    <button class="notification-bell" id="notificationBell">
+                        <i class="fas fa-bell"></i>
+                        @if($pendingStockReportsCount > 0)
+                            <span class="notification-badge">{{ $pendingStockReportsCount }}</span>
+                        @endif
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <i class="fas fa-exclamation-triangle"></i> Stock Alerts
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="loading-notifications">Loading...</div>
+                        </div>
+                        <div class="notification-footer">
+                            <a href="{{ route('admin.stock.reports') }}">View All Reports</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-menu-container">
+                    <a href="#">
+                        <i class="fa-solid fa-user"></i>
+                        <strong>{{ Auth::user()->fullname }}</strong>
+                    </a>
+                </div>
+                <form action="{{ route('logout')}}" method="POST">
+                    @csrf
+                    <button type="submit" class="logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -761,36 +1020,38 @@
             <div class="search-container">
                 <div class="search-wrapper">
                     <input type="text" id="searchLog" class="search-input" placeholder="Search by user, description, or IP address..." autocomplete="off" value="{{ request('search') }}">
-                    <button class="search-btn" onclick="applyFilters()"><i class="fas fa-search"></i></button>
+                    <button class="search-btn" onclick="applyFilters()">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
                 <div id="autocompleteDropdown" class="autocomplete-dropdown"></div>
             </div>
             <div class="filter-container">
                 <select id="moduleFilter" class="filter-dropdown">
-                    <option value="all" {{ request('module') == 'all' || !request('module') ? 'selected' : '' }}>📁 All Modules</option>
-                    <option value="product" {{ request('module') == 'product' ? 'selected' : '' }}>📦 Products</option>
-                    <option value="category" {{ request('module') == 'category' ? 'selected' : '' }}>📂 Categories</option>
-                    <option value="supplier" {{ request('module') == 'supplier' ? 'selected' : '' }}>🏭 Suppliers</option>
-                    <option value="sale" {{ request('module') == 'sale' ? 'selected' : '' }}>💰 Sales</option>
-                    <option value="purchase" {{ request('module') == 'purchase' ? 'selected' : '' }}>🛒 Purchases</option>
-                    <option value="user" {{ request('module') == 'user' ? 'selected' : '' }}>👥 Users</option>
-                    <option value="stock" {{ request('module') == 'stock' ? 'selected' : '' }}>⚠️ Stock Reports</option>
-                    <option value="auth" {{ request('module') == 'auth' ? 'selected' : '' }}>🔐 Authentication</option>
-                    <option value="batch_order" {{ request('module') == 'batch_order' ? 'selected' : '' }}>📦 Batch Orders</option>
+                    <option value="all" {{ request('module') == 'all' || !request('module') ? 'selected' : '' }}>All Modules</option>
+                    <option value="product" {{ request('module') == 'product' ? 'selected' : '' }}>Products</option>
+                    <option value="category" {{ request('module') == 'category' ? 'selected' : '' }}>Categories</option>
+                    <option value="supplier" {{ request('module') == 'supplier' ? 'selected' : '' }}>Suppliers</option>
+                    <option value="sale" {{ request('module') == 'sale' ? 'selected' : '' }}>Sales</option>
+                    <option value="purchase" {{ request('module') == 'purchase' ? 'selected' : '' }}>Purchases</option>
+                    <option value="user" {{ request('module') == 'user' ? 'selected' : '' }}>Users</option>
+                    <option value="stock" {{ request('module') == 'stock' ? 'selected' : '' }}>Stock Reports</option>
+                    <option value="auth" {{ request('module') == 'auth' ? 'selected' : '' }}>Authentication</option>
+                    <option value="batch_order" {{ request('module') == 'batch_order' ? 'selected' : '' }}>Batch Orders</option>
                 </select>
                 <select id="actionFilter" class="filter-dropdown">
-                    <option value="all" {{ request('action') == 'all' || !request('action') ? 'selected' : '' }}>🎯 All Actions</option>
-                    <option value="create" {{ request('action') == 'create' ? 'selected' : '' }}>📝 Create</option>
-                    <option value="update" {{ request('action') == 'update' ? 'selected' : '' }}>✏️ Update</option>
-                    <option value="delete" {{ request('action') == 'delete' ? 'selected' : '' }}>🗑️ Delete</option>
-                    <option value="login" {{ request('action') == 'login' ? 'selected' : '' }}>🔓 Login</option>
-                    <option value="logout" {{ request('action') == 'logout' ? 'selected' : '' }}>🔒 Logout</option>
-                    <option value="register" {{ request('action') == 'register' ? 'selected' : '' }}>📝 Register</option>
-                    <option value="report" {{ request('action') == 'report' ? 'selected' : '' }}>⚠️ Report</option>
-                    <option value="payment" {{ request('action') == 'payment' ? 'selected' : '' }}>💳 Payment</option>
-                    <option value="complete" {{ request('action') == 'complete' ? 'selected' : '' }}>✅ Complete</option>
-                    <option value="cancel" {{ request('action') == 'cancel' ? 'selected' : '' }}>❌ Cancel</option>
-                    <option value="receive" {{ request('action') == 'receive' ? 'selected' : '' }}>📦 Receive</option>
+                    <option value="all" {{ request('action') == 'all' || !request('action') ? 'selected' : '' }}>All Actions</option>
+                    <option value="create" {{ request('action') == 'create' ? 'selected' : '' }}>Create</option>
+                    <option value="update" {{ request('action') == 'update' ? 'selected' : '' }}>Update</option>
+                    <option value="delete" {{ request('action') == 'delete' ? 'selected' : '' }}>Delete</option>
+                    <option value="login" {{ request('action') == 'login' ? 'selected' : '' }}>Login</option>
+                    <option value="logout" {{ request('action') == 'logout' ? 'selected' : '' }}>Logout</option>
+                    <option value="register" {{ request('action') == 'register' ? 'selected' : '' }}>Register</option>
+                    <option value="report" {{ request('action') == 'report' ? 'selected' : '' }}>Report</option>
+                    <option value="payment" {{ request('action') == 'payment' ? 'selected' : '' }}>Payment</option>
+                    <option value="complete" {{ request('action') == 'complete' ? 'selected' : '' }}>Complete</option>
+                    <option value="cancel" {{ request('action') == 'cancel' ? 'selected' : '' }}>Cancel</option>
+                    <option value="receive" {{ request('action') == 'receive' ? 'selected' : '' }}>Receive</option>
                 </select>
                 <div class="recordcount">
                     <span class="count">Total Record: </span>
@@ -804,7 +1065,13 @@
             <div class="table-wrapper">
                 <table class="log-table">
                     <thead>
-                        <tr><th>Date & Time</th><th>User</th><th>Action</th><th>Module</th><th>Description</th><th>IP Address</th></tr>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Module</th>
+                            <th>Description</th>
+                        </tr>
                     </thead>
                     <tbody id="logsTableBody">
                         @forelse($logs as $log)
@@ -814,10 +1081,14 @@
                             <td><span class="badge-{{ $log->action }}">{{ ucfirst($log->action) }}</span></td>
                             <td>{{ ucfirst($log->module) }}</td>
                             <td>{{ $log->description }}</td>
-                            <td>{{ $log->ip_address }}</td>
                         </tr>
                         @empty
-                            <tr><td colspan="6" class="no-results"><i class="fas fa-history" style="font-size: 48px; color: #ccc;"></i><p>No activity logs found</p></span></tr>
+                            <tr>
+                                <td colspan="6" class="no-results">
+                                    <i class="fas fa-history" style="font-size: 48px; color: #ccc;"></i>
+                                    <p>No activity logs found</p>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -832,7 +1103,7 @@
     <div id="suggestionData" style="display:none;" data-suggestions='@json(array_unique(array_merge(\App\Models\Product::pluck("product_name")->toArray(), \App\Models\StockReport::distinct()->pluck("user_name")->toArray())))'></div>
 
     <script>
-    // ==================== AUTOCOMPLETE DATA ====================
+    //AUTOCOMPLETE DATA 
     const logDataElement = document.getElementById('logData');
     let allLogs = [];
     
@@ -859,7 +1130,6 @@
         searchSuggestions = ['Admin User', 'Jamaica', 'Eric Dave', 'Product created', 'Sale recorded', '127.0.0.1'];
     }
     
-    // ==================== ESCAPE HTML ====================
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -867,7 +1137,7 @@
         return div.innerHTML;
     }
     
-    // ==================== TOAST MESSAGE ====================
+    // TOAST MESSAGE 
     function showToast(message, bgColor) {
         var existing = document.querySelector('.toast-message');
         if (existing) existing.remove();
@@ -879,7 +1149,7 @@
         setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
     }
     
-    // ==================== AUTOCOMPLETE FUNCTIONALITY ====================
+    // AUTOCOMPLETE FUNCTIONALITY 
     const searchInput = document.getElementById('searchLog');
     const autocompleteDropdown = document.getElementById('autocompleteDropdown');
     let searchTimeout;
@@ -927,7 +1197,7 @@
         });
     }
     
-    // ==================== APPLY FILTERS ====================
+    // APPLY FILTERS
     function applyFilters() {
         const searchTerm = document.getElementById('searchLog').value;
         const moduleValue = document.getElementById('moduleFilter').value;
@@ -954,7 +1224,7 @@
         if (actionFilter) actionFilter.addEventListener('change', applyFilters);
     });
     
-    // ==================== NOTIFICATION DROPDOWN FUNCTIONS ====================
+    // NOTIFICATION DROPDOWN FUNCTIONS
     function fetchNotifications() {
         fetch('/admin/stock-reports/notifications', {
             method: 'GET',
@@ -1026,20 +1296,35 @@
     }
     
     function markAsRead(reportId) {
-        if (confirm('Mark this report as read?')) {
-            fetch('{{ route("admin.stock.report.read") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ report_id: reportId })
-            }).then(function(response) { return response.json(); }).then(function(data) {
-                if (data.success) {
-                    showToast('Report marked as read', '#28a745');
-                    fetchNotifications();
-                } else {
-                    alert('Failed to mark as read');
+        fetch('{{ route("admin.stock.report.read") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ report_id: reportId })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // Remove item from bell dropdown immediately
+                var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transition = 'opacity 0.3s ease';
+                    setTimeout(function() {
+                        item.remove();
+                        // Check if dropdown is now empty
+                        var list = document.getElementById('notificationList');
+                        if (list && list.querySelectorAll('.notification-item').length === 0) {
+                            list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
+                        }
+                    }, 300);
                 }
-            }).catch(function(error) { console.error('Error:', error); alert('An error occurred'); });
-        }
+                // Refresh bell count
+                fetchNotifications();
+            } else {
+                alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(function(error) { console.error('Error:', error); });
     }
     
     function createPurchaseOrder(productId, productName, reportId) {
@@ -1058,7 +1343,7 @@
         }
     }
     
-    // ==================== NOTIFICATION BELL TOGGLE ====================
+    //NOTIFICATION BELL TOGGLE 
     const bell = document.getElementById('notificationBell');
     const dropdown = document.getElementById('notificationDropdown');
     if (bell) {
@@ -1070,7 +1355,7 @@
     }
     document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
     
-    // ==================== CUSTOM PAGINATION ====================
+    //CUSTOM PAGINATION
     function renderPagination() {
         const currentPage = parseInt(document.getElementById('currentPage').value);
         const lastPage = parseInt(document.getElementById('lastPage').value);
@@ -1112,7 +1397,7 @@
         });
     }
     
-    // ==================== MAKE FUNCTIONS GLOBAL ====================
+    //MAKE FUNCTIONS GLOBAL
     window.clearFilters = clearFilters;
     window.applyFilters = applyFilters;
     window.markAsRead = markAsRead;
@@ -1120,7 +1405,7 @@
     window.editProductAndReduceStock = editProductAndReduceStock;
     window.selectSuggestion = selectSuggestion;
     
-    // ==================== INITIALIZE ====================
+    // INITIALIZE 
     document.addEventListener('DOMContentLoaded', function() {
         renderPagination();
         fetchNotifications();

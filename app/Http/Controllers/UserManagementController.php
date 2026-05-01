@@ -26,13 +26,11 @@ class UserManagementController extends Controller
         return view('landing');
     }
     
-    // Check if user is admin (fixed method - should be instance method, not property access)
     public function isAdmin()
     {
         return $this->role === 'admin';
     }
     
-    // Register new user
     public function register(Request $request)
 {
     $validator = Validator::make($request->all(), [
@@ -64,7 +62,6 @@ class UserManagementController extends Controller
         'ip_address' => $request->ip(),
     ]);
 
-    // Auto-login and redirect to correct dashboard
     Auth::login($user);
 
     if ($user->role === 'admin') {
@@ -76,10 +73,8 @@ class UserManagementController extends Controller
         ->with('success', 'Welcome ' . $user->fullname . '! Account created successfully.');
 }
 
-    // Login user with proper role-based redirection
     public function login(Request $request)
     {
-        // If already logged in, redirect to appropriate dashboard
         if (Auth::check()) {
             $user = Auth::user();
             if ($user->role === 'admin') {
@@ -109,7 +104,6 @@ class UserManagementController extends Controller
 
         Auth::login($user);
 
-        // Log login activity
         ActivityLog::create([
             'user_id'     => Auth::id(),
             'user_name'   => Auth::user()->fullname,
@@ -119,7 +113,6 @@ class UserManagementController extends Controller
             'ip_address'  => $request->ip(),
         ]);
 
-        // ROLE-BASED REDIRECTION - This is the key part
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard')
                 ->with('success', 'Welcome Admin ' . $user->fullname . '!');
@@ -129,10 +122,8 @@ class UserManagementController extends Controller
         }
     }
 
-    // Logout user
     public function logout(Request $request)
     {
-        // Log BEFORE logging out so Auth::user() still works
         if (Auth::check()) {
             ActivityLog::create([
                 'user_id'     => Auth::id(),

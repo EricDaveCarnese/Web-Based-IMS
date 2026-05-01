@@ -581,61 +581,176 @@
 
         /* Responsive */
         @media (max-width: 1200px) {
-            .notifications-container, .options { margin: 20px 30px; }
-            .alert-success, .alert-error { margin: 20px 30px; }
+            .notifications-container, .options { 
+                margin: 20px 30px; 
+            }
+            .alert-success, .alert-error { 
+                margin: 20px 30px; 
+            }
         }
         @media (max-width: 1000px) {
-            .sidebar { width: 90px; padding: 1rem 0.5rem; }
-            .brand h2, .nav-menu button span { display: none; }
-            .main-content { margin-left: 90px; }
-            .page-title { margin-left: 20px; }
-            .page-title h1 { font-size: 1.3rem; }
+            .sidebar { 
+                width: 90px; 
+                padding: 1rem 0.5rem; 
+            }
+            .brand h2, .nav-menu button span { 
+                display: none; 
+            }
+            .main-content { 
+                margin-left: 90px; 
+            }
+            .page-title { 
+                margin-left: 20px; 
+            }
+            .page-title h1 { 
+                font-size: 1.3rem; 
+            }
         }
         @media (max-width: 860px) {
-            .notifications-container, .options { margin: 20px; padding: 1rem; }
-            .options { flex-direction: column; align-items: stretch; }
-            .filter-container { justify-content: space-between; }
-            .filter-dropdown { flex: 1; }
-            .table-container { max-height: 400px; }
-            .topheader { padding: 15px; }
-            .page-title { margin-left: 15px; }
-            .user-menu { margin-right: 15px; }
-            .report-table th, .report-table td { padding: 10px 8px; font-size: 0.8rem; }
+            .notifications-container, .options { 
+                margin: 20px; 
+                padding: 1rem; 
+            }
+            .options { 
+                flex-direction: column; 
+                align-items: stretch; 
+            }
+            .filter-container { 
+                justify-content: space-between; 
+            }
+            .filter-dropdown { 
+                flex: 1; 
+            }
+            .table-container { 
+                max-height: 400px; 
+            }
+            .topheader { 
+                padding: 15px; 
+            }
+            .page-title { 
+                margin-left: 15px; 
+            }
+            .user-menu { 
+                margin-right: 15px; 
+            }
+            .report-table th, .report-table td { 
+                padding: 10px 8px; 
+                font-size: 0.8rem; 
+            }
         }
         @media (max-width: 768px) {
-            .sidebar { width: 70px; padding: 1rem 0.3rem; }
-            .main-content { margin-left: 70px; }
-            .brand-icon { width: 35px; height: 35px; font-size: 18px; }
-            .nav-menu button { font-size: 14px; padding: 8px; }
-            .page-title h1 { font-size: 1.2rem; }
+            .sidebar { 
+                width: 70px; 
+                padding: 1rem 0.3rem; 
+            }
+            .main-content { 
+                margin-left: 70px; 
+            }
+            .brand-icon { 
+                width: 35px; 
+                height: 35px; 
+                font-size: 18px; 
+            }
+            .nav-menu button { 
+                font-size: 14px; 
+                padding: 8px; 
+            }
+            .page-title h1 { 
+                font-size: 1.2rem; 
+            }
         }
         @media (max-width: 480px) {
-            .notifications-container, .options { margin: 15px; padding: 0.8rem; }
-            .alert-success, .alert-error { margin: 15px; padding: 10px 35px 10px 15px; font-size: 13px; }
-            .filter-container { flex-direction: column; }
-            .filter-dropdown { width: 100%; }
-            .report-table th, .report-table td { font-size: 0.7rem; padding: 8px 6px; }
-            .status-pending, .status-read, .status-ordered, .po-pending, .po-completed, .po-none { font-size: 9px; padding: 2px 6px; }
-            .btn-mark-read { padding: 4px 10px; font-size: 10px; }
-            .custom-pagination a, .custom-pagination span { min-width: 28px; height: 28px; font-size: 12px; }
-            .topheader { padding: 10px; }
-            .user-menu { gap: 10px; }
-            .logout-btn { padding: 8px 16px; font-size: 12px; }
+            .notifications-container, .options { 
+                margin: 15px; 
+                padding: 0.8rem; 
+            }
+            .alert-success, .alert-error { 
+                margin: 15px; 
+                padding: 10px 35px 10px 15px; 
+                font-size: 13px; 
+            }
+            .filter-container { 
+                flex-direction: column; 
+            }
+            .filter-dropdown { 
+                width: 100%; 
+            }
+            .report-table th, .report-table td { 
+                font-size: 0.7rem; 
+                padding: 8px 6px; 
+            }
+            .status-pending, .status-read, .status-ordered, .po-pending, .po-completed, .po-none { 
+                font-size: 9px; 
+                padding: 2px 6px; 
+            }
+            .btn-mark-read { 
+                padding: 4px 10px; 
+                font-size: 10px; 
+            }
+            .custom-pagination a, .custom-pagination span { 
+                min-width: 28px; 
+                height: 28px; 
+                font-size: 12px; 
+            }
+            .topheader { 
+                padding: 10px; 
+            }
+            .user-menu { 
+                gap: 10px;
+             }
+            .logout-btn { 
+                padding: 8px 16px; 
+                font-size: 12px; 
+            }
         }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="brand">
-            <div class="brand-icon"><i class="fa-solid fa-box"></i></div>
+            <div class="brand-icon">
+                <i class="fa-solid fa-box"></i>
+            </div>
             <div><h2 class="title">Inventory MS</h2></div>
         </div>
         <div class="nav-menu">
-            <form action="{{ route('user.dashboard')}}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-chart-column"></i><span>Dashboard</span></button></div></form>
-            <form action="{{ route('user.products') }}" method="GET"><div class="nav-item"><button><i class="fas fa-cubes"></i><span>Products</span></button></div></form>
-            <form action="{{ route('user.sales') }}" method="GET"><div class="nav-item"><button><i class="fas fa-chart-line"></i><span>Sales</span></button></div></form>
-            <form action="{{ route('user.purchases') }}" method="GET"><div class="nav-item"><button><i class="fas fa-shopping-cart"></i><span>Purchases</span></button></div></form>
-            <form action="{{ route('user.notifications') }}" method="GET"><div class="nav-item active"><button><i class="fa-solid fa-bell"></i><span>Notifications</span></button></div></form>
+            <form action="{{ route('user.dashboard')}}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fa-solid fa-chart-column"></i>
+                        <span>Dashboard</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('user.products') }}" method="GET">
+                <div class="nav-item">
+                    <button>
+                        <i class="fas fa-cubes"></i>
+                        <span>Products</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('user.sales') }}" method="GET">
+                <div class="nav-item">
+                    <button><i class="fas fa-chart-line"></i>
+                        <span>Sales</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('user.purchases') }}" method="GET">
+                <div class="nav-item">
+                    <button><i class="fas fa-shopping-cart"></i>
+                        <span>Purchases</span>
+                    </button>
+                </div>
+            </form>
+            <form action="{{ route('user.notifications') }}" method="GET">
+                <div class="nav-item active">
+                    <button><i class="fa-solid fa-bell"></i>
+                        <span>Notifications</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -675,7 +790,10 @@
                     </div>
                 </div>
                 <div class="user-menu-container">
-                    <a href="#"><i class="fa-solid fa-user"></i><strong>{{ Auth::user()->fullname }}</strong></a>
+                    <a href="#">
+                        <i class="fa-solid fa-user"></i>
+                        <strong>{{ Auth::user()->fullname }}</strong>
+                    </a>
                 </div>
                 <form action="{{ route('logout')}}" method="POST">
                     @csrf
@@ -705,10 +823,10 @@
         <div class="options">
             <div class="filter-container">
                 <select id="statusFilter" class="filter-dropdown">
-                    <option value="all" {{ request('status') == 'all' || !request('status') ? 'selected' : '' }}>📋 All Status</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>⏳ Unread</option>
-                    <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>👁️ Read</option>
-                    <option value="ordered" {{ request('status') == 'ordered' ? 'selected' : '' }}>✅ Acknowledged</option>
+                    <option value="all" {{ request('status') == 'all' || !request('status') ? 'selected' : '' }}>All Status</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Unread</option>
+                    <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>Read</option>
+                    <option value="ordered" {{ request('status') == 'ordered' ? 'selected' : '' }}>Acknowledged</option>
                 </select>
             </div>
             <div class="recordcount">
@@ -747,7 +865,7 @@
                                 <td style="font-size: 12px;">{{ $notification->created_at->format('M j, Y g:i A') }}</td>
                                 <td>
                                     <span style="font-size: 14px; font-weight: 500;">{{ $notification->product_name }}</span>
-                                </span>
+                                </td>
                                 <td>
                                     <span class="report-text">
                                         Current stock: 
@@ -755,7 +873,7 @@
                                         Minimum required: 
                                         <span style="font-weight: 500; color: rgb(248, 139, 6);">{{ $notification->min_stock_level }} units.</span>
                                     </span>
-                                </span>
+                                </td>
                                 <td>
                                     @if($poStatus)
                                         @if($poStatus == 'completed')
@@ -768,7 +886,7 @@
                                     @else
                                         <span class="po-none"><i class="fas fa-minus-circle"></i> No PO Yet</span>
                                     @endif
-                                </span>
+                                </td>
                                 <td>
                                     @if($notification->status == 'pending')
                                         <span class="status-pending"><i class="fas fa-clock"></i> Unread</span>
@@ -777,7 +895,7 @@
                                     @else
                                         <span class="status-ordered"><i class="fas fa-check-circle"></i> Acknowledged</span>
                                     @endif
-                                </span>
+                                </td>
                                 <td>
                                     <div class="action-buttons">
                                         @if($notification->status == 'pending')
@@ -788,7 +906,7 @@
                                             <span class="ordered-text"><i class="fas fa-check-double"></i> Acknowledged</span>
                                         @endif
                                     </div>
-                                </span>
+                                </td>
                             </tr>
                         @empty
                             <tr>

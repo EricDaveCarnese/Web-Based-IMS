@@ -897,66 +897,217 @@
         
         /* Responsive */
         @media (max-width: 1200px) {
-            .stats { margin: 20px 30px; gap: 20px; }
-            .dashboard-row { margin: 0 30px 20px 30px; }
-            .report-table-container, .alert-card, .report-filter-bar { margin-left: 30px; margin-right: 30px; }
+            .stats { 
+                margin: 20px 30px; 
+                gap: 20px; 
+            }
+            .dashboard-row { 
+                margin: 0 30px 20px 30px; 
+            }
+            .report-table-container, .alert-card, .report-filter-bar { 
+                margin-left: 30px; 
+                margin-right: 30px; 
+            }
         }
         @media (max-width: 1000px) {
-            .sidebar { width: 90px; padding: 1rem 0.5rem; }
-            .brand h2, .nav-menu button span { display: none; }
-            .main-content { margin-left: 90px; }
+            .sidebar { 
+                width: 90px; 
+                padding: 1rem 0.5rem; 
+            }
+            .brand h2, .nav-menu button span { 
+                display: none; 
+            }
+            .main-content { 
+                margin-left: 90px; 
+            }
         }
         @media (max-width: 860px) {
-            .stats { margin: 20px 20px; flex-direction: column; }
-            .dashboard-row { margin: 0 20px 20px 20px; flex-direction: column; }
-            .report-table-container, .alert-card, .report-filter-bar { margin-left: 20px; margin-right: 20px; }
-            .sales-performance-body { height: 280px; }
-            .stock-content { flex-direction: column; }
-            .pie-chart-section { width: 200px; height: 200px; }
-            .categories-list { max-height: 200px; width: 100%; }
-            .table-wrapper { max-height: 350px; }
+            .stats { 
+                margin: 20px 20px; 
+                flex-direction: column;
+            }
+            .dashboard-row { 
+                margin: 0 20px 20px 20px; 
+                flex-direction: column; 
+            }
+            .report-table-container, .alert-card, .report-filter-bar { 
+                margin-left: 20px; 
+                margin-right: 20px; 
+            }
+            .sales-performance-body { 
+                height: 280px; 
+            }
+            .stock-content { 
+                flex-direction: column; 
+            }
+            .pie-chart-section { 
+                width: 200px; 
+                height: 200px; 
+            }
+            .categories-list { 
+                max-height: 200px; 
+                width: 100%; 
+            }
+            .table-wrapper { 
+                max-height: 350px; 
+            }
         }
         @media (max-width: 768px) {
-            .sidebar { width: 70px; }
-            .main-content { margin-left: 70px; }
-            .stat-value { font-size: 24px; }
-            .report-filter-bar { padding: 15px 20px; }
-            .filter-group input, .filter-group select { min-width: 100%; }
-            .btn-generate { width: 100%; justify-content: center; }
-            .table-header { flex-direction: column; align-items: flex-start; }
-            .search-filter-bar { width: 100%; }
-            .table-wrapper { max-height: 300px; }
+            .sidebar { 
+                width: 70px; 
+            }
+            .main-content { 
+                margin-left: 70px; 
+            }
+            .stat-value { 
+                font-size: 24px; 
+            }
+            .report-filter-bar { 
+                padding: 15px 20px; 
+            }
+            .filter-group input, .filter-group select { 
+                min-width: 100%; 
+            }
+            .btn-generate { 
+                width: 100%; 
+                justify-content: center; 
+            }
+            .table-header { 
+                flex-direction: column; 
+                align-items: flex-start; 
+            }
+            .search-filter-bar { 
+                width: 100%; 
+            }
+            .table-wrapper { 
+                max-height: 300px; 
+            }
         }
         @media (max-width: 480px) {
-            .stats { margin: 15px 15px; }
-            .dashboard-row { margin: 0 15px 15px 15px; }
-            .report-table-container, .alert-card, .report-filter-bar { margin-left: 15px; margin-right: 15px; padding: 1rem; }
-            .sales-performance-body { height: 220px; }
-            .pie-chart-section { width: 160px; height: 160px; }
-            .data-table th, .data-table td { padding: 8px 6px; font-size: 0.7rem; }
-            .badge { padding: 2px 8px; font-size: 0.6rem; }
-            .stat-value { font-size: 20px; }
-            .table-wrapper { max-height: 250px; }
+            .stats { 
+                margin: 15px 15px; 
+            }
+            .dashboard-row { 
+                margin: 0 15px 15px 15px; 
+            }
+            .report-table-container, .alert-card, .report-filter-bar { 
+                margin-left: 15px; 
+                margin-right: 15px; 
+                padding: 1rem; 
+            }
+            .sales-performance-body { 
+                height: 220px; 
+            }
+            .pie-chart-section { 
+                width: 160px;
+                height: 160px; 
+            }
+            .data-table th, .data-table td { 
+                padding: 8px 6px; 
+                font-size: 0.7rem; 
+            }
+            .badge { 
+                padding: 2px 8px; 
+                font-size: 0.6rem; 
+            }
+            .stat-value { 
+                font-size: 20px; 
+            }
+            .table-wrapper {
+                max-height: 250px; 
+            }
         }
     </style>
 </head>
 <body>
 <div class="sidebar">
     <div class="brand">
-        <div class="brand-icon"><i class="fa-solid fa-box"></i></div>
+        <div class="brand-icon">
+            <i class="fa-solid fa-box"></i>
+        </div>
         <div><h2 class="title">Inventory MS</h2></div>
     </div>
     <div class="nav-menu">
-        <form action="{{ route('admin.dashboard')}}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-chart-column"></i><span>Dashboard</span></button></div></form>
-        <form action="{{ route('admin.products') }}" method="GET"><div class="nav-item"><button><i class="fas fa-cubes"></i><span>Products</span></button></div></form>
-        <form action="{{ route('admin.categories') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-folder-open"></i><span>Categories</span></button></div></form>
-        <form action="{{ route('admin.suppliers') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-warehouse"></i><span>Suppliers</span></button></div></form>
-        <form action="{{ route('admin.sales') }}" method="GET"><div class="nav-item"><button><i class="fas fa-chart-line"></i><span>Sales</span></button></div></form>
-        <form action="{{ route('admin.purchases') }}" method="GET"><div class="nav-item"><button><i class="fas fa-shopping-cart"></i><span>Purchases</span></button></div></form>
-        <form action="{{ route('admin.reports') }}" method="GET"><div class="nav-item active"><button><i class="fas fa-file-alt"></i><span>Reports</span></button></div></form>
-        <form action="{{ route('admin.users') }}" method="GET"><div class="nav-item"><button><i class="fas fa-users"></i><span>Users</span></button></div></form>
-        <form action="{{ route('admin.logs') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-file-lines"></i><span>Log</span></button></div></form>
-        <form action="{{ route('admin.stock.reports') }}" method="GET"><div class="nav-item"><button><i class="fa-solid fa-triangle-exclamation"></i><span>Stock Reports</span></button></div></form>
+        <form action="{{ route('admin.dashboard')}}" method="GET">
+            <div class="nav-item">
+                <button>
+                    <i class="fa-solid fa-chart-column"></i>
+                    <span>Dashboard</span>
+                </button>
+            </div>
+        </form>
+        <form action="{{ route('admin.products') }}" method="GET">
+            <div class="nav-item">
+                <button>
+                    <i class="fas fa-cubes"></i>
+                    <span>Products</span>
+                </button>
+            </div>
+        </form>
+        <form action="{{ route('admin.categories') }}" method="GET">
+            <div class="nav-item">
+                <button>
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>Categories</span>
+                </button>
+            </div>
+        </form>
+        <form action="{{ route('admin.suppliers') }}" method="GET">
+            <div class="nav-item">
+                <button>
+                    <i class="fa-solid fa-warehouse"></i>
+                    <span>Suppliers</span>
+                </button>
+            </div>
+        </form>
+        <form action="{{ route('admin.sales') }}" method="GET">
+            <div class="nav-item">
+                <button>
+                    <i class="fas fa-chart-line"></i>
+                    <span>Sales</span>
+                </button>
+            </div>
+        </form>
+        <form action="{{ route('admin.purchases') }}" method="GET">
+            <div class="nav-item">
+                <button>
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Purchases</span>
+                </button>
+            </div>
+        </form>
+        <form action="{{ route('admin.reports') }}" method="GET">
+            <div class="nav-item active">
+                <button>
+                    <i class="fas fa-file-alt"></i>
+                    <span>Reports</span>
+                </button>
+            </div>
+        </form>
+        <form action="{{ route('admin.users') }}" method="GET">
+            <div class="nav-item">
+                <button>
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </button>
+            </div>
+        </form>
+        <form action="{{ route('admin.logs') }}" method="GET">
+            <div class="nav-item">
+                <button>
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>Log</span>
+                </button>
+            </div>
+        </form>
+        <form action="{{ route('admin.stock.reports') }}" method="GET">
+            <div class="nav-item">
+                <button>
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Stock Reports</span>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -967,7 +1118,9 @@
             <p class="dashboard-sub">Real-time inventory and sales analytics from your database</p>
         </div>
         <div class="user-menu">
-            @php $pendingStockReportsCount = \App\Models\StockReport::where('status', 'pending')->where('notify_users', false)->count(); @endphp
+            @php 
+                $pendingStockReportsCount = \App\Models\StockReport::where('status', 'pending')->where('notify_users', false)->count();
+            @endphp
             <div class="notification-area">
                 <button class="notification-bell" id="notificationBell">
                     <i class="fas fa-bell"></i>
@@ -976,27 +1129,55 @@
                     @endif
                 </button>
                 <div class="notification-dropdown" id="notificationDropdown">
-                    <div class="notification-header"><i class="fas fa-exclamation-triangle"></i> Stock Alerts</div>
-                    <div class="notification-list" id="notificationList"><div class="loading-notifications">Loading...</div></div>
-                    <div class="notification-footer"><a href="{{ route('admin.stock.reports') }}">View All Reports</a></div>
+                    <div class="notification-header">
+                        <i class="fas fa-exclamation-triangle"></i> Stock Alerts
+                    </div>
+                    <div class="notification-list" id="notificationList">
+                        <div class="loading-notifications">Loading...</div>
+                    </div>
+                    <div class="notification-footer">
+                        <a href="{{ route('admin.stock.reports') }}">View All Reports</a>
+                    </div>
                 </div>
             </div>
-            <div class="user-menu-container"><a href="#"><i class="fa-solid fa-user"></i><strong>{{ Auth::user()->fullname }}</strong></a></div>
-            <form action="{{ route('logout')}}" method="POST">@csrf<button type="submit" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>Logout</button></form>
+            <div class="user-menu-container">
+                <a href="#">
+                    <i class="fa-solid fa-user"></i>
+                    <strong>{{ Auth::user()->fullname }}</strong>
+                </a>
+            </div>
+            <form action="{{ route('logout')}}" method="POST">
+                @csrf
+                <button type="submit" class="logout-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i>Logout
+                </button>
+            </form>
         </div>
     </div>
 
-    @if(session('success'))<div class="alert-success">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert-error">{{ session('error') }}</div>@endif
+    @if(session('success'))
+        <div class="alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert-error">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <!-- Report Filter Bar -->
     <div class="report-filter-bar">
         <div class="filter-group">
-            <label><i class="far fa-calendar-alt"></i> Start Date</label>
-            <input type="date" id="startDate" value="{{ date('Y-m-01') }}">
+            <label>
+                <i class="far fa-calendar-alt"></i> Start Date
+            </label>
+            <input type="date" id="startDate" value="2020-01-01">
         </div>
         <div class="filter-group">
-            <label><i class="far fa-calendar-alt"></i> End Date</label>
+            <label>
+                <i class="far fa-calendar-alt"></i> End Date
+            </label>
             <input type="date" id="endDate" value="{{ date('Y-m-d') }}">
         </div>
         <div class="filter-group">
@@ -1007,34 +1188,64 @@
                 <option value="purchases">Purchases Only</option>
             </select>
         </div>
-        <button class="btn-generate" id="generateReportBtn"><i class="fas fa-chart-line"></i> Generate Report</button>
+        <button class="btn-generate" id="generateReportBtn">
+            <i class="fas fa-chart-line"></i> Generate Report
+        </button>
     </div>
 
     <div id="reportContent">
         <!-- Stats Cards -->
         <div class="stats">
-            <div class="stats-container"><h3>Total Revenue</h3><div class="stat-value" id="statRevenue">₱0</div><div class="stat-sub">selected period</div></div>
-            <div class="stats-container"><h3>Total Transactions</h3><div class="stat-value" id="statTransactionCount">0</div><div class="stat-sub">sales & purchases</div></div>
-            <div class="stats-container"><h3>Avg. Transaction</h3><div class="stat-value" id="statAvgTransaction">₱0</div><div class="stat-sub">per transaction</div></div>
-            <div class="stats-container"><h3>Top Product</h3><div class="stat-value" id="statTopProduct">—</div><div class="stat-sub">best selling this period</div></div>
+            <div class="stats-container">
+                <h3>Total Revenue</h3>
+                <div class="stat-value" id="statRevenue">₱0</div>
+                <div class="stat-sub">selected period</div>
+            </div>
+            <div class="stats-container">
+                <h3>Total Transactions</h3>
+                <div class="stat-value" id="statTransactionCount">0</div>
+                <div class="stat-sub">sales & purchases</div>
+            </div>
+            <div class="stats-container">
+                <h3>Avg. Transaction</h3>
+                <div class="stat-value" id="statAvgTransaction">₱0</div>
+                <div class="stat-sub">per transaction</div>
+            </div>
+            <div class="stats-container">
+                <h3>Top Product</h3>
+                <div class="stat-value" id="statTopProduct">—</div>
+                <div class="stat-sub">best selling this period</div>
+            </div>
         </div>
 
-        <!-- Low Stock Alert Card -->
         <div class="alert-card" id="lowStockAlert">
-            <div class="alert-header"><i class="fas fa-exclamation-triangle"></i><h3>Low Stock Alerts</h3></div>
+            <div class="alert-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Low Stock Alerts</h3>
+            </div>
             <div id="lowStockList">Loading...</div>
         </div>
 
         <!-- Charts Row -->
         <div class="dashboard-row">
             <div class="sales-performance-card">
-                <div class="sales-performance-header"><i class="fas fa-chart-line"></i><h3>Monthly Sales Performance</h3></div>
-                <div class="sales-performance-body"><canvas id="salesChart"></canvas></div>
+                <div class="sales-performance-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Monthly Sales Performance</h3>
+                </div>
+                <div class="sales-performance-body">
+                    <canvas id="salesChart"></canvas>
+                </div>
             </div>
             <div class="stock-card">
-                <div class="stock-header"><i class="fas fa-chart-pie"></i><h3>Inventory Distribution by Category</h3></div>
+                <div class="stock-header">
+                    <i class="fas fa-chart-pie"></i>
+                    <h3>Inventory Distribution by Category</h3>
+                </div>
                 <div class="stock-content">
-                    <div class="pie-chart-section"><canvas id="stockPieChart"></canvas></div>
+                    <div class="pie-chart-section">
+                        <canvas id="stockPieChart"></canvas>
+                    </div>
                     <div class="categories-list" id="categoriesList"></div>
                 </div>
             </div>
@@ -1058,10 +1269,23 @@
             <div class="table-wrapper">
                 <table class="data-table" id="reportTable">
                     <thead>
-                        <tr><th>Date & Time</th><th>Type</th><th>Product</th><th>Category</th><th>Quantity</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Type</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody id="reportTableBody">
-                        <tr><td colspan="8" style="text-align:center;">Select filters and click Generate Report</span></tr>
+                        <tr>
+                            <td colspan="8" style="text-align:center;">
+                                <span>Select filters and click Generate Report</span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -1077,15 +1301,50 @@
 <!-- Sale Details Modal -->
 <div class="modal-container" id="saleDetailsModal">
     <div class="modal">
-        <div class="modal-header"><h2><i class="fa-solid fa-receipt"></i> Sale Details #<span id="sale_detail_id"></span></h2></div>
+        <div class="modal-header">
+            <h2>
+                <i class="fa-solid fa-receipt"></i> Sale Details #
+                <span id="sale_detail_id"></span>
+            </h2>
+        </div>
         <div class="modal-body">
-            <div class="sale-info"><strong>Cashier:</strong> <span id="sale_cashier"></span><br><strong>Date &amp; Time:</strong> <span id="sale_date_display"></span><br><strong>Status:</strong> <span id="sale_status_display"></span></div>
-            <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span></h4>
+            <div class="sale-info">
+                <strong>Cashier:</strong> 
+                <span id="sale_cashier"></span><br>
+                <strong>Date &amp; Time:</strong> 
+                <span id="sale_date_display"></span><br>
+                <strong>Status:</strong> 
+                <span id="sale_status_display"></span>
+            </div>
+            <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: 
+                <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span>
+            </h4>
             <div style="overflow-x:auto;">
                 <table class="details-table">
-                    <thead><tr><th>#</th><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Subtotal</th></tr></thead>
-                    <tbody id="sale_items_table"><tr class="spinner-row"><td colspan="5"><div class="loading-spinner"></div> Loading...<\/td><\/tr></tbody>
-                    <tfoot><tr><td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:<\/td><td style="text-align:right"><strong id="sale_total">₱0.00<\/strong><\/td><\/tr></tfoot>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th style="text-align:center">Qty</th>
+                            <th style="text-align:right">Unit Price</th>
+                            <th style="text-align:right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sale_items_table">
+                        <tr class="spinner-row">
+                            <td colspan="5">
+                                <div class="loading-spinner"></div> Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
+                            <td style="text-align:right">
+                                <strong id="sale_total">₱0.00</strong>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
             <button id="close_sale_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Close</button>
@@ -1096,18 +1355,50 @@
 <!-- Purchase Details Modal -->
 <div class="modal-container" id="purchaseDetailsModal">
     <div class="modal">
-        <div class="modal-header"><h2><i class="fa-solid fa-truck"></i> Purchase Order #<span id="purchase_id"></span></h2></div>
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-truck"></i> Purchase Order #
+                <span id="purchase_id"></span>
+            </h2>
+        </div>
         <div class="modal-body">
-            <div class="purchase-info"><strong>Supplier:</strong> <span id="purchase_supplier"></span><br><strong>Date:</strong> <span id="purchase_date"></span><br><strong>Batch #:</strong> <span id="purchase_batch"></span><br><strong>Status:</strong> <span id="purchase_status"></span></div>
+            <div class="purchase-info">
+                <strong>Supplier:</strong> <span id="purchase_supplier"></span><br>
+                <strong>Date:</strong> <span id="purchase_date"></span><br>
+                <strong>Batch #:</strong> <span id="purchase_batch"></span><br>
+                <strong>Status:</strong> <span id="purchase_status"></span>
+            </div>
             <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Purchased:</h4>
             <div style="overflow-x:auto;">
                 <table class="details-table">
-                    <thead><tr><th>#</th><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Cost Price</th><th style="text-align:right">Total</th></tr></thead>
-                    <tbody id="purchase_items_table"><tr class="spinner-row"><td colspan="5"><div class="loading-spinner"></div> Loading...<\/td><\/tr></tbody>
-                    <tfoot><tr><td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:<\/td><td style="text-align:right"><strong id="purchase_total">₱0.00<\/strong><\/td><\/tr></tfoot>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th style="text-align:center">Qty</th>
+                            <th style="text-align:right">Cost Price</th>
+                            <th style="text-align:right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchase_items_table">
+                        <tr class="spinner-row">
+                            <td colspan="5">
+                                <div class="loading-spinner"></div> Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
+                            <td style="text-align:right">
+                                <strong id="purchase_total">₱0.00</strong>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
-            <button id="close_purchase_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Close</button>
+            <button id="close_purchase_modal" class="cancel-button">
+                <i class="fa-solid fa-circle-xmark"></i> Close
+            </button>
         </div>
     </div>
 </div>
@@ -1167,7 +1458,7 @@
         };
     }
 
-    // ==================== RENDER PAGINATION ====================
+    //RENDER PAGINATION 
     function renderPagination(currentPage, lastPage) {
         const paginationContainer = document.getElementById('customPagination');
         if (!paginationContainer || lastPage <= 1) {
@@ -1237,10 +1528,11 @@
         });
     }
 
-    // ==================== LOAD REPORT DATA ====================
+    //LOAD REPORT DATA 
     function loadReportData() {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
+        const startDate = document.getElementById('startDate').value = '2000-01-01';
+        const endDate = document.getElementById('endDate').value = new Date().toISOString().split('T')[0];
+
         const reportType = document.getElementById('reportType').value;
         const currentPage = document.getElementById('currentPage').value;
         const searchTerm = document.getElementById('searchInput')?.value.trim() || '';
@@ -1250,7 +1542,7 @@
         document.getElementById('statTransactionCount').innerHTML = '<div class="loading-spinner"></div>';
         document.getElementById('statAvgTransaction').innerHTML = '<div class="loading-spinner"></div>';
         document.getElementById('statTopProduct').innerHTML = '<div class="loading-spinner"></div>';
-        document.getElementById('reportTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center;"><div class="loading-spinner"></div> Loading data...<\/td><\/tr>';
+        document.getElementById('reportTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center;"><div class="loading-spinner"></div> Loading data...</td></tr>';
         document.getElementById('lowStockList').innerHTML = '<div class="loading-spinner"></div> Loading...';
         
         fetch('/admin/report/generate', {
@@ -1290,11 +1582,11 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            document.getElementById('reportTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center; color:red;">Error loading data. Please try again.<\/td><\/tr>';
+            document.getElementById('reportTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center; color:red;">Error loading data. Please try again.</td></tr>';
         });
     }
 
-    // ==================== UPDATE STATS ====================
+    //UPDATE STATS 
     function updateStats(data) {
         document.getElementById('statRevenue').innerHTML = formatMoney(data.totalRevenue || 0);
         document.getElementById('statTransactionCount').innerHTML = (data.totalTransactions || 0).toLocaleString();
@@ -1302,7 +1594,7 @@
         document.getElementById('statTopProduct').innerHTML = data.topProduct || '—';
     }
 
-    // ==================== UPDATE LOW STOCK LIST ====================
+    //UPDATE LOW STOCK LIST 
     function updateLowStockList(lowStockProducts) {
         const container = document.getElementById('lowStockList');
         if (!lowStockProducts || lowStockProducts.length === 0) {
@@ -1320,13 +1612,13 @@
         container.innerHTML = html;
     }
 
-    // ==================== UPDATE TRANSACTION TABLE ====================
+    //UPDATE TRANSACTION TABLE
     function updateTransactionTable(transactions) {
         const tbody = document.getElementById('reportTableBody');
         tbody.innerHTML = '';
         
         if (!transactions || transactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No transactions found for selected filters<\/td><\/tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No transactions found for selected filters</td></tr>';
             return;
         }
         
@@ -1339,20 +1631,20 @@
             const referenceId = t.reference_id || '';
             
             const row = '<tr>' +
-                '<td>' + formattedDate + '<\/td>' +
-                '<td><span class="badge ' + typeBadge + '">' + (t.type || 'N/A') + '<\/span><\/td>' +
-                '<td>' + escapeHtml(t.product || '—') + '<\/td>' +
-                '<td>' + escapeHtml(t.category || '—') + '<\/td>' +
-                '<td>' + (t.quantity || 0) + '<\/td>' +
-                '<td>' + formatMoney(t.amount || 0) + '<\/td>' +
-                '<td><span class="badge ' + statusBadge + '">' + statusText + '<\/span><\/td>' +
-                '<td><button class="view-details-btn" onclick="viewTransactionDetails(\'' + t.type + '\', \'' + referenceId + '\')"><i class="fas fa-eye"></i> View<\/button><\/td>' +
-            '<\/tr>';
+                '<td> <strong>' + formattedDate + '</strong></td>' +
+                '<td><span class="badge ' + typeBadge + '">' + (t.type || 'N/A') + '</span></td>' +
+                '<td> <strong>' + escapeHtml(t.product || '—') + '</strong></td>' +
+                '<td> <strong>' + escapeHtml(t.category || '—') + '</strong></td>' +
+                '<td> <strong>' + (t.quantity || 0) + '</strong></td>' +
+                '<td> <strong>' + formatMoney(t.amount || 0) + '</strong></td>' +
+                '<td><span class="badge ' + statusBadge + '">' + statusText + '</span></td>' +
+                '<td><button class="view-details-btn" onclick="viewTransactionDetails(\'' + t.type + '\', \'' + referenceId + '\')"><i class="fas fa-eye"></i> View</button></td>' +
+            '</tr>';
             tbody.innerHTML += row;
         }
     }
 
-    // ==================== VIEW TRANSACTION DETAILS ====================
+    //VIEW TRANSACTION DETAILS
     function viewTransactionDetails(type, referenceId) {
         if (!referenceId || referenceId === 'null' || referenceId === 'undefined' || referenceId === '') {
             alert('No reference ID available for this transaction.');
@@ -1367,7 +1659,7 @@
         }
     }
 
-    // ==================== VIEW SALE DETAILS ====================
+    //VIEW SALE DETAILS
     function viewSaleDetails(id) {
         const modal = document.getElementById('saleDetailsModal');
         modal.classList.add('show');
@@ -1378,7 +1670,7 @@
         document.getElementById('sale_status_display').innerHTML = '<div class="loading-spinner"></div> Loading...';
         document.getElementById('sale_total').textContent = '₱0.00';
         document.getElementById('sale_items_table').innerHTML = 
-        '<tr class="spinner-row"><td colspan="5"><div class="loading-spinner"></div> Loading sale details...<\/td><\/tr>';
+        '<tr class="spinner-row"><td colspan="5"><div class="loading-spinner"></div> Loading sale details...</td></tr>';
         
         fetch('/admin/sale/details/' + id, {
             method: 'GET',
@@ -1397,7 +1689,7 @@
             
             document.getElementById('sale_cashier').innerHTML = sale.user?.fullname || 'N/A';
             document.getElementById('sale_date_display').innerHTML = sale.sale_date || 'N/A';
-            const statusClass = sale.status === 'completed' ? 'badge-completed' : 'badge-pending';
+            const statusClass = sale.status === 'completed' ? '' : '';
             const statusLabel = sale.status ? sale.status.charAt(0).toUpperCase() + sale.status.slice(1) : 'Unknown';
             document.getElementById('sale_status_display').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
             document.getElementById('sale_total').innerHTML = '₱' + parseFloat(sale.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2});
@@ -1407,29 +1699,29 @@
             document.getElementById('sale_items_count').innerHTML = '(' + details.length + ' product type' + (details.length !== 1 ? 's' : '') + ', ' + totalUnits + ' unit' + (totalUnits !== 1 ? 's' : '') + ')';
             
             if (details.length === 0) {
-                document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found<\/td><\/tr>';
+                document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>';
                 return;
             }
             
             let html = '';
             details.forEach((item, idx) => {
                 html += '<tr>' +
-                    '<td>' + (idx + 1) + '<\/td>' +
-                    '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '<\/td>' +
-                    '<td style="text-align:center">' + item.quantity + '<\/td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                '<\/tr>';
+                    '<td>' + (idx + 1) + '</td>' +
+                    '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '</td>' +
+                    '<td style="text-align:center">' + item.quantity + '</td>' +
+                    '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                    '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                '</tr>';
             });
             document.getElementById('sale_items_table').innerHTML = html;
         })
         .catch(err => {
             console.error('Sale details error:', err);
-            document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading sale details: ' + err.message + '<\/td><\/tr>';
+            document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading sale details: ' + err.message + '</td></tr>';
         });
     }
 
-    // ==================== VIEW PURCHASE DETAILS ====================
+    //VIEW PURCHASE DETAILS
     function viewPurchaseDetails(id) {
         const modal = document.getElementById('purchaseDetailsModal');
         modal.classList.add('show');
@@ -1440,7 +1732,7 @@
         document.getElementById('purchase_batch').innerHTML = '<div class="loading-spinner"></div> Loading...';
         document.getElementById('purchase_status').innerHTML = '<div class="loading-spinner"></div> Loading...';
         document.getElementById('purchase_total').textContent = '₱0.00';
-        document.getElementById('purchase_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><div class="loading-spinner"></div> Loading purchase details...<\/td><\/tr>';
+        document.getElementById('purchase_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><div class="loading-spinner"></div> Loading purchase details...</td></tr>';
         
         fetch('/admin/purchase/details/' + id, {
             method: 'GET',
@@ -1460,26 +1752,26 @@
             document.getElementById('purchase_supplier').innerHTML = data.supplier_name || 'N/A';
             document.getElementById('purchase_date').innerHTML = data.order_date || 'N/A';
             document.getElementById('purchase_batch').innerHTML = data.batch_number || 'N/A';
-            const statusClass = data.status === 'completed' ? 'badge-completed' : (data.status === 'pending' ? 'badge-pending' : 'badge-canceled');
+            const statusClass = data.status === 'completed' ? '' : (data.status === 'pending' ? '' : '');
             const statusLabel = data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Unknown';
             document.getElementById('purchase_status').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
             
             const items = data.items || [];
             let total = 0;
             if (items.length === 0) {
-                document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found<\/td><\/tr>';
+                document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>';
             } else {
                 let html = '';
                 items.forEach((item, idx) => {
                     const itemTotal = (item.quantity || 0) * (item.cost_price || 0);
                     total += itemTotal;
-                    html += '<td>' +
-                        '<td>' + (idx + 1) + '<\/td>' +
-                        '<td>' + escapeHtml(item.product_name || 'N/A') + '<\/td>' +
-                        '<td style="text-align:center">' + (item.quantity || 0) + '<\/td>' +
-                        '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                        '<td style="text-align:right">₱' + itemTotal.toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                    '<\/tr>';
+                    html += '<tr>' +
+                        '<td>' + (idx + 1) + '</td>' +
+                        '<td>' + escapeHtml(item.product_name || 'N/A') + '</td>' +
+                        '<td style="text-align:center">' + (item.quantity || 0) + '</td>' +
+                        '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                        '<td style="text-align:right">₱' + itemTotal.toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                    '</tr>';
                 });
                 document.getElementById('purchase_items_table').innerHTML = html;
             }
@@ -1487,11 +1779,11 @@
         })
         .catch(err => {
             console.error('Purchase details error:', err);
-            document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading purchase details<\/td><\/tr>';
+            document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading purchase details</td></tr>';
         });
     }
 
-    // ==================== MODAL CLOSE HANDLERS ====================
+    //MODAL CLOSE HANDLERS 
     const saleModal = document.getElementById('saleDetailsModal');
     const closeSaleModal = document.getElementById('close_sale_modal');
     const purchaseModal = document.getElementById('purchaseDetailsModal');
@@ -1502,7 +1794,7 @@
     if (closePurchaseModal) closePurchaseModal.onclick = () => purchaseModal.classList.remove('show');
     if (purchaseModal) purchaseModal.onclick = (e) => { if (e.target === purchaseModal) purchaseModal.classList.remove('show'); };
 
-    // ==================== UPDATE CHARTS ====================
+    //UPDATE CHARTS 
     function updateCharts(data) {
         const config = getResponsiveChartConfig();
         
@@ -1567,7 +1859,7 @@
         });
     }
 
-    // ==================== UPDATE CATEGORY LIST ====================
+    //UPDATE CATEGORY LIST
     function updateCategoryList(categories) {
         const container = document.getElementById('categoriesList');
         if (!categories || categories.length === 0) { 
@@ -1593,7 +1885,7 @@
         container.innerHTML = html;
     }
 
-    // ==================== NOTIFICATION FUNCTIONS ====================
+    //NOTIFICATION FUNCTIONS 
     function fetchNotifications() {
         fetch('/admin/stock-reports/notifications', {
             method: 'GET',
@@ -1654,20 +1946,35 @@
     }
 
     function markAsRead(reportId) {
-        if (confirm('Mark this report as read?')) {
-            fetch('{{ route("admin.stock.report.read") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ report_id: reportId })
-            }).then(function(response) { return response.json(); }).then(function(data) {
-                if (data.success) {
-                    showToast('Report marked as read', '#28a745');
-                    fetchNotifications();
-                } else {
-                    alert('Failed to mark as read');
+        fetch('{{ route("admin.stock.report.read") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ report_id: reportId })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // Remove item from bell dropdown immediately
+                var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transition = 'opacity 0.3s ease';
+                    setTimeout(function() {
+                        item.remove();
+                        // Check if dropdown is now empty
+                        var list = document.getElementById('notificationList');
+                        if (list && list.querySelectorAll('.notification-item').length === 0) {
+                            list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
+                        }
+                    }, 300);
                 }
-            }).catch(function(error) { console.error('Error:', error); });
-        }
+                // Refresh bell count
+                fetchNotifications();
+            } else {
+                alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(function(error) { console.error('Error:', error); });
     }
 
     function createPurchaseOrder(productId, productName, reportId) {
@@ -1686,7 +1993,7 @@
         }
     }
 
-    // ==================== NOTIFICATION BELL TOGGLE ====================
+    //NOTIFICATION BELL TOGGLE 
     var bell = document.getElementById('notificationBell');
     var dropdown = document.getElementById('notificationDropdown');
     if (bell) {
@@ -1698,7 +2005,7 @@
     }
     document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
 
-    // ==================== HANDLE RESIZE ====================
+    //HANDLE RESIZE
     function handleResize() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(function() {
@@ -1714,7 +2021,7 @@
 
     window.addEventListener('resize', handleResize);
 
-    // ==================== EVENT LISTENERS ====================
+    //EVENT LISTENERS 
     const generateBtn = document.getElementById('generateReportBtn');
     if (generateBtn) {
         generateBtn.addEventListener('click', function() { 
@@ -1739,7 +2046,7 @@
         });
     }
 
-    // ==================== INITIALIZE ====================
+    //INITIALIZE
     loadReportData();
     fetchNotifications();
     setInterval(fetchNotifications, 30000);
