@@ -45,7 +45,7 @@ WORKDIR /var/www/html
 # Copy full Laravel app
 COPY . .
 
-# Create base .env file (database credentials will come from Render env vars)
+# Create .env file with correct settings (before composer install)
 RUN echo "APP_NAME=Web-Based-IMS" > .env && \
     echo "APP_ENV=production" >> .env && \
     echo "APP_DEBUG=false" >> .env && \
@@ -53,11 +53,11 @@ RUN echo "APP_NAME=Web-Based-IMS" > .env && \
     echo "SESSION_LIFETIME=120" >> .env && \
     echo "LOG_CHANNEL=stack" >> .env
 
-# Generate application key
-RUN php artisan key:generate
-
-# Install PHP dependencies
+# Install PHP dependencies (MUST happen before artisan commands)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Generate application key (after composer install)
+RUN php artisan key:generate
 
 # Install frontend dependencies and build Vite assets
 RUN npm install
