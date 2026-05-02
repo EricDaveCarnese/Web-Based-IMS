@@ -45,18 +45,19 @@ WORKDIR /var/www/html
 # Copy full Laravel app
 COPY . .
 
-# Create .env file with correct settings (before composer install)
+# Create .env file with debug enabled
 RUN echo "APP_NAME=Web-Based-IMS" > .env && \
-    echo "APP_ENV=production" >> .env && \
-    echo "APP_DEBUG=false" >> .env && \
+    echo "APP_ENV=local" >> .env && \
+    echo "APP_DEBUG=true" >> .env && \
     echo "SESSION_DRIVER=file" >> .env && \
     echo "SESSION_LIFETIME=120" >> .env && \
-    echo "LOG_CHANNEL=stack" >> .env
+    echo "LOG_CHANNEL=stack" >> .env && \
+    echo "APP_URL=https://web-based-ims.onrender.com" >> .env
 
-# Install PHP dependencies (MUST happen before artisan commands)
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install PHP dependencies
+RUN composer install --optimize-autoloader --no-interaction
 
-# Generate application key (after composer install)
+# Generate application key
 RUN php artisan key:generate
 
 # Install frontend dependencies and build Vite assets
@@ -66,16 +67,19 @@ RUN npm run build
 # Create storage symlink for public files
 RUN php artisan storage:link || true
 
-# Clear and cache configuration
+# Clear cache
 RUN php artisan config:clear && \
-    php artisan config:cache && \
-    php artisan view:cache && \
-    php artisan route:cache
+    php artisan cache:clear && \
+    php artisan view:clear
 
 # Set permissions
 RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache public/uploads \
 && chown -R www-data:www-data storage bootstrap/cache public/uploads \
-&& chmod -R 775 storage bootstrap/cache public/uploads
+&& chmod -R 777 storage bootstrap/cache public/uploads
+
+# Enable error logging
+RUN echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/docker-php-ext-error.ini && \
+    echo "display_errors=On" >> /usr/local/etc/php/conf.d/docker-php-ext-error.ini
 
 EXPOSE 10000
 
