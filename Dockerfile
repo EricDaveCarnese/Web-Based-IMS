@@ -126,4 +126,6 @@ EXPOSE 10000
 
 
 
-CMD ["apache2-foreground"]
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+CMD ["/start.sh"]
