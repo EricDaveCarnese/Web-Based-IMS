@@ -55,7 +55,7 @@
         .nav-menu {
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 15px;
             padding: 5px;
         }
         .nav-menu button {
@@ -396,6 +396,27 @@
             border-color: rgb(44, 110, 98);
             box-shadow: 0 0 0 3px rgba(44, 110, 98, 0.1);
         }
+        .right { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+        }
+        .recordcount { 
+            color: rgb(71,241,4); 
+            padding: 11px 18px; 
+            border-radius: 25px; 
+            font-size: 14px;
+            font-weight: 600; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px;
+            background: linear-gradient(180deg,rgb(15,43,61) 0%,rgb(25,110,114) 100%); 
+        }
+        .count { 
+            font-weight: 600; 
+            color: white; 
+        }
 
         /* Product Table */
         .product-table {
@@ -458,6 +479,7 @@
             color: white;
         }
 
+
         .description-cell {
             max-width: 300px;
             min-width: 200px;
@@ -507,11 +529,32 @@
             background: #f8d7da;
             color: #721c24;
         }
-
+        .record-table td {
+            vertical-align: middle;
+        }
         .action-buttons {
             display: flex;
             gap: 8px;
+            align-items: center;
             flex-wrap: wrap;
+        }
+        .status-badge {
+            font-size: 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            white-space: nowrap;
+        }
+
+        .report-damage-btn {
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            white-space: nowrap;
         }
         
         /* Report Damage Button */
@@ -533,24 +576,14 @@
             background: #e86c00;
             transform: scale(1.02);
         }
-        .damage-reported-badge {
-            background: #fd7e14;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 10px;
-            display: inline-block;
+        .report-damage-btn.report-sent {
+            background: #28a745;
+            cursor: default;
+            transform: none;
         }
-        .damage-pending-badge {
-            background: #fd7e14;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+        .report-damage-btn.report-sent:hover {
+            background: #28a745;
+            transform: none;
         }
 
         .stock-alert {
@@ -567,12 +600,8 @@
             color: #2c6e62;
             white-space: nowrap;
         }
-        .stock-quantity {
-            font-weight: 600;
-            text-align: center;
-        }
 
-        /* Alert Messages */
+        /* Alert Messages - Same style as dashboard */
         .alert-success {
             position: relative;
             background-color: #d4edda;
@@ -607,6 +636,89 @@
         }
         .close-btn:hover {
             opacity: 1;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-top: 5px;
+        }
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        .autocomplete-item:hover {
+            background: #f0f2f5;
+        }
+        .autocomplete-item strong {
+            color: rgb(44, 110, 98);
+        }
+        .autocomplete-item .product-price {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .no-results {
+            padding: 12px 16px;
+            text-align: center;
+            color: #999;
+        }
+
+        /* Custom Pagination */
+        .custom-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .custom-pagination a,
+        .custom-pagination span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 4px;
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+        .custom-pagination a {
+            color: #4a5568;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .custom-pagination a:hover {
+            background: #2c6e62;
+            color: white;
+        }
+        .custom-pagination .page-active {
+            background: #2c6e62;
+            color: white;
+        }
+        .custom-pagination .page-disabled {
+            color: #cbd5e0;
+            cursor: default;
+        }
+        .custom-pagination .page-dots {
+            color: #a0aec0;
+            cursor: default;
         }
 
         /* Modal Styles */
@@ -722,89 +834,6 @@
             align-items: center;
             gap: 5px;
             flex-wrap: wrap;
-        }
-
-        .autocomplete-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border-radius: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-top: 5px;
-        }
-        .autocomplete-dropdown.show {
-            display: block;
-        }
-        .autocomplete-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-            transition: background 0.2s;
-        }
-        .autocomplete-item:hover {
-            background: #f0f2f5;
-        }
-        .autocomplete-item strong {
-            color: rgb(44, 110, 98);
-        }
-        .autocomplete-item .product-price {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
-        }
-        .no-results {
-            padding: 12px 16px;
-            text-align: center;
-            color: #999;
-        }
-
-        /* Custom Pagination */
-        .custom-pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        .custom-pagination a,
-        .custom-pagination span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 32px;
-            padding: 0 4px;
-            text-decoration: none;
-            font-size: 14px;
-            border-radius: 4px;
-        }
-        .custom-pagination a {
-            color: #4a5568;
-            background: transparent;
-            transition: all 0.2s;
-        }
-        .custom-pagination a:hover {
-            background: #2c6e62;
-            color: white;
-        }
-        .custom-pagination .page-active {
-            background: #2c6e62;
-            color: white;
-        }
-        .custom-pagination .page-disabled {
-            color: #cbd5e0;
-            cursor: default;
-        }
-        .custom-pagination .page-dots {
-            color: #a0aec0;
-            cursor: default;
         }
 
         /* Responsive Design */
@@ -1137,16 +1166,19 @@
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="alert-success">
+        <!-- Dynamic Alert Container - Appears at top below header -->
+        <div id="dynamicAlertContainer"></div>
+
+       @if(session('success'))
+            <div class="alert-success" id="sessionAlert">
                 {{ session('success') }}
-                <button type="button" class="close-btn" onclick="this.parentElement.style.display = 'none'">&times;</button>
+                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">
+            <div class="alert-error" id="sessionAlert">
                 {{ session('error') }}
-                <button type="button" class="close-btn" onclick="this.parentElement.style.display = 'none'">&times;</button>
+                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         
@@ -1160,16 +1192,19 @@
                 </div>
                 <div id="autocompleteDropdown" class="autocomplete-dropdown"></div>
             </div>
-            <div class="filter-container">
-                <select id="filterStatus" class="filter-dropdown" onchange="applyFilter()">
-                    <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Products</option>
-                    <option value="instock" {{ request('status') == 'instock' ? 'selected' : '' }}>In Stock</option>
-                    <option value="lowstock" {{ request('status') == 'lowstock' ? 'selected' : '' }}>Low Stock</option>
-                    <option value="outofstock" {{ request('status') == 'outofstock' ? 'selected' : '' }}>Out of Stock</option>
-                </select>
-            </div>
             <div class="right">
-                <!-- Users cannot add products, only view -->
+                <div class="filter-container">
+                    <select id="filterStatus" class="filter-dropdown" onchange="applyFilter()">
+                        <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Products</option>
+                        <option value="instock" {{ request('status') == 'instock' ? 'selected' : '' }}>In Stock</option>
+                        <option value="lowstock" {{ request('status') == 'lowstock' ? 'selected' : '' }}>Low Stock</option>
+                        <option value="outofstock" {{ request('status') == 'outofstock' ? 'selected' : '' }}>Out of Stock</option>
+                    </select>
+                </div>
+                <div class="recordcount">
+                    <span class="count">Total Products: </span>
+                    <strong>{{ $products->total() }}</strong>
+                </div>
             </div>
         </div>
 
@@ -1192,29 +1227,20 @@
                     <tbody id="productsTableBody">
                         @forelse($products as $product)
                         <tr>
-                            <td><span>{{ $product->id }}</span></td>
-                            <td><span><strong>{{ $product->product_name }}</strong></span></td>
+                            <td><span>{{ $product->id }}</span>
+                            <td><span><strong>{{ $product->product_name }}</strong></span>
                             <td class="description-cell">
-                                <span>
-                                    <span class="short-desc">
-                                        {{ Str::limit($product->description, 80) }}
-                                    </span>
-                                    <span class="full-desc" style="display: none;">
-                                        {{ $product->description }}
-                                    </span>
-                                    @if(strlen($product->description) > 80)
-                                        <a href="javascript:void(0)" class="toggle-description">Show more</a>
-                                    @endif
-                                </span>
+                                <span class="short-desc">
+                                    <small>{{ Str::limit($product->description, 80) }}</small></span>
+                                <span class="full-desc" style="display:none;">{{ $product->description }}</span>
+                                @if(strlen($product->description) > 80)
+                                    <a href="javascript:void(0)" class="toggle-description">Show more</a>
+                                @endif
                             </td>
-                            <td><span style="font-size: 13px;">{{ $product->category->category_name ?? 'N/A' }}</span></td>
-                            <td><span class="price-cell">₱{{ number_format($product->price, 2) }}</span></td>
-                            <td><span class="stock-quantity">{{ $product->quantity }} units</span></td>
-                            <td>
-                                <span class="stock-alert">
-                                    <i class="fas fa-bell"></i> {{ $product->min_stock_level }} units
-                                </span>
-                            </td>
+                            <td><span style="font-size: 13px;"><strong>{{ $product->category->category_name ?? 'N/A' }}</strong></span>
+                            <td><span class="price-cell">₱{{ number_format($product->price, 2) }}</span>
+                            <td>{{ $product->quantity }} <small>units</small></td>
+                            <td>{{ $product->min_stock_level }} <small>units</small></td>
                             <td>
                                 <span>
                                     @if($product->quantity <= $product->min_stock_level && $product->quantity > 0)
@@ -1234,44 +1260,19 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    @php
-                                        // Check for pending damage report (waiting for admin action)
-                                        $hasPendingDamage = \App\Models\StockReport::where('product_id', $product->id)
-                                            ->where('user_id', Auth::id())
-                                            ->where('status', 'pending')
-                                            ->where('message', 'like', '%DAMAGE%')
-                                            ->exists();
-                                        
-                                        // Check for resolved damage report (admin already acted - can report again)
-                                        $hasResolvedDamage = \App\Models\StockReport::where('product_id', $product->id)
-                                            ->where('user_id', Auth::id())
-                                            ->where('status', 'resolved')
-                                            ->where('message', 'like', '%DAMAGE%')
-                                            ->exists();
-                                    @endphp
-                                    
-                                    @if($hasPendingDamage)
-                                        <span class="damage-pending-badge">
-                                            <i class="fas fa-clock"></i> Damage Pending
-                                        </span>
-                                    @else
-                                        <button class="report-damage-btn" onclick="openDamageModal('{{ $product->id }}', '{{ $product->product_name }}', '{{ $product->category->category_name ?? N/A }}')">
-                                            <i class="fas fa-exclamation-triangle"></i> 
-                                            {{ $hasResolvedDamage ? 'Report Damage Again' : 'Report Damage' }}
-                                        </button>
-                                    @endif
+                                    <button class="report-damage-btn" data-product-id="{{ $product->id }}" data-product-name="{{ $product->product_name }}" data-category-name="{{ $product->category->category_name ?? 'N/A' }}">
+                                        <i class="fas fa-exclamation-triangle"></i> Report Damage
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                         @empty
-                            <tr>
-                                <td colspan="9" style="text-align: center; padding: 40px;">
-                                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                                        <i class="fas fa-box-open" style="font-size: 48px; color: #ccc;"></i>
-                                        <p style="margin-top: 10px; color: #666;">No products found</p>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:40px;">
+                                <i class="fa-solid fa-box-open" style="font-size:48px; color:#ccc;"></i>
+                                <p>No products found</p>
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -1316,6 +1317,7 @@
                     <div class="input-group">
                         <label class="input-label">Quantity Affected</label>
                         <input type="number" name="damage_quantity" id="damage_quantity" placeholder="Number of damaged units" min="1">
+                        <div class="input-hint">Leave empty if quantity is not specified</div>
                     </div>
                     
                     <button type="submit" class="save-button">
@@ -1334,11 +1336,72 @@
     <div id="suggestionData" style="display:none;" data-suggestions='@json(array_unique(array_merge(\App\Models\Product::pluck("product_name")->toArray(), \App\Models\StockReport::distinct()->pluck("user_name")->toArray())))'></div>
 
     <script>
-        // ==================== REPORT DAMAGE ====================
+        function showAlertMessage(message, type) {
+            var alertContainer = document.getElementById('dynamicAlertContainer');
+            if (!alertContainer) return;
+            
+            var alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) {
+                    alertDiv.style.opacity = '0';
+                    alertDiv.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+                    }, 500);
+                }
+            }, 3000);
+        }
+        function autoCloseSessionAlerts() {
+            var sessionAlert = document.getElementById('sessionAlert');
+            if (sessionAlert) {
+                setTimeout(function() {
+                    if (sessionAlert) {
+                        sessionAlert.style.opacity = '0';
+                        sessionAlert.style.transition = 'opacity 0.5s ease';
+                        setTimeout(function() {
+                            if (sessionAlert && sessionAlert.parentElement) {
+                                sessionAlert.remove();
+                            }
+                        }, 500);
+                    }
+                }, 3000);
+            }
+        }
+
+        //REPORT DAMAGE 
         var damageModal = document.getElementById('damage_modal_container');
         var closeDamageModal = document.getElementById('close_damage_modal');
         
-        function openDamageModal(productId, productName, categoryName) {
+        // Attach click handlers to all Report Damage buttons
+        function attachDamageButtonHandlers() {
+            var reportButtons = document.querySelectorAll('.report-damage-btn');
+            for (var i = 0; i < reportButtons.length; i++) {
+                var btn = reportButtons[i];
+                btn.removeEventListener('click', damageButtonClickHandler);
+                btn.addEventListener('click', damageButtonClickHandler);
+            }
+        }
+        
+        function damageButtonClickHandler(e) {
+            var btn = e.currentTarget;
+            var productId = btn.getAttribute('data-product-id');
+            var productName = btn.getAttribute('data-product-name');
+            var categoryName = btn.getAttribute('data-category-name');
+            openDamageModal(productId, productName, categoryName, btn);
+        }
+        
+        var currentButton = null;
+        
+        function openDamageModal(productId, productName, categoryName, buttonElement) {
+            currentButton = buttonElement;
             document.getElementById('damage_product_id').value = productId;
             document.getElementById('damage_product_name').value = productName;
             document.getElementById('damage_category_name').value = categoryName;
@@ -1352,12 +1415,14 @@
         if (closeDamageModal) {
             closeDamageModal.onclick = function() {
                 damageModal.classList.remove('show');
+                currentButton = null;
             };
         }
         if (damageModal) {
             damageModal.onclick = function(e) {
                 if (e.target === damageModal) {
                     damageModal.classList.remove('show');
+                    currentButton = null;
                 }
             };
         }
@@ -1366,7 +1431,7 @@
         document.getElementById('damageReportForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const formData = {
+            var formData = {
                 product_id: document.getElementById('damage_product_id').value,
                 product_name: document.getElementById('damage_product_name').value,
                 category_name: document.getElementById('damage_category_name').value,
@@ -1376,12 +1441,12 @@
             };
             
             if (!formData.damage_description) {
-                alert('Please provide a damage description.');
+                showAlertMessage('Please provide a damage description.', 'error');
                 return;
             }
             
-            const submitButton = document.querySelector('#damageReportForm .save-button');
-            const originalText = submitButton.innerHTML;
+            var submitButton = document.querySelector('#damageReportForm .save-button');
+            var originalText = submitButton.innerHTML;
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
             
@@ -1394,21 +1459,42 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
                 if (data.success) {
-                    alert('✓ Damage report sent to admin successfully!');
+                    // Close modal
                     damageModal.classList.remove('show');
-                    location.reload();
+                    
+                    // Show success alert bar at top (like dashboard)
+                    showAlertMessage('✓ Damage report sent to admin successfully!', 'success');
+                    
+                    // Change the button to show "✓ Report Sent" temporarily
+                    if (currentButton) {
+                        var originalButtonHtml = currentButton.innerHTML;
+                        currentButton.innerHTML = '<i class="fas fa-check-circle"></i> ✓ Report Sent';
+                        currentButton.classList.add('report-sent');
+                        currentButton.disabled = true;
+                        
+                        // After 3 seconds, restore the button
+                        setTimeout(function() {
+                            if (currentButton) {
+                                currentButton.innerHTML = originalButtonHtml;
+                                currentButton.classList.remove('report-sent');
+                                currentButton.disabled = false;
+                            }
+                        }, 3000);
+                    }
+                    
+                    currentButton = null;
                 } else {
-                    alert(data.message || 'Failed to send damage report.');
+                    showAlertMessage(data.message || 'Failed to send damage report.', 'error');
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalText;
                 }
             })
-            .catch(error => {
+            .catch(function(error) {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                showAlertMessage('An error occurred. Please try again.', 'error');
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalText;
             });
@@ -1539,257 +1625,246 @@
                     }
                 };
             }
+            
+            attachDamageButtonHandlers();
         });
         
-        // ==================== CUSTOM PAGINATION ====================
+        // CUSTOM PAGINATION
         function renderPagination() {
-            const currentPage = parseInt(document.getElementById('currentPage').value);
-            const lastPage = parseInt(document.getElementById('lastPage').value);
-            const paginationContainer = document.getElementById('customPagination');
+            var currentPage = parseInt(document.getElementById('currentPage').value);
+            var lastPage = parseInt(document.getElementById('lastPage').value);
+            var paginationContainer = document.getElementById('customPagination');
             
             if (!paginationContainer || lastPage <= 1) return;
             
-            let html = '<div class="custom-pagination">';
+            var html = '<div class="custom-pagination">';
             
-            // Previous button (<)
             if (currentPage > 1) {
-                html += `<a href="#" class="page-link" data-page="${currentPage - 1}">&lt;</a>`;
+                html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
             } else {
-                html += `<span class="page-disabled">&lt;</span>`;
+                html += '<span class="page-disabled">&lt;</span>';
             }
             
-            // Page numbers
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(lastPage, currentPage + 2);
+            var startPage = Math.max(1, currentPage - 2);
+            var endPage = Math.min(lastPage, currentPage + 2);
             
-            // Adjust if at the beginning
             if (currentPage <= 3) {
                 endPage = Math.min(lastPage, 5);
             }
             
-            // Adjust if at the end
             if (currentPage >= lastPage - 2) {
                 startPage = Math.max(1, lastPage - 4);
             }
             
-            // First page
             if (startPage > 1) {
-                html += `<a href="#" class="page-link" data-page="1">1</a>`;
+                html += '<a href="#" class="page-link" data-page="1">1</a>';
                 if (startPage > 2) {
-                    html += `<span class="page-dots">...</span>`;
+                    html += '<span class="page-dots">...</span>';
                 }
             }
             
-            // Page numbers
-            for (let i = startPage; i <= endPage; i++) {
+            for (var i = startPage; i <= endPage; i++) {
                 if (i === currentPage) {
-                    html += `<span class="page-active">${i}</span>`;
+                    html += '<span class="page-active">' + i + '</span>';
                 } else {
-                    html += `<a href="#" class="page-link" data-page="${i}">${i}</a>`;
+                    html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
                 }
             }
             
-            // Last page
             if (endPage < lastPage) {
                 if (endPage < lastPage - 1) {
-                    html += `<span class="page-dots">...</span>`;
+                    html += '<span class="page-dots">...</span>';
                 }
-                html += `<a href="#" class="page-link" data-page="${lastPage}">${lastPage}</a>`;
+                html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
             }
             
-            // Next button (>)
             if (currentPage < lastPage) {
-                html += `<a href="#" class="page-link" data-page="${currentPage + 1}">&gt;</a>`;
+                html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
             } else {
-                html += `<span class="page-disabled">&gt;</span>`;
+                html += '<span class="page-disabled">&gt;</span>';
             }
             
             html += '</div>';
             paginationContainer.innerHTML = html;
             
-            // Add click event listeners
-            document.querySelectorAll('.page-link').forEach(link => {
-                link.addEventListener('click', function(e) {
+            var pageLinks = document.querySelectorAll('.page-link');
+            for (var i = 0; i < pageLinks.length; i++) {
+                pageLinks[i].addEventListener('click', function(e) {
                     e.preventDefault();
-                    const page = this.getAttribute('data-page');
+                    var page = this.getAttribute('data-page');
                     if (page) {
-                        const urlParams = new URLSearchParams(window.location.search);
+                        var urlParams = new URLSearchParams(window.location.search);
                         urlParams.set('page', page);
-                        // Preserve existing filters
-                        const searchTerm = searchInput ? searchInput.value.trim() : '';
-                        const statusValue = document.getElementById('filterStatus')?.value || 'all';
+                        var searchTerm = searchInput ? searchInput.value.trim() : '';
+                        var statusValue = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : 'all';
                         if (searchTerm) urlParams.set('search', searchTerm);
                         if (statusValue && statusValue !== 'all') urlParams.set('status', statusValue);
                         window.location.href = window.location.pathname + '?' + urlParams.toString();
                     }
                 });
-            });
+            }
         }
         
         document.addEventListener('DOMContentLoaded', function() {
             renderPagination();
         });
         
-        // ==================== UNIFIED USER NOTIFICATION FUNCTIONS ====================
-function fetchUserNotifications() {
-    fetch('/user/notifications/bell', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        if (data.success) {
-            updateUserNotificationBell(data.unread_count);
-            renderNotificationDropdown(data.notifications);
-        }
-    })
-    .catch(function(error) { console.error('Notification error:', error); });
-}
-
-function updateUserNotificationBell(count) {
-    var badge = document.getElementById('userNotificationBadge');
-    if (!badge) return;
-    if (count > 0) {
-        badge.textContent = count;
-        badge.style.display = 'flex';
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
-function renderNotificationDropdown(notifications) {
-    var list = document.getElementById('userNotificationList');
-    if (!list) return;
-
-    if (!notifications || notifications.length === 0) {
-        list.innerHTML = '<div class="no-notifications">'
-            + '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>'
-            + '<p>No new notifications</p></div>';
-        return;
-    }
-
-    var html = '';
-    for (var i = 0; i < notifications.length; i++) {
-        var notif = notifications[i];
-        var isDamageResolved = notif.is_resolved
-            || (notif.message && notif.message.includes('DAMAGE RESOLVED'));
-
-        // Resolved badge (shown alongside mark read for damage resolved items)
-        var resolvedBadge = isDamageResolved
-            ? '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Admin Resolved</span>'
-            : '';
-
-        // Action button — always show Mark Read for pending, show Read label otherwise
-        var actionButton = notif.status === 'pending'
-            ? resolvedBadge + '<button class="btn-read-notif" onclick="markUserNotificationAsRead('
-                + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button>'
-            : '<span style="color:#28a745;font-size:12px;">'
-                + '<i class="fas fa-check-double"></i> Read</span>';
-
-        // PO status badge
-        var poHtml = '';
-        if (notif.po_status === 'completed') {
-            poHtml = '<span style="background:#28a745;color:white;padding:2px 10px;border-radius:15px;font-size:10px;">'
-                + '<i class="fas fa-check-circle"></i> PO Completed</span>';
-        } else if (notif.po_status === 'pending') {
-            poHtml = '<span style="background:#ffc107;color:#212529;padding:2px 10px;border-radius:15px;font-size:10px;">'
-                + '<i class="fas fa-clock"></i> PO Pending</span>';
-        } else if (notif.po_status) {
-            poHtml = '<span style="background:#17a2b8;color:white;padding:2px 10px;border-radius:15px;font-size:10px;">'
-                + '<i class="fas fa-shopping-cart"></i> PO Created</span>';
-        } else {
-            poHtml = '<span style="background:#6c757d;color:white;padding:2px 10px;border-radius:15px;font-size:10px;">'
-                + '<i class="fas fa-minus-circle"></i> No PO Yet</span>';
+        //UNIFIED USER NOTIFICATION FUNCTIONS
+        function fetchUserNotifications() {
+            fetch('/user/notifications/bell', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    updateUserNotificationBell(data.unread_count);
+                    renderNotificationDropdown(data.notifications);
+                }
+            })
+            .catch(function(error) { console.error('Notification error:', error); });
         }
 
-        var shortMessage = notif.message && notif.message.length > 120
-            ? notif.message.substring(0, 120) + '...'
-            : (notif.message || '');
-
-        html += '<div class="notification-item unread" data-id="' + notif.id + '">'
-            + '<div class="notification-title">'
-            +   '<strong>' + escapeHtml(notif.product_name) + '</strong>'
-            +   '<span class="notification-time">' + notif.time_ago + '</span>'
-            + '</div>'
-            + '<div class="notification-message">'
-            +   '<div>' + escapeHtml(shortMessage) + '</div>'
-            +   '<div style="margin-top:6px;">'
-            +     '<strong>Stock:</strong> ' + notif.current_stock + ' / ' + notif.min_stock_level + ' min'
-            +     ' | <strong>PO:</strong> ' + poHtml
-            +   '</div>'
-            + '</div>'
-            + '<div class="notification-buttons">' + actionButton + '</div>'
-            + '</div>';
-    }
-
-    list.innerHTML = html;
-}
-
-function markUserNotificationAsRead(notificationId) {
-    fetch('{{ route("user.notification.mark-read") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ notification_id: notificationId })
-    })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        if (data.success) {
-            var item = document.querySelector('.notification-item[data-id="' + notificationId + '"]');
-            if (item) {
-                item.style.opacity = '0';
-                item.style.transition = 'opacity 0.3s ease';
-                setTimeout(function() {
-                    item.remove();
-                    var list = document.getElementById('userNotificationList');
-                    if (list && list.querySelectorAll('.notification-item').length === 0) {
-                        list.innerHTML = '<div class="no-notifications">'
-                            + '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>'
-                            + '<p>No new notifications</p></div>';
-                    }
-                }, 300);
+        function updateUserNotificationBell(count) {
+            var badge = document.getElementById('userNotificationBadge');
+            if (!badge) return;
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
             }
-            fetchUserNotifications();
-        } else {
-            alert('Failed to mark as read');
         }
-    })
-    .catch(function(error) { console.error('Error:', error); });
-}
 
-function escapeHtml(text) {
-    if (!text) return '';
-    var div = document.createElement('div');
-    div.textContent = String(text);
-    return div.innerHTML;
-}
+        function renderNotificationDropdown(notifications) {
+            var list = document.getElementById('userNotificationList');
+            if (!list) return;
 
-// Bell toggle
-var userBell     = document.getElementById('userNotificationBell');
-var userDropdown = document.getElementById('userNotificationDropdown');
-if (userBell) {
-    userBell.addEventListener('click', function(e) {
-        e.stopPropagation();
-        userDropdown.classList.toggle('show');
-        if (userDropdown.classList.contains('show')) fetchUserNotifications();
-    });
-}
-document.addEventListener('click', function(e) {
-    if (userDropdown && !userDropdown.contains(e.target) && userBell && !userBell.contains(e.target)) {
-        userDropdown.classList.remove('show');
-    }
-});
+            if (!notifications || notifications.length === 0) {
+                list.innerHTML = '<div class="no-notifications">'
+                    + '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>'
+                    + '<p>No new notifications</p></div>';
+                return;
+            }
 
-fetchUserNotifications();
-// Auto-refresh every 30 seconds (dashboard only needs this, harmless on others)
-setInterval(fetchUserNotifications, 30000);
+            var html = '';
+            for (var i = 0; i < notifications.length; i++) {
+                var notif = notifications[i];
+                var isDamageResolved = notif.is_resolved
+                    || (notif.message && notif.message.includes('DAMAGE RESOLVED'));
+
+                var resolvedBadge = isDamageResolved
+                    ? '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Admin Resolved</span>'
+                    : '';
+
+                var actionButton = notif.status === 'pending'
+                    ? resolvedBadge + '<button class="btn-read-notif" onclick="markUserNotificationAsRead('
+                        + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button>'
+                    : '<span style="color:#28a745;font-size:12px;">'
+                        + '<i class="fas fa-check-double"></i> Read</span>';
+
+                var poHtml = '';
+                if (notif.po_status === 'completed') {
+                    poHtml = '<span style="background:#28a745;color:white;padding:2px 10px;border-radius:15px;font-size:10px;">'
+                        + '<i class="fas fa-check-circle"></i> PO Completed</span>';
+                } else if (notif.po_status === 'pending') {
+                    poHtml = '<span style="background:#ffc107;color:#212529;padding:2px 10px;border-radius:15px;font-size:10px;">'
+                        + '<i class="fas fa-clock"></i> PO Pending</span>';
+                } else if (notif.po_status) {
+                    poHtml = '<span style="background:#17a2b8;color:white;padding:2px 10px;border-radius:15px;font-size:10px;">'
+                        + '<i class="fas fa-shopping-cart"></i> PO Created</span>';
+                } else {
+                    poHtml = '<span style="background:#6c757d;color:white;padding:2px 10px;border-radius:15px;font-size:10px;">'
+                        + '<i class="fas fa-minus-circle"></i> No PO Yet</span>';
+                }
+
+                var shortMessage = notif.message && notif.message.length > 120
+                    ? notif.message.substring(0, 120) + '...'
+                    : (notif.message || '');
+
+                html += '<div class="notification-item unread" data-id="' + notif.id + '">'
+                    + '<div class="notification-title">'
+                    +   '<strong>' + escapeHtml(notif.product_name) + '</strong>'
+                    +   '<span class="notification-time">' + notif.time_ago + '</span>'
+                    + '</div>'
+                    + '<div class="notification-message">'
+                    +   '<div>' + escapeHtml(shortMessage) + '</div>'
+                    +   '<div style="margin-top:6px;">'
+                    +     '<strong>Stock:</strong> ' + notif.current_stock + ' / ' + notif.min_stock_level + ' min'
+                    +     ' | <strong>PO:</strong> ' + poHtml
+                    +   '</div>'
+                    + '</div>'
+                    + '<div class="notification-buttons">' + actionButton + '</div>'
+                    + '</div>';
+            }
+
+            list.innerHTML = html;
+        }
+
+        function markUserNotificationAsRead(notificationId) {
+            fetch('{{ route("user.notification.mark-read") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ notification_id: notificationId })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var item = document.querySelector('.notification-item[data-id="' + notificationId + '"]');
+                    if (item) {
+                        item.style.opacity = '0';
+                        item.style.transition = 'opacity 0.3s ease';
+                        setTimeout(function() {
+                            item.remove();
+                            var list = document.getElementById('userNotificationList');
+                            if (list && list.querySelectorAll('.notification-item').length === 0) {
+                                list.innerHTML = '<div class="no-notifications">'
+                                    + '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>'
+                                    + '<p>No new notifications</p></div>';
+                            }
+                        }, 300);
+                    }
+                    fetchUserNotifications();
+                } else {
+                    showAlertMessage('Failed to mark as read', 'error');
+                }
+            })
+            .catch(function(error) { console.error('Error:', error); });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+
+        // Bell toggle
+        var userBell = document.getElementById('userNotificationBell');
+        var userDropdown = document.getElementById('userNotificationDropdown');
+        if (userBell) {
+            userBell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+                if (userDropdown.classList.contains('show')) fetchUserNotifications();
+            });
+        }
+        document.addEventListener('click', function(e) {
+            if (userDropdown && !userDropdown.contains(e.target) && userBell && !userBell.contains(e.target)) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        fetchUserNotifications();
+        setInterval(fetchUserNotifications, 30000);
     </script>
 </body>
 </html>

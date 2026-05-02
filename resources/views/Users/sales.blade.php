@@ -54,7 +54,7 @@
         .nav-menu { 
             display: flex; 
             flex-direction: column; 
-            gap: 25px; 
+            gap: 15px; 
             padding: 5px; 
         }
         .nav-menu button {
@@ -291,10 +291,10 @@
             gap: 12px; 
             font-size: 14px; 
             font-weight: 600;
+            transition: all 0.3s ease; 
         }
-        .logout-container:hover {
-            transform: translateY(3px);
-            box-shadow: 0 -4px 5px rgba(0, 0, 0, 0.1);
+        .logout-btn:hover { 
+            transform: translateY(-2px); 
         }
 
         .stats { 
@@ -478,6 +478,10 @@
         .product-grid::-webkit-scrollbar-thumb { 
             background: #2c6e62; 
             border-radius: 10px; 
+        }
+        .product-grid {
+            scrollbar-width: thin;
+            scrollbar-color: #2c6e62 #f1f1f1;
         }
         .product-card {
             background: white; 
@@ -712,6 +716,32 @@
             background: #2c6e62; 
             border-radius: 10px; 
         }
+        .table-container {
+            scrollbar-width: thin;
+            scrollbar-color: #2c6e62 #f1f1f1;
+        }
+        .recordcount {
+            color: rgb(71, 241, 4);
+            padding: 11px 18px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            background: linear-gradient(180deg, rgb(15,43,61) 0%, rgb(25,110,114) 100%);   
+        }
+        .count { 
+            font-weight: 600; 
+            color: white; 
+        }
+        .right { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+        }
         .badge-success { 
             background: #28a745; 
             color: white; 
@@ -755,6 +785,48 @@
             background: #6c757d !important; 
             cursor: not-allowed !important; 
             opacity: 0.6; 
+        }
+        /*CUSTOM PAGINATION */
+        .custom-pagination {
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 8px; 
+            margin-top: 20px; 
+            flex-wrap: wrap;
+        }
+        .custom-pagination a, .custom-pagination span {
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            min-width: 32px; 
+            height: 32px; 
+            padding: 0 4px; 
+            text-decoration: none; 
+            font-size: 14px; 
+            border-radius: 4px;
+        }
+        .custom-pagination a { 
+            color: #4a5568; 
+            background: transparent; 
+            transition: all 0.2s; 
+            cursor: pointer; 
+        }
+        .custom-pagination a:hover { 
+            background: #2c6e62; 
+            color: white; 
+        }
+        .custom-pagination .page-active { 
+            background: #2c6e62; 
+            color: white; 
+        }
+        .custom-pagination .page-disabled { 
+            color: #cbd5e0; 
+            cursor: default; 
+        }
+        .custom-pagination .page-dots { 
+            color: #a0aec0; 
+            cursor: default; 
         }
 
         .modal-container {
@@ -1082,13 +1154,17 @@
             </div>
         </div>
 
+        <div id="dynamicAlertContainer"></div>
+
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}
+            <div class="alert-success sessionAlert">
+                {{ session('success') }}
                 <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">{{ session('error') }}
+            <div class="alert-error sessionAlert">
+                {{ session('error') }}
                 <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
@@ -1126,10 +1202,16 @@
                         </select>
                     </form>
                 </div>
-                <div class="add-new-sale">
-                    <button id="open_new_sale_modal" class="new-sale-button">
-                        <i class="fas fa-plus"></i> New Sale
-                    </button>
+                <div class="right">
+                    <div class="recordcount">
+                        <span class="count">Total Sales: </span>
+                        <strong>{{ $sales->total() }}</strong>
+                    </div>
+                    <div class="add-new-sale">
+                        <button id="open_new_sale_modal" class="new-sale-button">
+                            <i class="fas fa-plus"></i> New Sale
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1194,11 +1276,9 @@
                                 <i class="fas fa-credit-card"></i> Complete Sale
                             </button>
                         </div>
-
                     </div>
                 </div>
             </div>
-]
             <div class="modal-container" id="saleDetailsModal">
                 <div class="modal">
                     <div class="modal-header">
@@ -1322,18 +1402,66 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" style="text-align:center;padding:30px;">No sales recorded yet</td>
+                                <td colspan="7" style="text-align:center; padding:40px;">
+                                    <i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i>
+                                    <p>No transactions found</p>
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+                <!-- Custom Pagination -->
+                <div class="pagination-container" id="customPagination"></div>
+                <input type="hidden" id="currentPage" value="{{ $sales->currentPage() }}">
+                <input type="hidden" id="lastPage" value="{{ $sales->lastPage() }}">
             </div>
 
         </div>{{-- end .sales-view --}}
     </div>{{-- end .main-content --}}
 
     <script>
+
+        function showAlertMessage(message, type) {
+            var alertContainer = document.getElementById('dynamicAlertContainer');
+            if (!alertContainer) return;
+            
+            var alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) {
+                    alertDiv.style.opacity = '0';
+                    alertDiv.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+                    }, 500);
+                }
+            }, 3000);
+        }
+        function autoCloseSessionAlerts() {
+            var sessionAlert = document.querySelector('.sessionAlert');
+            if (sessionAlert) {
+                setTimeout(function() {
+                    if (sessionAlert) {
+                        sessionAlert.style.opacity = '0';
+                        sessionAlert.style.transition = 'opacity 0.5s ease';
+                        setTimeout(function() {
+                            if (sessionAlert && sessionAlert.parentElement) {
+                                sessionAlert.remove();
+                            }
+                        }, 500);
+                    }
+                }, 3000);
+            }
+        }
+
     function escapeHtml(text) {
         if (text === null || text === undefined) return '';
         const d = document.createElement('div');
@@ -1469,18 +1597,22 @@
             const result = await response.json();
 
             if (result.success) {
-                alert('Sale #' + result.sale_id + ' completed! (' + items.length + ' product type(s))');
+                // Use the new alert bar instead of popup
+                showAlertMessage('Sale #' + result.sale_id + ' completed! (' + items.length + ' product type(s))', 'success');
                 newSaleModal.classList.remove('show');
                 resetCart();
-                location.reload();
+                // Refresh the page after 2 seconds to show the new sale
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
             } else {
-                alert('Error: ' + (result.message || 'Unknown error'));
+                showAlertMessage('Error: ' + (result.message || 'Unknown error'), 'error');
                 this.disabled = false;
                 this.innerHTML = '<i class="fas fa-credit-card"></i> Complete Sale';
             }
         } catch (err) {
             console.error(err);
-            alert('Network error. Please try again.');
+            showAlertMessage('Network error. Please try again.', 'error');
             this.disabled = false;
             this.innerHTML = '<i class="fas fa-credit-card"></i> Complete Sale';
         }
@@ -1736,10 +1868,63 @@ document.addEventListener('click', function(e) {
         userDropdown.classList.remove('show');
     }
 });
+    //  CUSTOM PAGINATION
+    function renderPagination() {
+        var currentPage = parseInt(document.getElementById('currentPage').value);
+        var lastPage = parseInt(document.getElementById('lastPage').value);
+        var paginationContainer = document.getElementById('customPagination');
+        if (!paginationContainer || lastPage <= 1) return;
+        
+        var html = '<div class="custom-pagination">';
+        if (currentPage > 1) html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
+        else html += '<span class="page-disabled">&lt;</span>';
+        
+        var startPage = Math.max(1, currentPage - 2);
+        var endPage = Math.min(lastPage, currentPage + 2);
+        if (currentPage <= 3) endPage = Math.min(lastPage, 5);
+        if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
+        
+        if (startPage > 1) {
+            html += '<a href="#" class="page-link" data-page="1">1</a>';
+            if (startPage > 2) html += '<span class="page-dots">...</span>';
+        }
+        
+        for (var i = startPage; i <= endPage; i++) {
+            if (i === currentPage) html += '<span class="page-active">' + i + '</span>';
+            else html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
+        }
+        
+        if (endPage < lastPage) {
+            if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
+            html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
+        }
+        
+        if (currentPage < lastPage) html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
+        else html += '<span class="page-disabled">&gt;</span>';
+        html += '</div>';
+        paginationContainer.innerHTML = html;
+        
+        var pageLinks = document.querySelectorAll('.page-link');
+        for (var i = 0; i < pageLinks.length; i++) {
+            pageLinks[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                var page = this.getAttribute('data-page');
+                if (page) {
+                    var urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('page', page);
+                    window.location.href = window.location.pathname + '?' + urlParams.toString();
+                }
+            });
+        }
+    }
 
-fetchUserNotifications();
-// Auto-refresh every 30 seconds (dashboard only needs this, harmless on others)
-setInterval(fetchUserNotifications, 30000);
+//  INITIALIZE
+    document.addEventListener('DOMContentLoaded', function() {
+        renderPagination();
+        fetchUserNotifications();
+        autoCloseSessionAlerts();
+        setInterval(fetchUserNotifications, 30000);
+    });
     </script>
 </body>
 </html>

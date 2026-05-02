@@ -402,6 +402,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
         }
         .search-btn:hover {
             background: rgb(22, 155, 128);
@@ -1169,16 +1170,18 @@
             </div>
         </div>
 
+        <div id="dynamicAlertContainer"></div>
+
         @if(session('success'))
-            <div class="alert-success">
+            <div class="alert-success sessionAlert">
                 {{ session('success') }}
-                <button type="button" class="close-btn" onclick="this.parentElement.style.display = 'none'">&times;</button>
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">
+            <div class="alert-error sessionAlert">
                 {{ session('error') }}
-                <button type="button" class="close-btn" onclick="this.parentElement.style.display = 'none'">&times;</button>
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
 
@@ -1319,7 +1322,44 @@
     </div>
 
     <script>
-        // ==================== CONTACT NUMBER VALIDATION ====================
+
+        function showAlertMessage(message, type) {
+            var alertContainer = document.getElementById('dynamicAlertContainer');
+            if (!alertContainer) return;
+            
+            var alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) {
+                    alertDiv.style.opacity = '0';
+                    alertDiv.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+                    }, 500);
+                }
+            }, 3000);
+        }
+
+        function autoCloseSessionAlerts() {
+            var sessionAlerts = document.querySelectorAll('.session-alert');
+            sessionAlerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alert && alert.parentElement) alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        }
+        //CONTACT NUMBER VALIDATION
         function onlyNumbersAndAllowedChars(event) {
             const allowedChars = /[0-9\s\(\)\+-]/;
             const key = event.key;
@@ -1338,7 +1378,7 @@
             if (cleaned !== input.value) input.value = cleaned;
         }
 
-        // ==================== AUTOCOMPLETE FUNCTIONALITY ====================
+        //AUTOCOMPLETE FUNCTIONALITY
         var supplierDataElement = document.getElementById('supplierData');
         var allSuppliers = [];
         
@@ -1640,6 +1680,7 @@
 
         // Initial fetch for badge count and auto-refresh
         document.addEventListener('DOMContentLoaded', function() {
+            autoCloseSessionAlerts();
             renderPagination();
             fetchNotifications();
             setInterval(fetchNotifications, 30000);

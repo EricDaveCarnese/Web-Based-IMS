@@ -168,12 +168,11 @@
             gap: 12px;
             font-size: 14px;
             font-weight: 600;
+            transition: all 0.3s ease; 
         }
-        .logout-container:hover {
-            transform: translateY(3px);
-            box-shadow: 0 -4px 5px rgba(0, 0, 0, 0.1);
+        .logout-btn:hover { 
+            transform: translateY(-2px); 
         }
-        /* Notification Bell Styles */
         .notification-area {
             position: relative;
             display: inline-block;
@@ -337,7 +336,6 @@
             gap: 5px;
         }
         
-        /* Stats Cards */
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -374,7 +372,6 @@
             color: #9ca3af;
         }
         
-        /* Stock Distribution Card */
         .stock-card {
             background: white;
             border-radius: 20px;
@@ -579,7 +576,6 @@
             color: #2c6e62;
         }
         
-        /* View Button */
         .view-details-btn {
             background: #007bff;
             color: white;
@@ -598,7 +594,6 @@
             transform: scale(1.02);
         }
 
-        /* Scrollable Table Container */
         .table-container {
             max-height: 500px;
             overflow-y: auto;
@@ -661,7 +656,6 @@
             color: #b45309;
         }
         
-        /* Alert Messages */
         .alert-success {
             position: relative;
             background-color: #d4edda;
@@ -719,7 +713,6 @@
             display: none;
         }
         
-        /* Custom Pagination */
         .custom-pagination {
             display: flex;
             justify-content: center;
@@ -766,7 +759,6 @@
             .custom-pagination a, .custom-pagination span { min-width: 28px; height: 28px; font-size: 12px; }
         }
 
-        /* Modal Styles */
         .modal-container {
             position: fixed;
             top: 0;
@@ -858,7 +850,6 @@
             padding: 30px;
         }
 
-        /* Toast Message */
         .toast-message {
             position: fixed;
             bottom: 20px;
@@ -876,7 +867,6 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* Responsive */
         @media (max-width: 1200px) {
             .stats { margin: 20px 30px; gap: 20px; }
             .dashboard-row { margin: 0 30px 20px 30px; }
@@ -1076,19 +1066,22 @@
             </div>
         </div>
 
+       <div id="dynamicAlertContainer"></div>
+
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-success session-alert">
+                {{ session('success') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">{{ session('error') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-error session-alert">
+                {{ session('error') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
 
-        <div id="categoryData" class="hidden-data" data-categories='@json($categoryDistribution ?? [])'>
-        </div>
+        <div id="categoryData" class="hidden-data" data-categories='@json($categoryDistribution ?? [])'></div>
         <div id="salesChartData" class="hidden-data" data-sales='@json($salesData ?? [])'></div>
 
         <div class="stats">
@@ -1201,9 +1194,15 @@
                                 @endif
                             </td>
                             <td>
-                                <button class="view-details-btn" onclick="viewTransactionDetails('{{ $transaction->type }}', '{{ $transaction->reference_id ?? ',' }}')">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
+                                @if($transaction->type == 'Sale')
+                                    <button class="view-details-btn" data-sale-id="{{ $transaction->reference_id ?? '' }}" onclick="viewSaleDetails(this.getAttribute('data-sale-id'))">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                @elseif($transaction->type == 'Purchase')
+                                    <button class="view-details-btn" data-purchase-id="{{ $transaction->reference_id ?? '' }}" onclick="viewPurchaseDetails(this.getAttribute('data-purchase-id'))">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -1223,15 +1222,15 @@
         </div>
     </div>
 
-        <!-- Sale Details Modal -->
-        <div class="modal-container" id="saleDetailsModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <h2>
-                        <i class="fa-solid fa-receipt"></i> Sale Details #
-                        <span id="sale_detail_id"></span>
-                    </h2>
-                </div>
+    <!-- Sale Details Modal -->
+    <div class="modal-container" id="saleDetailsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fa-solid fa-receipt"></i> Sale Details #
+                    <span id="sale_detail_id"></span>
+                </h2>
+            </div>
             <div class="modal-body">
                 <div class="sale-info">
                     <strong>Cashier:</strong>
@@ -1243,42 +1242,43 @@
                     <strong>Status:</strong>
                         <span id="sale_status_display"></span>
                 </div>
-            <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: 
-                <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span>
-            </h4>
-            <div style="overflow-x:auto;">
-                <table class="details-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Product</th>
-                            <th style="text-align:center">Qty</th>
-                            <th style="text-align:right">Unit Price</th>
-                            <th style="text-align:right">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sale_items_table">
-                        <tr class="spinner-row">
-                            <td colspan="5">
-                                <i class="fas fa-spinner fa-spin"></i> Loading…
-                            </td>
-                        </tr>
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
-                            <td style="text-align:right">
-                                <strong id="sale_total">₱0.00</strong>
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: 
+                    <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span>
+                </h4>
+                <div style="overflow-x:auto;">
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th style="text-align:center">Qty</th>
+                                <th style="text-align:right">Unit Price</th>
+                                <th style="text-align:right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sale_items_table">
+                            <tr class="spinner-row">
+                                <td colspan="5">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading…
+                                 </td>
+                             </tr>
+                        </tbody>
+                        <tfoot>
+                             <tr>
+                                <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
+                                <td style="text-align:right">
+                                    <strong id="sale_total">₱0.00</strong>
+                                </td>
+                             </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
+            <button id="close_sale_modal" class="cancel-button">
+                <i class="fa-solid fa-circle-xmark"></i> Close
+            </button>
         </div>
-    <button id="close_sale_modal" class="cancel-button">
-        <i class="fa-solid fa-circle-xmark"></i> Close
-    </button>
-</div>
+    </div>
 
     <!-- Purchase Details Modal -->
     <div class="modal-container" id="purchaseDetailsModal">
@@ -1288,59 +1288,95 @@
                     <span id="purchase_id"></span>
                 </h2>
             </div>
-        <div class="modal-body">
-            <div class="purchase-info">
-                <strong>Supplier:</strong>
-                    <span id="purchase_supplier"></span>
-                <br>
-                <strong>Date:</strong>
-                    <span id="purchase_date"></span>
-                <br>
+            <div class="modal-body">
+                <div class="purchase-info">
+                    <strong>Supplier:</strong>
+                        <span id="purchase_supplier"></span>
+                    <br>
+                    <strong>Date:</strong>
+                        <span id="purchase_date"></span>
+                    <br>
                     <strong>Batch #:</strong>
-                <span id="purchase_batch"></span>
-                <br>
+                        <span id="purchase_batch"></span>
+                    <br>
                     <strong>Status:</strong>
-                <span id="purchase_status"></span>
+                        <span id="purchase_status"></span>
+                </div>
+                <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Purchased:</h4>
+                <div style="overflow-x:auto;">
+                    <table class="details-table">
+                        <thead>
+                             <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th style="text-align:center">Qty</th>
+                                <th style="text-align:right">Cost Price</th>
+                                <th style="text-align:right">Total</th>
+                             </tr>
+                        </thead>
+                        <tbody id="purchase_items_table">
+                            <tr class="spinner-row">
+                                <td colspan="5">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading…
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                             <tr>
+                                <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
+                                <td style="text-align:right">
+                                    <strong id="purchase_total">₱0.00</strong>
+                                </td>
+                             </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <button id="close_purchase_modal" class="cancel-button">
+                    <i class="fa-solid fa-circle-xmark"></i> Close
+                </button>
             </div>
-            <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Purchased:</h4>
-            <div style="overflow-x:auto;">
-                <table class="details-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Product</th>
-                            <th style="text-align:center">Qty</th>
-                            <th style="text-align:right">Cost Price</th>
-                            <th style="text-align:right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="purchase_items_table">
-                        <tr class="spinner-row">
-                            <td colspan="5">
-                                <i class="fas fa-spinner fa-spin"></i> Loading…
-                            </td>
-                        </tr>
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
-                            <td style="text-align:right">
-                                <strong id="purchase_total">₱0.00</strong>
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-            <button id="close_purchase_modal" class="cancel-button">
-                <i class="fa-solid fa-circle-xmark"></i> Close
-            </button>
         </div>
-    </div>
     </div>
 
     <div id="suggestionData" style="display:none;" data-suggestions='@json(array_unique(array_merge(\App\Models\Product::pluck("product_name")->toArray(), \App\Models\StockReport::distinct()->pluck("user_name")->toArray())))'></div>
 
     <script>
+        function showAlertMessage(message, type) {
+            var alertContainer = document.getElementById('dynamicAlertContainer');
+            if (!alertContainer) return;
+            
+            var alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) {
+                    alertDiv.style.opacity = '0';
+                    alertDiv.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+                    }, 500);
+                }
+            }, 3000);
+        }
+
+        function autoCloseSessionAlerts() {
+            var sessionAlerts = document.querySelectorAll('.session-alert');
+            sessionAlerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alert && alert.parentElement) alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        }
         document.addEventListener('DOMContentLoaded', function() {
             // Stock by Category Chart
             var categoryData = [];
@@ -1384,35 +1420,53 @@
             const searchInput = document.getElementById('searchInput');
             const statusFilter = document.getElementById('statusFilter');
             function filterAndDisplay() {
-                const searchTerm = searchInput?.value.toLowerCase() || '';
-                const statusValue = statusFilter?.value || 'all';
-                const rows = document.querySelectorAll('#transactionsTableBody tr');
-                rows.forEach(row => {
-                    const product = row.cells[2]?.textContent.toLowerCase() || '';
-                    const category = row.cells[3]?.textContent.toLowerCase() || '';
-                    const status = row.cells[6]?.textContent.toLowerCase() || '';
-                    let show = true;
-                    if (statusValue !== 'all' && status !== statusValue) show = false;
-                    if (searchTerm && !product.includes(searchTerm) && !category.includes(searchTerm)) show = false;
-                    row.style.display = show ? '' : 'none';
-                });
+            const searchTerm = searchInput?.value.toLowerCase() || '';
+            const statusValue = statusFilter?.value || 'all';
+            const rows = document.querySelectorAll('#transactionsTableBody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                if (row.id === 'noResultsRow') return;
+
+                const product = row.cells[2]?.textContent.toLowerCase() || '';
+                const category = row.cells[3]?.textContent.toLowerCase() || '';
+                const status = row.cells[6]?.textContent.toLowerCase() || '';
+                let show = true;
+                if (statusValue !== 'all' && status !== statusValue) show = false;
+                if (searchTerm && !product.includes(searchTerm) && !category.includes(searchTerm)) show = false;
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+
+            const tbody = document.getElementById('transactionsTableBody');
+            let noResultsRow = document.getElementById('noResultsRow');
+
+            if (visibleCount === 0) {
+                if (!noResultsRow) {
+                    noResultsRow = document.createElement('tr');
+                    noResultsRow.id = 'noResultsRow';
+                    noResultsRow.innerHTML = `<td colspan="8" style="text-align:center; padding:40px;">
+                        <i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i>
+                        <p>No transactions found</p>
+                    </td>`;
+                    tbody.appendChild(noResultsRow);
+                }
+                noResultsRow.style.display = '';
+            } else {
+                if (noResultsRow) noResultsRow.style.display = 'none';
             }
+        }
             if (searchInput) searchInput.addEventListener('keyup', filterAndDisplay);
             if (statusFilter) statusFilter.addEventListener('change', filterAndDisplay);
         });
 
         // ==================== VIEW TRANSACTION DETAILS ====================
-        function viewTransactionDetails(type, referenceId) {
-            if (!referenceId || referenceId === '') { 
+        function viewSaleDetails(id) {
+            if (!id || id === '') { 
                 alert('No reference ID available for this transaction'); 
                 return; 
             }
-            if (type === 'Sale') viewSaleDetails(referenceId);
-            else if (type === 'Purchase') viewPurchaseDetails(referenceId);
-            else alert('Unknown transaction type: ' + type);
-        }
-
-        function viewSaleDetails(id) {
+            
             const modal = document.getElementById('saleDetailsModal');
             modal.classList.add('show');
             document.getElementById('sale_detail_id').textContent = id;
@@ -1420,10 +1474,21 @@
             document.getElementById('sale_date_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('sale_status_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('sale_total').textContent = '₱0.00';
-            document.getElementById('sale_items_table').innerHTML =
-            '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...</td></tr>';
-            fetch('/admin/sale/details/' + id, { method: 'GET', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, credentials: 'same-origin' })
-            .then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
+            document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...<\/td><\/tr>';
+            
+            fetch('/admin/sale/details/' + id, { 
+                method: 'GET', 
+                headers: { 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
+                    'X-Requested-With': 'XMLHttpRequest', 
+                    'Accept': 'application/json' 
+                }, 
+                credentials: 'same-origin' 
+            })
+            .then(function(response) { 
+                if (!response.ok) throw new Error('HTTP ' + response.status); 
+                return response.json(); 
+            })
             .then(function(sale) {
                 if (sale.error) throw new Error(sale.error);
                 document.getElementById('sale_cashier').innerHTML = sale.user?.fullname || 'N/A';
@@ -1436,102 +1501,107 @@
                 var totalUnits = 0;
                 for (var i = 0; i < details.length; i++) totalUnits += details[i].quantity;
                 document.getElementById('sale_items_count').innerHTML = '(' + details.length + ' product type' + (details.length !== 1 ? 's' : '') + ', ' + totalUnits + ' unit' + (totalUnits !== 1 ? 's' : '') + ')';
-                if (details.length === 0) { document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>'; return; }
+                if (details.length === 0) { document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found<\/td><\/tr>'; return; }
                 var html = '';
                 for (var i = 0; i < details.length; i++) {
                     var item = details[i];
                     html += '<tr>'
-                        + '<td>' + (i + 1) + '</td>'
-                        + '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '</td>'
-                        + '<td style="text-align:center">' + item.quantity + '</td>'
-                        + '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>'
-                        + '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>'
-                        + '</tr>';
+                        + '<td>' + (i + 1) + '<\/td>'
+                        + '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '<\/td>'
+                        + '<td style="text-align:center">' + item.quantity + '<\/td>'
+                        + '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>'
+                        + '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>'
+                        + '<\/tr>';
                 }
                 document.getElementById('sale_items_table').innerHTML = html;
             })
-            .catch(function(err) { console.error('Sale details error:', err); document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading sale details: ' + err.message + '</td></tr>'; });
+            .catch(function(err) { 
+                console.error('Sale details error:', err); 
+                document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading sale details: ' + err.message + '<\/td><\/tr>'; 
+            });
         }
 
         function viewPurchaseDetails(id) {
-    const modal = document.getElementById('purchaseDetailsModal');
-    modal.classList.add('show');
-    document.getElementById('purchase_id').textContent = id;
-    document.getElementById('purchase_supplier').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-    document.getElementById('purchase_date').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-    document.getElementById('purchase_batch').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-    document.getElementById('purchase_status').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-    document.getElementById('purchase_total').textContent = '₱0.00';
-    document.getElementById('purchase_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading purchase details...<\/td><\/tr>';
-    
-    fetch('/admin/purchase/details/' + id, { 
-        method: 'GET', 
-        headers: { 
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
-            'X-Requested-With': 'XMLHttpRequest', 
-            'Accept': 'application/json' 
-        }, 
-        credentials: 'same-origin' 
-    })
-    .then(function(response) { 
-        if (!response.ok) throw new Error('HTTP ' + response.status); 
-        return response.json(); 
-    })
-    .then(function(data) {
-        if (data.error) throw new Error(data.error);
-        
-        document.getElementById('purchase_supplier').innerHTML = data.supplier_name || 'N/A';
-        document.getElementById('purchase_date').innerHTML = data.order_date || 'N/A';
-        document.getElementById('purchase_batch').innerHTML = data.batch_number || 'N/A';
-        
-        var statusClass = data.status === 'completed' ? 'badge-success' : (data.status === 'pending' ? 'badge-warning' : 'badge');
-        var statusLabel = data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Unknown';
-        document.getElementById('purchase_status').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
-        
-        // FIXED: Check if data has items array or direct product data
-        var items = [];
-        var total = 0;
-        
-        // If data has items array (for multi-item purchases)
-        if (data.items && data.items.length > 0) {
-            items = data.items;
-            total = data.total_amount || 0;
-        } 
-        // If data has single product fields (for single product purchases)
-        else if (data.product_name) {
-            items = [{
-                product_name: data.product_name,
-                quantity: data.quantity || 0,
-                cost_price: data.cost_price || 0,
-                total: data.total || 0
-            }];
-            total = data.total || 0;
-        }
-        
-        if (items.length === 0) { 
-            document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found<\/td><\/tr>'; 
-        } else {
-            var itemsHtml = '';
-            for (var i = 0; i < items.length; i++) {
-                var item = items[i];
-                itemsHtml += '<tr>' +
-                    '<td>' + (i + 1) + '</td>' +
-                    '<td>' + escapeHtml(item.product_name || 'N/A') + '</td>' +
-                    '<td style="text-align:center">' + (item.quantity || 0) + '</td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.total || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
-                '</tr>';
+            if (!id || id === '') { 
+                alert('No reference ID available for this purchase'); 
+                return; 
             }
-            document.getElementById('purchase_items_table').innerHTML = itemsHtml;
+            
+            const modal = document.getElementById('purchaseDetailsModal');
+            modal.classList.add('show');
+            document.getElementById('purchase_id').textContent = id;
+            document.getElementById('purchase_supplier').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            document.getElementById('purchase_date').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            document.getElementById('purchase_batch').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            document.getElementById('purchase_status').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            document.getElementById('purchase_total').textContent = '₱0.00';
+            document.getElementById('purchase_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading purchase details...<\/td><\/tr>';
+            
+            fetch('/admin/purchase/details/' + id, { 
+                method: 'GET', 
+                headers: { 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
+                    'X-Requested-With': 'XMLHttpRequest', 
+                    'Accept': 'application/json' 
+                }, 
+                credentials: 'same-origin' 
+            })
+            .then(function(response) { 
+                if (!response.ok) throw new Error('HTTP ' + response.status); 
+                return response.json(); 
+            })
+            .then(function(data) {
+                if (data.error) throw new Error(data.error);
+                
+                document.getElementById('purchase_supplier').innerHTML = data.supplier_name || 'N/A';
+                document.getElementById('purchase_date').innerHTML = data.order_date || 'N/A';
+                document.getElementById('purchase_batch').innerHTML = data.batch_number || 'N/A';
+                
+                var statusClass = data.status === 'completed' ? 'badge-success' : (data.status === 'pending' ? 'badge-warning' : 'badge');
+                var statusLabel = data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Unknown';
+                document.getElementById('purchase_status').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
+                
+                var items = [];
+                var total = 0;
+                
+                if (data.items && data.items.length > 0) {
+                    items = data.items;
+                    total = data.total_amount || 0;
+                } 
+                else if (data.product_name) {
+                    items = [{
+                        product_name: data.product_name,
+                        quantity: data.quantity || 0,
+                        cost_price: data.cost_price || 0,
+                        total: data.total || 0
+                    }];
+                    total = data.total || 0;
+                }
+                
+                if (items.length === 0) { 
+                    document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found<\/td><\/tr>'; 
+                } else {
+                    var itemsHtml = '';
+                    for (var i = 0; i < items.length; i++) {
+                        var item = items[i];
+                        itemsHtml += '<tr>' +
+                            '<td>' + (i + 1) + '<\/td>' +
+                            '<td>' + escapeHtml(item.product_name || 'N/A') + '<\/td>' +
+                            '<td style="text-align:center">' + (item.quantity || 0) + '<\/td>' +
+                            '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
+                            '<td style="text-align:right">₱' + parseFloat(item.total || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
+                        '<\/tr>';
+                    }
+                    document.getElementById('purchase_items_table').innerHTML = itemsHtml;
+                }
+                
+                document.getElementById('purchase_total').textContent = '₱' + parseFloat(total).toLocaleString(undefined, { minimumFractionDigits: 2 });
+            })
+            .catch(function(err) { 
+                console.error('Purchase details error:', err); 
+                document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading purchase details: ' + err.message + '<\/td><\/tr>'; 
+            });
         }
-        
-        document.getElementById('purchase_total').textContent = '₱' + parseFloat(total).toLocaleString(undefined, { minimumFractionDigits: 2 });
-    })
-    .catch(function(err) { 
-        console.error('Purchase details error:', err); 
-        document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading purchase details: ' + err.message + '</td></tr>'; 
-    });
-}
 
         function escapeHtml(text) {
             if (!text) return '';
@@ -1540,7 +1610,7 @@
             return div.innerHTML;
         }
 
-         // Modal Close Handlers
+        // Modal Close Handlers
         var saleModal = document.getElementById('saleDetailsModal');
         var closeSaleModal = document.getElementById('close_sale_modal');
         var purchaseModal = document.getElementById('purchaseDetailsModal');
@@ -1578,6 +1648,7 @@
                 });
             });
         }
+
         function showToastMessage(message, bgColor) {
             var toast = document.createElement('div');
             toast.className = 'toast-message';
@@ -1587,7 +1658,7 @@
             setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
         }
 
-        // ==================== FIXED NOTIFICATION FUNCTIONS WITH CORRECT DAMAGE QUANTITY ====================
+        // ==================== NOTIFICATION FUNCTIONS ====================
         function fetchNotifications() {
             fetch('/admin/stock-reports/notifications', { method: 'GET', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(response) { return response.json(); })
@@ -1641,7 +1712,6 @@
             list.innerHTML = html;
         }
         
-        // ==================== OPEN DAMAGE EDIT MODAL WITH CORRECT QUANTITY ====================
         function openDamageEditModal(productId, productName, damageQuantity, reportId) {
             showToastMessage('Loading product for damage report (' + damageQuantity + ' units)...', '#fd7e14');
             sessionStorage.setItem('edit_product_id', productId);
@@ -1650,15 +1720,6 @@
             sessionStorage.setItem('damage_report_id', reportId);
             sessionStorage.setItem('edit_from_damage_report', 'true');
             window.location.href = '/admin/products?edit_damage=1&product_id=' + productId + '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
-        }
-        
-        function showToastMessage(message, bgColor) {
-            var toast = document.createElement('div');
-            toast.className = 'toast-message';
-            toast.style.background = bgColor || '#28a745';
-            toast.innerHTML = '<i class="fas fa-info-circle"></i> ' + message;
-            document.body.appendChild(toast);
-            setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
         }
         
         function markAsRead(reportId) {
@@ -1670,21 +1731,18 @@
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success) {
-                    // Remove item from bell dropdown immediately
                     var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
                     if (item) {
                         item.style.opacity = '0';
                         item.style.transition = 'opacity 0.3s ease';
                         setTimeout(function() {
                             item.remove();
-                            // Check if dropdown is now empty
                             var list = document.getElementById('notificationList');
                             if (list && list.querySelectorAll('.notification-item').length === 0) {
                                 list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
                             }
                         }, 300);
                     }
-                    // Refresh bell count
                     fetchNotifications();
                 } else {
                     alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
@@ -1712,6 +1770,7 @@
         document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
         
         // Initialize
+        autoCloseSessionAlerts();
         renderPagination();
         fetchNotifications();
         setInterval(fetchNotifications, 30000);

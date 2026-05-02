@@ -1181,16 +1181,18 @@
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="alert-success">
+       <div id="dynamicAlertContainer"></div>
+
+        @if(session('success'))
+            <div class="alert-success session-alert">
                 {{ session('success') }}
-                <button type="button" class="close-btn" onclick="this.parentElement.style.display = 'none'">&times;</button>
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
-        @if (session('error'))
-            <div class="alert-error">
+        @if(session('error'))
+            <div class="alert-error session-alert">
                 {{ session('error') }}
-                <button type="button" class="close-btn" onclick="this.parentElement.style.display = 'none'">&times;</button>
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
 
@@ -1340,8 +1342,8 @@
                     <table class="record-table">
                         <thead>
                             <tr>
-                                <th>PO #</th>
                                 <th>Batch #</th>
+                                <th>PO #</th>
                                 <th>Supplier</th>
                                 <th>Order Date</th>
                                 <th>Total</th>
@@ -1375,15 +1377,15 @@
                                         <span>
                                             @if ($purchase->status == 'completed')
                                                 <span class="badge-completed">
-                                                    <i class="fa-solid fa-check"></i>Completed
+                                                    <i class="fa-solid fa-check"></i> Completed
                                                 </span>
                                             @elseif ($purchase->status == 'pending')
                                                 <span class="badge-pending">
-                                                    <i class="fa-solid fa-spinner"></i>Pending
+                                                    <i class="fa-solid fa-spinner"></i> Pending
                                                 </span>
                                             @else
                                                 <span class="badge-canceled">
-                                                    <i class="fa-solid fa-ban"></i>Canceled
+                                                    <i class="fa-solid fa-ban"></i> Canceled
                                                 </span>
                                             @endif
                                         </span>
@@ -1415,7 +1417,7 @@
                                                     <i class="fas fa-check-double" ></i>Received
                                                 </span>
                                             @else
-                                                <span style="color: #dc3545;font-size: 12px;">
+                                                <span class="ordered-text" style="color: #dc3545;font-size: 12px;">
                                                     <i class="fas fa-ban"></i>Canceled
                                                 </span>
                                             @endif
@@ -1442,6 +1444,44 @@
     </div>
 
     <script>
+
+    function showAlertMessage(message, type) {
+        var alertContainer = document.getElementById('dynamicAlertContainer');
+            if (!alertContainer) return;
+                
+            var alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+                
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+                
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) {
+                    alertDiv.style.opacity = '0';
+                    alertDiv.style.transition = 'opacity 0.5s ease';
+                        setTimeout(function() {
+                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+                    }, 500);
+                }
+            }, 3000);
+        }
+
+        function autoCloseSessionAlerts() {
+            var sessionAlerts = document.querySelectorAll('.session-alert');
+            sessionAlerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alert && alert.parentElement) alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        }
+
         //  UTILITY FUNCTIONS
         function escapeHtml(text) {
             if (!text) return '';
@@ -2201,7 +2241,9 @@
             document.addEventListener('click', function () {
                 if (dropdown) dropdown.classList.remove('show');
             });
-            //INITIAL FETCH
+            
+            autoCloseSessionAlerts();
+            renderPagination();
             fetchNotifications();
             setInterval(fetchNotifications, 30000);
         });

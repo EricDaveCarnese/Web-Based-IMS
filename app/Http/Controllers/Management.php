@@ -1012,24 +1012,30 @@ public function deleteProduct($id)
         return redirect()->back()->with('error', 'Failed to create purchase order: ' . $e->getMessage());
     }
 }
-public function getUserNotifications(Request $request)
-{
-    $userId = Auth::id();
+    public function getUserNotifications(Request $request)
+    {
+        $userId = Auth::id();
 
-    $query = StockReport::where('user_id', $userId)
-        ->where('notify_users', true)
-        ->orderBy('created_at', 'desc');
+        $query = StockReport::where('user_id', $userId)
+            ->where('notify_users', true)
+            ->orderBy('created_at', 'desc');
 
-    $status = $request->status;
-    if ($status && $status != 'all') {
-        $query->where('status', $status);
+        // Add search functionality
+        $search = $request->search;
+        if ($search) {
+            $query->where('product_name', 'like', "%{$search}%");
+        }
+
+        $status = $request->status;
+        if ($status && $status != 'all') {
+            $query->where('status', $status);
+        }
+
+        $notifications = $query->paginate(15);
+        $notifications->appends(['search' => $search, 'status' => $status]);
+
+        return view('Users.notifications', compact('notifications'));
     }
-
-    $notifications = $query->paginate(15);
-    $notifications->appends(['status' => $status]);
-
-    return view('Users.notifications', compact('notifications'));
-}
 
 public function getUserNotificationsBell()
 {
@@ -1622,7 +1628,7 @@ public function getUserUnreadCount()
             $query->where('status', 'pending');
         }
 
-        $sales = $query->orderBy('id', 'desc')->get();
+        $sales = $query->orderBy('id', 'desc')->paginate(15);
 
         $today = now()->format('Y-m-d');
         $totalSalesToday = Sale::whereDate('sale_date', $today)->count();
@@ -1636,23 +1642,56 @@ public function getUserUnreadCount()
     }
 
     public function userPurchases()
-    {
-        $search = request('search');
-        $query = Purchase::with(['user', 'supplier', 'purchaseDetails.product']);
-
-        if ($search) {
-            $query->whereHas('supplier', function ($q) use ($search) {
+{
+    $search = request('search');
+    $query = Purchase::with(['user', 'supplier', 'purchaseDetails.product']);
+    
+    if ($search) {
+        $query->where(function($q) use ($search) {
+            $q->whereHas('supplier', function($q) use ($search) {
                 $q->where('supplier_name', 'like', "%{$search}%");
-            });
-        }
-
-        $purchases = $query->orderBy('id', 'desc')->paginate(15);
-        $suppliers = Supplier::all();
-        $products = Product::all();
-        $allSuppliers = Supplier::select('id', 'supplier_name')->get();
-
-        return view('Users.purchases', compact('purchases', 'suppliers', 'products', 'allSuppliers'));
+            })->orWhere('batch_number', 'like', "%{$search}%");
+        });
     }
+    
+    $purchases = $query->orderBy('id', 'desc')->paginate(15);
+    $suppliers = Supplier::all();
+    $products = Product::all();
+    $allSuppliers = Supplier::select('id', 'supplier_name')->get();
+    
+    $allPurchases = Purchase::select('id', 'batch_number')->with('supplier')->orderBy('id', 'desc')->get()->map(function($purchase) {
+        return [
+            'id' => $purchase->id,
+            'batch_number' => $purchase->batch_number,
+            'supplier_name' => $purchase->supplier->supplier_name ?? ''
+        ];
+    });
+    
+    return view('Users.purchases', compact('purchases', 'suppliers', 'products', 'allSuppliers', 'allPurchases'));
+}
+public function getUserPurchaseDetails($id)
+{
+    $purchase = Purchase::with(['supplier', 'purchaseDetails.product'])->find($id);
+    
+    if (!$purchase) {
+        return response()->json(['error' => 'Purchase order not found'], 404);
+    }
+    
+    $firstDetail = $purchase->purchaseDetails->first();
+    
+    return response()->json([
+        'success' => true,
+        'batch_number' => $purchase->batch_number ?? 'N/A',
+        'supplier_name' => $purchase->supplier->supplier_name ?? 'N/A',
+        'order_date' => $purchase->purchase_date ? $purchase->purchase_date->format('M j, Y g:i A') : 'N/A',
+        'due_date' => $purchase->due_date ? \Carbon\Carbon::parse($purchase->due_date)->format('M j, Y') : 'Not set',
+        'status' => $purchase->status,
+        'product_name' => $firstDetail ? $firstDetail->product->product_name : 'N/A',
+        'quantity' => $firstDetail ? $firstDetail->quantity : 0,
+        'cost_price' => $firstDetail ? $firstDetail->cost_price : 0,
+        'total' => $firstDetail ? ($firstDetail->quantity * $firstDetail->cost_price) : 0,
+    ]);
+}
 
     public function reportOutOfStock(Request $request)
 {
@@ -1752,6 +1791,7 @@ public function getUserUnreadCount()
 {
     $search = request('search');
     $status = request('status');
+    $type   = request('type'); 
     
     $query = StockReport::where('notify_users', false)
         ->orderBy('created_at', 'desc');
@@ -1766,9 +1806,15 @@ public function getUserUnreadCount()
     if ($status && $status != 'all') {
         $query->where('status', $status);
     }
+
+    if ($type === 'damage') {
+        $query->where('message', 'like', '%DAMAGE REPORT%');
+    } elseif ($type === 'lowstock') {
+        $query->where('message', 'not like', '%DAMAGE REPORT%');
+    }
     
     $reports = $query->paginate(15);
-    $reports->appends(['search' => $search, 'status' => $status]);
+    $reports->appends(['search' => $search, 'status' => $status, 'type' => $type]);
     
     return view('Admin.stock_reports', compact('reports'));
 }

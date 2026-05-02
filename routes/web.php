@@ -70,8 +70,11 @@ Route::prefix('user')->middleware(['auth', 'role:user'])->name('user.')->group(f
     Route::put('/sale/process-payment/{id}', [Management::class, 'processUserPayment'])->name('sale.process-payment');
     Route::get('/sales/{id}/details', [Management::class, 'getUserSaleDetails'])->name('sale.details');
     Route::post('/sale/store', [Management::class, 'storeSale'])->name('sale.store');
+
     Route::post('/purchase/complete/{id}', [Management::class, 'completePurchase'])->name('purchase.complete');
     Route::post('/purchase/cancel/{id}', [Management::class, 'cancelPurchase'])->name('purchase.cancel');
+    Route::get('/purchase/details/{id}', [Management::class, 'getUserPurchaseDetails'])->name('purchase.details');
+
     Route::post('/report-out-of-stock', [Management::class, 'reportOutOfStock'])->name('report.outofstock');
     
     Route::get('/notifications', [Management::class, 'getUserNotifications'])->name('notifications');

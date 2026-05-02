@@ -1132,14 +1132,18 @@
             </div>
         </div>
 
+        <div id="dynamicAlertContainer"></div>
+
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-success session-alert">
+                {{ session('success') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">{{ session('error') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-error session-alert">
+                {{ session('error') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
 
@@ -1267,7 +1271,43 @@
     </div>
 
     <script>
-    // Get category data from hidden div for autocomplete
+
+        function showAlertMessage(message, type) {
+            var alertContainer = document.getElementById('dynamicAlertContainer');
+            if (!alertContainer) return;
+            
+            var alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) {
+                    alertDiv.style.opacity = '0';
+                    alertDiv.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+                    }, 500);
+                }
+            }, 3000);
+        }
+
+        function autoCloseSessionAlerts() {
+            var sessionAlerts = document.querySelectorAll('.session-alert');
+            sessionAlerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alert && alert.parentElement) alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        }
     var categoryDataElement = document.getElementById('categoryData');
     var allCategories = [];
     
@@ -1285,7 +1325,7 @@
         return confirm('Delete category "' + categoryName + '"?\n\nProducts in this category will NOT be deleted, but they will become uncategorized.\n\nThis action cannot be undone. Continue?');
     }
     
-    // ==================== AUTOCOMPLETE SUGGESTIONS ====================
+    //AUTOCOMPLETE SUGGESTIONS
     var searchInput = document.getElementById('searchInput');
     var autocompleteDropdown = document.getElementById('autocompleteDropdown');
     var searchTimeout;
@@ -1575,6 +1615,7 @@
     }
     
     document.addEventListener('DOMContentLoaded', function() {
+        autoCloseSessionAlerts();
         renderPagination();
         fetchNotifications();
         setInterval(fetchNotifications, 30000);

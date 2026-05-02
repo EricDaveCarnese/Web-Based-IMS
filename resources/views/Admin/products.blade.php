@@ -152,6 +152,10 @@
             gap: 12px; 
             font-size: 14px; 
             font-weight: 600; 
+            transition: all 0.3s ease; 
+        }
+        .logout-btn:hover { 
+            transform: translateY(-2px); 
         }
 
         /* Notification */
@@ -365,7 +369,12 @@
             cursor: pointer; 
             display: flex; 
             align-items: center; 
-            justify-content: center; 
+            justify-content: center;
+            transition: all 0.3s ease; 
+        }
+        .search-btn:hover {
+            background: rgb(22, 155, 128);
+            transform: scale(1.05);
         }
         .filter-dropdown { 
             padding: 10px 16px; 
@@ -387,7 +396,12 @@
             border-radius: 25px; 
             display: flex; 
             align-items: center; 
-            gap: 10px; transition: all 0.3s ease; 
+            gap: 10px; 
+            transition: all 0.3s ease; 
+        }
+        .add-product-button:hover { 
+            transform: scale(1.03); 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
         }
         .right { 
             display: flex; 
@@ -464,6 +478,10 @@
             background: linear-gradient(180deg,rgb(49,83,104) 0%,rgba(47,229,239,0.426) 100%); 
             color: white;
         }
+        .record-table td:last-child {
+            white-space: nowrap;
+            min-width: 140px;
+        }
         .description-cell { 
             max-width: 300px;
             min-width: 200px; 
@@ -518,6 +536,7 @@
             gap: 5px; 
             border: none; 
             transition: all 0.3s ease; 
+            white-space: nowrap;
         }
         .edit-button   { 
             background: linear-gradient(180deg,rgb(40,140,203) 0%,rgb(25,110,114) 100%); 
@@ -912,18 +931,21 @@
             </div>
         </div>
 
+        <div id="dynamicAlertContainer"></div>
+
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-success session-alert">
+                {{ session('success') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">{{ session('error') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-error session-alert">
+                {{ session('error') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
 
-        <!-- OPTIONS -->
         <div class="options">
             <div class="search-container">
                 <div class="search-wrapper">
@@ -960,24 +982,56 @@
                 </div>
                 <form method="POST" action="{{ route('admin.product.store') }}">
                     @csrf
-                    <input type="text" name="product_name" placeholder="Product Name" required/>
-                    <textarea name="description" placeholder="Description"></textarea>
-                    <select name="category_id" required>
-                        <option value="">Select Category</option>
-                        @foreach($categories as $c)
-                            <option value="{{ $c->id }}">{{ $c->category_name }}</option>
-                        @endforeach
-                    </select>
-                    <select name="supplier_id" required>
-                        <option value="">Select Supplier</option>
-                        @foreach($suppliers as $s)
-                            <option value="{{ $s->id }}">{{ $s->supplier_name }}</option>
-                        @endforeach
-                    </select>
-                    <input type="number" step="0.01" name="price" placeholder="Price" required/>
-                    <input type="number" name="quantity" placeholder="Stock Quantity" required/>
-                    <input type="number" name="min_stock_level" placeholder="Minimum Stock Alert" value="10" required/>
-                    <button class="save-button" type="submit">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0 16px;">
+
+                        <div style="grid-column:1;">
+                            <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Product Name</label>
+                            <input type="text" name="product_name" placeholder="e.g. Wireless Mouse" required style="margin-bottom:12px;"/>
+                        </div>
+
+                        <div style="grid-column:2;">
+                            <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Price (₱)</label>
+                            <input type="number" step="0.01" name="price" placeholder="0.00" required style="margin-bottom:12px;"/>
+                        </div>
+
+                        <div style="grid-column:1 / -1;">
+                            <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Description</label>
+                            <textarea name="description" placeholder="Product description..." style="margin-bottom:12px;"></textarea>
+                        </div>
+
+                        <div style="grid-column:1;">
+                            <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Category</label>
+                            <select name="category_id" required style="margin-bottom:12px;">
+                                <option value="">Select Category</option>
+                                @foreach($categories as $c)
+                                    <option value="{{ $c->id }}">{{ $c->category_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div style="grid-column:2;">
+                            <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Min Stock Alert</label>
+                            <input type="number" name="min_stock_level" placeholder="e.g. 10" value="10" required style="margin-bottom:12px;"/>
+                        </div>
+
+                        <div style="grid-column:1;">
+                            <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Supplier</label>
+                            <select name="supplier_id" required style="margin-bottom:12px;">
+                                <option value="">Select Supplier</option>
+                                @foreach($suppliers as $s)
+                                    <option value="{{ $s->id }}">{{ $s->supplier_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div style="grid-column:2;">
+                            <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Stock Quantity</label>
+                            <input type="number" name="quantity" placeholder="0" required style="margin-bottom:12px;"/>
+                        </div>
+
+                    </div>
+
+                    <button class="save-button" type="submit" style="margin-top:8px;">
                         <i class="fa-solid fa-circle-check"></i> Save Product
                     </button>
                 </form>
@@ -994,34 +1048,72 @@
                     <h2><i class="fa-solid fa-box-open"></i> Edit Product</h2>
                 </div>
                 <div id="editModalBody">
+
                     <form method="POST" id="editProductForm">
                         @csrf
                         @method('PUT')
-                            {{-- Hidden fields —always submitted, never disabled --}}
-                        <input type="number" name="damage_report_id" id="edit_damage_report_id">
-                            {{-- Visible / editable fields --}}
-                        <input type="text" name="product_name" id="edit_product_name" placeholder="Product Name" required/>
-                        <textarea name="description" id="edit_description" placeholder="Description"></textarea>
-                        <select name="category_id" id="edit_category_id" required>
-                            <option value="">-- Select Category --</option>
-                            @foreach($categories as $c)
-                                <option value="{{ $c->id }}">{{ $c->category_name }}</option>
-                            @endforeach
-                        </select>
-                        <select name="supplier_id" id="edit_supplier_id" required>
-                            <option value="">-- Select Supplier --</option>
-                            @foreach($suppliers as $s)
-                                <option value="{{ $s->id }}">{{ $s->supplier_name }}</option>
-                            @endforeach
-                        </select>
-                        <input type="number" step="0.01" name="price" id="edit_price" placeholder="Price" required/>
-                        <input type="hidden" name="quantity" id="edit_quantity" placeholder="Stock Quantity" readonly/>
-                        <input type="number" name="min_stock_level" id="edit_min_stock" placeholder="Min Stock Alert" required/>
+                        <input type="hidden" name="damage_report_id" id="edit_damage_report_id">
 
-                        <button type="submit" class="save-button" id="editSubmitBtn">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0 16px;">
+
+                            <div style="grid-column:1;">
+                                <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Product Name</label>
+                                <input type="text" name="product_name" id="edit_product_name" placeholder="Product Name" required style="margin-bottom:12px;"/>
+                            </div>
+
+                            <div style="grid-column:2;">
+                                <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Price (₱)</label>
+                                <input type="number" step="0.01" name="price" id="edit_price" placeholder="0.00" required style="margin-bottom:12px;"/>
+                            </div>
+
+                            <div style="grid-column:1 / -1;">
+                                <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Description</label>
+                                <textarea name="description" id="edit_description" placeholder="Description" style="margin-bottom:12px;"></textarea>
+                            </div>
+
+                            <div style="grid-column:1;">
+                                <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Category</label>
+                                <select name="category_id" id="edit_category_id" required style="margin-bottom:12px;">
+                                    <option value="">-- Select Category --</option>
+                                    @foreach($categories as $c)
+                                        <option value="{{ $c->id }}">{{ $c->category_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div style="grid-column:2;">
+                                <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Min Stock Alert</label>
+                                <input type="number" name="min_stock_level" id="edit_min_stock" placeholder="e.g. 10" required style="margin-bottom:12px;"/>
+                            </div>
+
+                            <div style="grid-column:1;">
+                                <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Supplier</label>
+                                <select name="supplier_id" id="edit_supplier_id" required style="margin-bottom:12px;">
+                                    <option value="">-- Select Supplier --</option>
+                                    @foreach($suppliers as $s)
+                                        <option value="{{ $s->id }}">{{ $s->supplier_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div style="grid-column:2;" id="quantityWrapper">
+                                <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">
+                                    Stock Quantity
+                                    <span id="quantityLockIcon" style="margin-left:4px;font-size:10px;opacity:0.7;">
+                                        <i class="fas fa-lock"></i> read-only
+                                    </span>
+                                </label>
+                                <input type="number" name="quantity" id="edit_quantity" placeholder="0" style="margin-bottom:4px;"/>
+                                <small id="quantityHint" style="display:none; color:#fd7e14; font-size:11px; padding-left:4px; margin-bottom:8px; display:block;"></small>
+                            </div>
+
+                        </div>
+
+                        <button type="submit" class="save-button" id="editSubmitBtn" style="margin-top:8px;">
                             <i class="fa-solid fa-circle-check"></i> Update Product
                         </button>
                     </form>
+
                     <button id="close_edit_modal" class="cancel-button">
                         <i class="fa-solid fa-circle-xmark"></i> Cancel
                     </button>
@@ -1078,12 +1170,12 @@
                                     </span>
                                 @endif
                             </td>
-                            <td>
+                            <td style="white-space:nowrap;">
                                 <button type="button" class="edit-button" onclick="editProduct('{{ $product->id }}')">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
                                 <form method="POST" action="{{ route('admin.product.delete',$product->id) }}"
-                                      style="display:inline;" onsubmit="return confirm('Delete this product?')">
+                                    style="display:inline;" onsubmit="return confirm('Delete this product?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="delete-button">
                                         <i class="fas fa-trash"></i> Delete
@@ -1093,7 +1185,10 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" style="text-align:center;padding:40px;">No products found</td>
+                            <td colspan="9" style="text-align:center;padding:40px;">
+                                <i class="fa-solid fa-box-open" style="font-size:48px; color:#ccc;"></i>
+                                <p>No products found</p>
+                            </td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -1108,6 +1203,43 @@
     <div id="productData" style="display:none;" data-products='@json($allProducts ?? [])'></div>
 
     <script>
+
+        function showAlertMessage(message, type) {
+            var alertContainer = document.getElementById('dynamicAlertContainer');
+            if (!alertContainer) return;
+            
+            var alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) {
+                    alertDiv.style.opacity = '0';
+                    alertDiv.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+                    }, 500);
+                }
+            }, 3000);
+        }
+
+        function autoCloseSessionAlerts() {
+            var sessionAlerts = document.querySelectorAll('.session-alert');
+            sessionAlerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alert && alert.parentElement) alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        }
     var CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
     // Product data for autocomplete 
@@ -1203,29 +1335,53 @@
     var LOCK_FIELDS = ['edit_product_name','edit_description','edit_category_id','edit_supplier_id','edit_price','edit_min_stock'];
 
     function lockFieldsForDamage() {
-        LOCK_FIELDS.forEach(function(id){
+        LOCK_FIELDS.forEach(function(id) {
             var f = document.getElementById(id);
             if (!f) return;
+            f.setAttribute('readonly', true);
+            f.classList.add('field-readonly-visual');
             if (f.tagName === 'SELECT' || f.tagName === 'TEXTAREA') {
-                f.classList.add('field-readonly-visual');
-            } else {
-                f.setAttribute('readonly', true);
-                f.classList.add('field-readonly-visual');
+                f.style.pointerEvents = 'none';
+                f.style.opacity = '0.6';
+                f.style.cursor = 'not-allowed';
             }
         });
         var qty = document.getElementById('edit_quantity');
-        if (qty) { qty.removeAttribute('readonly'); qty.classList.remove('field-readonly-visual'); }
+        if (qty) {
+            qty.removeAttribute('readonly');
+            qty.style.pointerEvents = '';
+            qty.style.opacity = '';
+            qty.style.cursor = '';
+            qty.classList.remove('field-readonly-visual');
+        }
+        // Hide lock icon in damage mode
+        var lockIcon = document.getElementById('quantityLockIcon');
+        if (lockIcon) lockIcon.style.display = 'none';
     }
-
     function restoreAllFields() {
-        var all = ['edit_product_name','edit_description','edit_category_id','edit_supplier_id','edit_price','edit_min_stock','edit_quantity'];
-        all.forEach(function(id){
+        var all = ['edit_product_name','edit_description','edit_category_id','edit_supplier_id',
+                'edit_price','edit_min_stock','edit_quantity'];
+        all.forEach(function(id) {
             var f = document.getElementById(id);
             if (!f) return;
             f.removeAttribute('readonly');
-            f.classList.remove('field-readonly-visual');
-            f.classList.remove('damage-highlight');
+            f.classList.remove('field-readonly-visual', 'damage-highlight');
+            f.style.pointerEvents = '';
+            f.style.opacity = '';
+            f.style.cursor = '';
         });
+        // Disable quantity in normal mode
+        var qty = document.getElementById('edit_quantity');
+        if (qty) {
+            qty.setAttribute('readonly', true);
+            qty.classList.add('field-readonly-visual');
+            qty.style.cursor = 'not-allowed';
+        }
+        // Show lock icon, hide hint
+        var lockIcon = document.getElementById('quantityLockIcon');
+        if (lockIcon) lockIcon.style.display = 'inline';
+        var hint = document.getElementById('quantityHint');
+        if (hint) hint.style.display = 'none';
     }
 
     function removeDamageNotice() {
@@ -1239,29 +1395,30 @@
         fetch('/admin/product/' + productId + '/data', {
             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }
         })
-        .then(function(r){ return r.json(); })
-        .then(function(data){
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
             if (!data.success || !data.product) {
                 alert('Error loading product: ' + (data.message || 'Unknown error'));
                 return;
             }
             var p = data.product;
-            document.getElementById('edit_product_name').value = p.product_name  || '';
-            document.getElementById('edit_description').value  = p.description   || '';
-            document.getElementById('edit_price').value        = p.price         || '';
-            document.getElementById('edit_quantity').value     = p.quantity      || '';
-            document.getElementById('edit_min_stock').value    = p.min_stock_level || '';
-            document.getElementById('edit_category_id').value  = p.category_id   || '';
-            document.getElementById('edit_supplier_id').value  = p.supplier_id   || '';
+            document.getElementById('edit_product_name').value  = p.product_name    || '';
+            document.getElementById('edit_description').value   = p.description     || '';
+            document.getElementById('edit_price').value         = p.price           || '';
+            document.getElementById('edit_quantity').value      = p.quantity        || '';
+            document.getElementById('edit_min_stock').value     = p.min_stock_level || '';
+            document.getElementById('edit_category_id').value   = p.category_id     || '';
+            document.getElementById('edit_supplier_id').value   = p.supplier_id     || '';
             document.getElementById('edit_damage_report_id').value = '';
-            document.getElementById('editProductForm').action  = '/admin/product/update/' + p.id;
+            document.getElementById('editProductForm').action   = '/admin/product/update/' + p.id;
 
             removeDamageNotice();
-            restoreAllFields();
+            restoreAllFields(); // this disables quantity in normal mode
+
             openModal('edit_modal_container');
             showToast('Product loaded!', '#28a745');
         })
-        .catch(function(err){ alert('Error: ' + err.message); });
+        .catch(function(err) { alert('Error: ' + err.message); });
     }
     window.editProduct = editProduct;
 
@@ -1273,52 +1430,57 @@
         fetch('/admin/product/' + productId + '/data', {
             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }
         })
-        .then(function(r){ return r.json(); })
-        .then(function(data){
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
             if (!data.success || !data.product) {
                 alert('Product not found');
                 return;
             }
             var p = data.product;
 
-            // Fill ALL fields so they submit correctly
-            document.getElementById('edit_product_name').value = p.product_name  || '';
-            document.getElementById('edit_description').value  = p.description   || '';
-            document.getElementById('edit_price').value        = p.price         || '';
-            document.getElementById('edit_min_stock').value    = p.min_stock_level || '';
-            document.getElementById('edit_category_id').value  = p.category_id   || '';
-            document.getElementById('edit_supplier_id').value  = p.supplier_id   || '';
+            // Fill all fields so they submit correctly
+            document.getElementById('edit_product_name').value  = p.product_name    || '';
+            document.getElementById('edit_description').value   = p.description     || '';
+            document.getElementById('edit_price').value         = p.price           || '';
+            document.getElementById('edit_min_stock').value     = p.min_stock_level || '';
+            document.getElementById('edit_category_id').value   = p.category_id     || '';
+            document.getElementById('edit_supplier_id').value   = p.supplier_id     || '';
             document.getElementById('edit_damage_report_id').value = reportId || '';
+            document.getElementById('editProductForm').action   = '/admin/product/update/' + p.id;
 
-            // Set suggested quantity
+            // Auto-deduct damage quantity
             var currentStock = parseInt(p.quantity) || 0;
-            var suggested    = Math.max(0, currentStock - damageQty);
-            var qtyEl = document.getElementById('edit_quantity');
-            qtyEl.value = suggested;
-            qtyEl.setAttribute('data-original', currentStock);
-            qtyEl.classList.add('damage-highlight');
+            var newStock     = Math.max(0, currentStock - damageQty);
+            var qty = document.getElementById('edit_quantity');
+            qty.value = newStock;
+            qty.classList.add('damage-highlight');
 
-            document.getElementById('editProductForm').action = '/admin/product/update/' + p.id;
+            // Show hint below quantity
+            var hint = document.getElementById('quantityHint');
+            if (hint) {
+                hint.style.display = 'block';
+                hint.innerHTML = 'Auto-deducted: ' + currentStock + ' − ' + damageQty + ' = <strong>' + newStock + '</strong> units';
+            }
 
-            // Visually lock non-quantity fields (they are NOT disabled, just readonly)
+            // Lock everything except quantity
+            removeDamageNotice();
             lockFieldsForDamage();
 
             // Add damage notice banner
-            removeDamageNotice();
             var notice = document.createElement('div');
             notice.className = 'damage-notice';
             notice.innerHTML =
                 '<i class="fas fa-exclamation-triangle"></i> <strong>DAMAGE REPORT MODE</strong><br>' +
-                'Reported damage: <strong>' + damageQty + '</strong> units<br>' +
-                'Current stock: <strong>' + currentStock + '</strong> → Suggested new stock: <strong>' + suggested + '</strong><br>' +
-                '<small>Only the <u>Quantity</u> field is editable. All other fields are locked.</small>';
+                'Damaged: <strong>' + damageQty + '</strong> units · ' +
+                'New stock: <strong>' + newStock + '</strong> units<br>' +
+                '<small>All fields are locked. Click "Update Product" to confirm.</small>';
             var body = document.getElementById('editModalBody');
             body.insertBefore(notice, body.firstChild);
 
             openModal('edit_modal_container');
-            showToast('Damage mode — only quantity is editable', '#fd7e14');
+            showToast('Ready — click Update Product to confirm deduction', '#fd7e14');
         })
-        .catch(function(err){ alert('Error: ' + err.message); });
+        .catch(function(err) { alert('Error: ' + err.message); });
     }
     window.editProductForDamage = editProductForDamage;
 
@@ -1510,8 +1672,8 @@
         });
     }
 
-    // Init
     document.addEventListener('DOMContentLoaded', function(){
+        autoCloseSessionAlerts();
         renderPagination();
         fetchNotifications();
         setInterval(fetchNotifications, 30000);

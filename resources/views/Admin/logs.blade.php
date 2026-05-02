@@ -166,10 +166,10 @@
             gap: 12px;
             font-size: 14px;
             font-weight: 600;
+            transition: all 0.3s ease; 
         }
-        .logout-container:hover {
-            transform: translateY(3px);
-            box-shadow: 0 -4px 5px rgba(0, 0, 0, 0.1);
+        .logout-btn:hover { 
+            transform: translateY(-2px); 
         }
 
         /* Notification Bell Styles */

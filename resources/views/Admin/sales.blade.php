@@ -529,6 +529,10 @@
             background: #2c6e62; 
             border-radius: 10px; 
         }
+        .product-grid {
+            scrollbar-width: thin;
+            scrollbar-color: #2c6e62 #f1f1f1;
+        }
         .product-card {
             background: white; 
             border-radius: 20px; 
@@ -832,7 +836,7 @@
             flex-wrap: wrap; 
         }
 
-        /* ===== CUSTOM PAGINATION ===== */
+        /*CUSTOM PAGINATION */
         .custom-pagination {
             display: flex; 
             justify-content: center; 
@@ -1264,11 +1268,7 @@
             </form>
         </div>
     </div>
-
-    <!-- MAIN CONTENT -->
     <div class="main-content">
-
-        <!-- TOP HEADER -->
         <div class="topheader">
             <div class="page-title">
                 <h1>Sales</h1>
@@ -1312,14 +1312,18 @@
             </div>
         </div>
 
+        <div id="dynamicAlertContainer"></div>
+
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-success session-alert">
+                {{ session('success') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">{{ session('error') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-error session-alert">
+                {{ session('error') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
 
@@ -1437,7 +1441,7 @@
                 </div>
             </div>
 
-            <!-- ===================== SALE DETAILS MODAL ===================== -->
+            <!--SALE DETAILS MODAL-->
             <div class="modal-container" id="saleDetailsModal">
                 <div class="modal">
                     <div class="modal-header">
@@ -1456,32 +1460,70 @@
                             <strong>Status:</strong> 
                                 <span id="sale_status_display"></span>
                         </div>
-                        <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span></h4>
+                        <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Sold: 
+                            <span id="sale_items_count" style="font-size:13px;font-weight:400;"></span>
+                        </h4>
                         <div style="overflow-x:auto;">
                             <table class="details-table">
-                                <thead><tr><th>#</th><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Subtotal</th></tr></thead>
-                                <tbody id="sale_items_table"><tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading…<\/td><\/tr></tbody>
-                                <tfoot><tr><td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:<\/td><td style="text-align:right"><strong id="sale_total">₱0.00<\/strong><\/td><\/tr></tfoot>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product</th>
+                                        <th style="text-align:center">Qty</th>
+                                        <th style="text-align:right">Unit Price</th>
+                                        <th style="text-align:right">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sale_items_table">
+                                    <tr class="spinner-row">
+                                        <td colspan="5">
+                                            <i class="fas fa-spinner fa-spin"></i> Loading…
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4" style="text-align:right;color:rgb(151,205,200);">Grand Total:</td>
+                                        <td style="text-align:right">
+                                            <strong id="sale_total">₱0.00</strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
-                        <button id="close_sale_modal" class="cancel-button" style="margin-top:20px;"><i class="fa-solid fa-circle-xmark"></i> Close</button>
+                        <button id="close_sale_modal" class="cancel-button" style="margin-top:20px;">
+                            <i class="fa-solid fa-circle-xmark"></i> Close
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- ===================== PROCESS PAYMENT MODAL ===================== -->
+            <!--PROCESS PAYMENT MODAL-->
             <div class="modal-container" id="paymentModal">
                 <div class="modal" style="max-width:400px;">
-                    <div class="modal-header"><h2><i class="fa-solid fa-credit-card"></i> Process Payment</h2></div>
+                    <div class="modal-header">
+                        <h2><i class="fa-solid fa-credit-card"></i> Process Payment</h2>
+                    </div>
                     <div class="modal-body">
-                        <div class="sale-info"><strong>Sale ID:</strong> <span id="payment_sale_id"></span><br><strong>Total Amount:</strong> <span id="payment_total"></span></div>
-                        <form id="processPaymentForm" method="POST">@csrf @method('PUT')<input type="hidden" name="sale_id" id="payment_sale_id_input" /><button type="submit" class="save-button"><i class="fa-solid fa-check-circle"></i> Confirm Payment</button></form>
-                        <button id="close_payment_modal" class="cancel-button"><i class="fa-solid fa-circle-xmark"></i> Cancel</button>
+                        <div class="sale-info">
+                            <strong>Sale ID:</strong> <span id="payment_sale_id"></span><br>
+                            <strong>Total Amount:</strong> <span id="payment_total"></span></div>
+                        <form id="processPaymentForm" method="POST">
+                            @csrf 
+                            @method('PUT')
+                            <input type="hidden" name="sale_id" id="payment_sale_id_input" />
+                            <button type="submit" class="save-button">
+                                <i class="fa-solid fa-check-circle"></i> Confirm Payment
+                            </button>
+                        </form>
+                        <button id="close_payment_modal" class="cancel-button">
+                            <i class="fa-solid fa-circle-xmark"></i> Cancel
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- ===================== SALES TABLE ===================== -->
+            <!--SALES TABLE-->
             <div class="product-table">
                 <div class="table-container">
                     <table class="record-table">
@@ -1507,13 +1549,13 @@
                                         {{ ucfirst($sale->status) }}
                                     </span>
                                 </td>
-                                <td>₱{{ number_format($sale->total_amount, 2) }}</span>
+                                <td>₱{{ number_format($sale->total_amount, 2) }}</td>
                                 <td>
                                     <span class="items-badge">
                                         {{ $sale->saleDetails->count() }} {{ Str::plural('item', $sale->saleDetails->count()) }}
                                         ({{ $sale->saleDetails->sum('quantity') }} {{ Str::plural('unit', $sale->saleDetails->sum('quantity')) }})
                                     </span>
-                                </span>
+                                </td>
                                 <td>
                                     <button class="view-button" onclick="viewSaleDetails('{{ $sale->id }}')"><i class="fas fa-eye"></i> View</button>
                                     @if($sale->status == 'pending')
@@ -1521,10 +1563,15 @@
                                     @else
                                         <button class="pay-button" disabled><i class="fas fa-check-circle"></i> Paid</button>
                                     @endif
-                                </span>
+                                </td>
                             </tr>
                             @empty
-                            <td><td colspan="7" style="text-align:center;padding:30px;">No sales recorded yet</span></td>
+                            <tr>
+                                <td colspan="7" style="text-align:center; padding:40px;">
+                                    <i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i>
+                                    <p>No transactions found</p>
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -1539,9 +1586,44 @@
     </div>{{-- end .main-content --}}
 
     <script>
-    // ================================================================
-    //  UTILITY
-    // ================================================================
+
+        function showAlertMessage(message, type) {
+            var alertContainer = document.getElementById('dynamicAlertContainer');
+            if (!alertContainer) return;
+            
+            var alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) {
+                    alertDiv.style.opacity = '0';
+                    alertDiv.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+                    }, 500);
+                }
+            }, 3000);
+        }
+
+        function autoCloseSessionAlerts() {
+            var sessionAlerts = document.querySelectorAll('.session-alert');
+            sessionAlerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alert && alert.parentElement) alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        }
+
     function escapeHtml(text) {
         if (text === null || text === undefined) return '';
         var d = document.createElement('div');
@@ -1549,11 +1631,7 @@
         return d.innerHTML;
     }
 
-    // ================================================================
-    //  UNIFORM SUCCESS/ERROR ALERT (Same as products page)
-    // ================================================================
     function showUniformAlert(message, type) {
-        // Remove any existing alerts
         var existingAlerts = document.querySelectorAll('.alert-success, .alert-error');
         existingAlerts.forEach(function(alert) { alert.remove(); });
         
@@ -1566,17 +1644,12 @@
             topheader.insertAdjacentElement('afterend', alertDiv);
         }
         
-        // Auto hide after 5 seconds
         setTimeout(function() { 
             if (alertDiv) alertDiv.style.display = 'none'; 
         }, 5000);
     }
 
-    // ================================================================
-    //  CART STATE
-    // ================================================================
     var cart = [];
-
     function resetCart() {
         cart = [];
         renderCart();
@@ -1692,9 +1765,6 @@
         document.getElementById('totalAmount').textContent = '₱' + fmt;
     }
 
-    // ================================================================
-    //  NEW SALE MODAL — open / close
-    // ================================================================
     var newSaleModal = document.getElementById('newSaleModal');
     var openNewSaleBtn = document.getElementById('open_new_sale_modal');
     var closeNewSaleBtn = document.getElementById('closeNewSaleModal');
@@ -1752,9 +1822,6 @@
         });
     }
 
-    // ================================================================
-    //  SUBMIT SALE — with uniform success message
-    // ================================================================
     var submitSaleBtn = document.getElementById('submitSaleBtn');
     if (submitSaleBtn) {
         submitSaleBtn.addEventListener('click', function() {
@@ -1808,9 +1875,7 @@
         });
     }
 
-    // ================================================================
     //  VIEW SALE DETAILS
-    // ================================================================
     var saleDetailsModal = document.getElementById('saleDetailsModal');
     var closeSaleModal = document.getElementById('close_sale_modal');
 
@@ -1822,7 +1887,7 @@
         document.getElementById('sale_status_display').innerHTML = '';
         document.getElementById('sale_items_count').textContent = '';
         document.getElementById('sale_total').textContent = '₱0.00';
-        document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading…<\/td><\/tr>';
+        document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>';
 
         fetch('/admin/sale/details/' + id, {
             method: 'GET',
@@ -1854,7 +1919,7 @@
             document.getElementById('sale_items_count').textContent = '(' + details.length + ' product type' + (details.length !== 1 ? 's' : '') + ', ' + totalUnits + ' unit' + (totalUnits !== 1 ? 's' : '') + ')';
 
             if (details.length === 0) {
-                document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found<\/td><\/tr>';
+                document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>';
                 return;
             }
 
@@ -1862,18 +1927,18 @@
             for (var i = 0; i < details.length; i++) {
                 var item = details[i];
                 html += '<tr>' +
-                    '<td>' + (i + 1) + '<\/td>' +
-                    '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '<\/td>' +
-                    '<td style="text-align:center">' + item.quantity + '<\/td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                '<\/tr>';
+                    '<td>' + (i + 1) + '</td>' +
+                    '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '</td>' +
+                    '<td style="text-align:center">' + item.quantity + '</td>' +
+                    '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                    '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                '</tr>';
             }
             document.getElementById('sale_items_table').innerHTML = html;
         })
         .catch(function(err) {
             console.error('Sale details error:', err);
-            document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> ' + escapeHtml(err.message) + '<br><small>Please try again later.<\/small><\/td><\/tr>';
+            document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> ' + escapeHtml(err.message) + '<br><small>Please try again later.</small></td></tr>';
             document.getElementById('sale_cashier').textContent = 'N/A';
             document.getElementById('sale_date_display').textContent = 'N/A';
             document.getElementById('sale_status_display').innerHTML = '<span class="badge-warning">Unknown</span>';
@@ -1889,12 +1954,9 @@
         };
     }
 
-    // Make viewSaleDetails available globally
     window.viewSaleDetails = viewSaleDetails;
 
-    // ================================================================
     //  PROCESS PAYMENT
-    // ================================================================
     var paymentModal = document.getElementById('paymentModal');
     var closePaymentModal = document.getElementById('close_payment_modal');
 
@@ -1916,12 +1978,9 @@
         };
     }
 
-    // Make processPayment available globally
     window.processPayment = processPayment;
 
-    // ================================================================
     //  CUSTOM PAGINATION
-    // ================================================================
     function renderPagination() {
         var currentPage = parseInt(document.getElementById('currentPage').value);
         var lastPage = parseInt(document.getElementById('lastPage').value);
@@ -2075,14 +2134,11 @@
         }
     }
     
-    // Make functions available globally
     window.createPurchaseOrder = createPurchaseOrder;
     window.editProductAndReduceStock = editProductAndReduceStock;
     window.markAsRead = markAsRead;
 
-    // ================================================================
     //  NOTIFICATION BELL TOGGLE
-    // ================================================================
     var bell = document.getElementById('notificationBell');
     var dropdown = document.getElementById('notificationDropdown');
     if (bell) {
@@ -2098,6 +2154,7 @@
     
     //  INITIALIZE
     document.addEventListener('DOMContentLoaded', function() {
+        autoCloseSessionAlerts();
         renderPagination();
         fetchNotifications();
         setInterval(fetchNotifications, 30000);

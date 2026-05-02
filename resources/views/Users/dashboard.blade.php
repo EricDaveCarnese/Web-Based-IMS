@@ -278,7 +278,7 @@
             cursor: pointer;
             border: none;
         }
-        .btn-read {
+        .btn-read-notif {
             background: #6c757d;
             color: white;
             padding: 4px 10px;
@@ -286,6 +286,9 @@
             font-size: 11px;
             cursor: pointer;
             border: none;
+        }
+        .btn-read-notif:hover {
+            background: #5a6268;
         }
         .btn-edit-damage {
             background: #fd7e14;
@@ -1161,13 +1164,17 @@
             </div>
         </div>
 
+        <div id="dynamicAlertContainer"></div>
+
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}
+            <div class="alert-success" id="sessionAlert">
+                {{ session('success') }}
                 <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">{{ session('error') }}
+            <div class="alert-error" id="sessionAlert">
+                {{ session('error') }}
                 <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
@@ -1359,6 +1366,22 @@
     <div id="suggestionData" style="display:none;" data-suggestions='@json(array_unique(array_merge(\App\Models\Product::pluck("product_name")->toArray(), \App\Models\StockReport::distinct()->pluck("user_name")->toArray())))'></div>
 
     <script>
+        function autoCloseSessionAlerts() {
+            var sessionAlert = document.getElementById('sessionAlert');
+            if (sessionAlert) {
+                setTimeout(function() {
+                    if (sessionAlert) {
+                        sessionAlert.style.opacity = '0';
+                        sessionAlert.style.transition = 'opacity 0.5s ease';
+                        setTimeout(function() {
+                            if (sessionAlert && sessionAlert.parentElement) {
+                                sessionAlert.remove();
+                            }
+                        }, 500);
+                    }
+                }, 3000);
+            }
+        }
         document.addEventListener('DOMContentLoaded', function() {
             // Stock by Category Chart
             var categoryData = [];
@@ -1402,24 +1425,47 @@
             const searchInput = document.getElementById('searchInput');
             const statusFilter = document.getElementById('statusFilter');
             function filterAndDisplay() {
-                const searchTerm = searchInput?.value.toLowerCase() || '';
-                const statusValue = statusFilter?.value || 'all';
-                const rows = document.querySelectorAll('#transactionsTableBody tr');
-                rows.forEach(row => {
-                    const product = row.cells[2]?.textContent.toLowerCase() || '';
-                    const category = row.cells[3]?.textContent.toLowerCase() || '';
-                    const status = row.cells[6]?.textContent.toLowerCase() || '';
-                    let show = true;
-                    if (statusValue !== 'all' && status !== statusValue) show = false;
-                    if (searchTerm && !product.includes(searchTerm) && !category.includes(searchTerm)) show = false;
-                    row.style.display = show ? '' : 'none';
-                });
+            const searchTerm = searchInput?.value.toLowerCase() || '';
+            const statusValue = statusFilter?.value || 'all';
+            const rows = document.querySelectorAll('#transactionsTableBody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                if (row.id === 'noResultsRow') return;
+
+                const product = row.cells[2]?.textContent.toLowerCase() || '';
+                const category = row.cells[3]?.textContent.toLowerCase() || '';
+                const status = row.cells[6]?.textContent.toLowerCase() || '';
+                let show = true;
+                if (statusValue !== 'all' && status !== statusValue) show = false;
+                if (searchTerm && !product.includes(searchTerm) && !category.includes(searchTerm)) show = false;
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+
+            const tbody = document.getElementById('transactionsTableBody');
+            let noResultsRow = document.getElementById('noResultsRow');
+
+            if (visibleCount === 0) {
+                if (!noResultsRow) {
+                    noResultsRow = document.createElement('tr');
+                    noResultsRow.id = 'noResultsRow';
+                    noResultsRow.innerHTML = `<td colspan="8" style="text-align:center; padding:40px;">
+                        <i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i>
+                        <p>No transactions found</p>
+                    </td>`;
+                    tbody.appendChild(noResultsRow);
+                }
+                noResultsRow.style.display = '';
+            } else {
+                if (noResultsRow) noResultsRow.style.display = 'none';
             }
+        }
             if (searchInput) searchInput.addEventListener('keyup', filterAndDisplay);
             if (statusFilter) statusFilter.addEventListener('change', filterAndDisplay);
         });
 
-        // ==================== VIEW SALE DETAILS (FIXED FOR USER) ====================
+        //  VIEW SALE DETAILS (FIXED FOR USER) 
         function viewSaleDetails(id) {
             if (!id || id === '') { 
                 alert('No reference ID available for this transaction'); 
@@ -1433,7 +1479,7 @@
             document.getElementById('sale_date_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('sale_status_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('sale_total').textContent = '₱0.00';
-            document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...<\/td><\/tr>';
+            document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...</td></tr>';
             
             // FIXED: Use correct user route for sale details
             fetch('/user/sales/' + id + '/details', { 
@@ -1679,9 +1725,9 @@ document.addEventListener('click', function(e) {
         userDropdown.classList.remove('show');
     }
 });
-
-fetchUserNotifications();
-setInterval(fetchUserNotifications, 30000);
+    autoCloseSessionAlerts();
+    fetchUserNotifications();
+    setInterval(fetchUserNotifications, 30000);
     </script>
 </body>
 </html>

@@ -163,10 +163,10 @@
             gap: 12px;
             font-size: 14px;
             font-weight: 600;
+            transition: all 0.3s ease; 
         }
-        .logout-container:hover {
-            transform: translateY(3px);
-            box-shadow: 0 -4px 5px rgba(0, 0, 0, 0.1);
+        .logout-btn:hover { 
+            transform: translateY(-2px); 
         }
         /* Notification Bell Styles */
         .notification-area {
@@ -1103,14 +1103,18 @@
             </div>
         </div>
 
+        <div id="dynamicAlertContainer"></div>
+
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-success session-alert">
+                {{ session('success') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error">{{ session('error') }}
-                <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            <div class="alert-error session-alert">
+                {{ session('error') }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
 
@@ -1152,7 +1156,7 @@
                             @csrf
                             <input type="text" name="fullname" placeholder="Full Name" required/>
                             <input type="email" name="email" placeholder="Email" required/>
-                            
+                        
                             <div class="password-field">
                                 <input type="password" name="password" id="add_password" placeholder="Password" required/>
                                 <i class="fas fa-eye-slash toggle-password" data-target="add_password"></i>
@@ -1197,40 +1201,40 @@
                         <form method="POST" id="editUserForm">
                             @csrf
                             @method('PUT')
-                            <input type="text" id="edit_fullname" name="fullname" placeholder="Full Name" required/>
-                            <input type="email" id="edit_email" name="email" placeholder="Email" required/>
-                            <div class="password-field">
-                                <input type="password" name="password" id="edit_password" placeholder="New Password (leave blank to keep current)"/>
-                                <i class="fas fa-eye-slash toggle-password" data-target="edit_password"></i>
-                            </div>
-                            <div class="password-field">
-                                <input type="password" name="password_confirmation" id="edit_password_confirm" placeholder="Confirm New Password"/>
-                                <i class="fas fa-eye-slash toggle-password" data-target="edit_password_confirm"></i>
-                            </div>
-                            <div class="password-match-error" id="edit_password_error">
-                                <i class="fas fa-exclamation-circle"></i> Passwords do not match!
-                            </div>
-                            
-                            <div class="role">
-                                <label>
-                                    <input type="radio" name="role" value="admin" id="edit_role_admin"/> 
-                                    <i class="fa-solid fa-user-tie"></i> Admin
-                                </label>
-                                <label>
-                                    <input type="radio" name="role" value="user" id="edit_role_user"/> 
-                                    <i class="fa-solid fa-user"></i> User
-                                </label>
-                            </div>
-                            <button class="save-button" type="submit" id="edit_user_submit">
-                                <i class="fa-solid fa-circle-check"></i> Update User
+                        
+                                <input type="text" id="edit_fullname" name="fullname" placeholder="Full Name" required/>
+                                <input type="email" id="edit_email" name="email" placeholder="Email" required/>
+                                <div class="password-field">
+                                    <input type="password" name="password" id="edit_password" placeholder="New Password (leave blank to keep current)"/>
+                                    <i class="fas fa-eye-slash toggle-password" data-target="edit_password"></i>
+                                </div>
+                                <div class="password-field">
+                                    <input type="password" name="password_confirmation" id="edit_password_confirm" placeholder="Confirm New Password"/>
+                                    <i class="fas fa-eye-slash toggle-password" data-target="edit_password_confirm"></i>
+                                </div>
+                                <div class="password-match-error" id="edit_password_error">
+                                    <i class="fas fa-exclamation-circle"></i> Passwords do not match!
+                                </div>
+                                <div class="role" id="role_buttons_container">
+                                    <label>
+                                        <input type="radio" name="role" value="admin" id="edit_role_admin"/> 
+                                        <i class="fa-solid fa-user-tie"></i> Admin
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="role" value="user" id="edit_role_user"/> 
+                                        <i class="fa-solid fa-user"></i> User
+                                    </label>
+                                </div>
+                                <button class="save-button" type="submit" id="edit_user_submit">
+                                    <i class="fa-solid fa-circle-check"></i> Update User
+                                </button>
+                            </form>
+                            <button id="close_edit_modal" class="cancel-button">
+                                <i class="fa-solid fa-circle-xmark"></i> Cancel
                             </button>
-                        </form>
-                        <button id="close_edit_modal" class="cancel-button">
-                            <i class="fa-solid fa-circle-xmark"></i> Cancel
-                        </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
             <div class="user-table">
                 <div class="table-container">
@@ -1266,6 +1270,9 @@
                                                 <i class="fa-solid fa-trash"></i> Delete</button>
                                         </form>
                                     @else
+                                        <button class="edit-button" onclick='editUser("{{ $user->id }}", "{{ addslashes($user->fullname) }}", "{{ $user->email }}", "{{ $user->role }}")'>
+                                            <i class="fa-solid fa-edit"></i> Edit
+                                        </button>
                                         <span style="color: gray; font-size: 12px;">
                                             <i class="fa-solid fa-user-check"></i> Current User
                                         </span>
@@ -1298,6 +1305,44 @@
     </div>
 
     <script>
+
+        function showAlertMessage(message, type) {
+        var alertContainer = document.getElementById('dynamicAlertContainer');
+            if (!alertContainer) return;
+                
+            var alertDiv = document.createElement('div');
+            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+                
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+                
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) {
+                    alertDiv.style.opacity = '0';
+                    alertDiv.style.transition = 'opacity 0.5s ease';
+                        setTimeout(function() {
+                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+                    }, 500);
+                }
+            }, 3000);
+        }
+
+        function autoCloseSessionAlerts() {
+            var sessionAlerts = document.querySelectorAll('.session-alert');
+            sessionAlerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        if (alert && alert.parentElement) alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        }
+
         // Get user data from hidden div for autocomplete
         var userDataElement = document.getElementById('userData');
         var allUsers = [];
@@ -1717,9 +1762,11 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
 
         document.addEventListener('DOMContentLoaded', function() {
             renderPagination();
+            autoCloseSessionAlerts();
             initializePasswordToggles();
             validatePasswords('add_password', 'add_password_confirm', 'add_password_error', 'add_user_submit');
             validatePasswords('edit_password', 'edit_password_confirm', 'edit_password_error', 'edit_user_submit');
+            setInterval(fetchNotifications, 30000);
         });
     </script>
 </body>

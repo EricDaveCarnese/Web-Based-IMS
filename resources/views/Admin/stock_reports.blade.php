@@ -146,8 +146,11 @@
             gap: 12px; 
             font-size: 14px; 
             font-weight: 600; 
+            transition: all 0.3s ease; 
         }
-        
+        .logout-btn:hover { 
+            transform: translateY(-2px); 
+        }
         .notification-area { 
             position: relative; 
             display: inline-block; 
@@ -317,7 +320,12 @@
             width: 44px; 
             height: 44px; 
             border-radius: 50%; 
-            cursor: pointer; 
+            cursor: pointer;
+            transition: all 0.3s ease; 
+        }
+        .search-btn:hover {
+            background: rgb(22, 155, 128);
+            transform: scale(1.05);
         }
         .autocomplete-dropdown { 
             position: absolute; 
@@ -910,7 +918,7 @@
                                     $displayReporter = 'System (Auto Alert)';
                                 }
                             @endphp
-                            <tr @if($report->status == 'pending' && !$isDamageReport)@endif>
+                            <tr @if($report->status == 'pending' && !$isDamageReport)style="background-color: #f5f5f5;" @endif>
                                 <td>{{ $report->created_at->format('M j, Y g:i A') }}</span>
                                 <td>
                                     <div class="reporter-info">
@@ -929,7 +937,7 @@
                                     @endphp
                                     Current stock: <strong>{{ $liveStock }}</strong> units
                                     @if($isDamageReport)
-                                        <div class="damage-note"><i class="fas fa-tools"></i> Damage reported - @php
+                                        <div class="damage-note"> Damage reported - @php
                                         $damageQty = 1;
                                         if (preg_match('/(\d+)\s+damaged/i', $report->message, $matches)) {
                                             $damageQty = (int)$matches[1];
@@ -996,11 +1004,6 @@
                                             @elseif($report->status == 'ordered')
                                                 <span class="ordered-text"><i class="fas fa-check-double"></i> Order Placed</span>
                                             @else
-                                                @if($report->status == 'pending')
-                                                    <button class="btn-mark-read" onclick="markAsRead('{{ $report->id }}')">
-                                                        <i class="fas fa-check"></i> Mark Read
-                                                    </button>
-                                                @endif
                                                 <button class="btn-create-po" onclick="createPurchaseOrder('{{ $report->product_id }}', '{{ addslashes($report->product_name) }}', '{{ $report->id }}')">
                                                     <i class="fas fa-shopping-cart"></i> Create PO
                                                 </button>
@@ -1058,21 +1061,21 @@
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success) {
-                    // Remove item from bell dropdown immediately
-                    var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
-                    if (item) {
-                        item.style.opacity = '0';
-                        item.style.transition = 'opacity 0.3s ease';
-                        setTimeout(function() {
-                            item.remove();
-                            // Check if dropdown is now empty
-                            var list = document.getElementById('notificationList');
-                            if (list && list.querySelectorAll('.notification-item').length === 0) {
-                                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
+                    // Update the table row visually without page reload
+                    var row = document.querySelector('button[onclick*="markAsRead(\'' + reportId + '\')"]');
+                    if (row) {
+                        var tr = row.closest('tr');
+                        if (tr) {
+                            // Replace status badge
+                            var statusTd = tr.querySelectorAll('td')[3];
+                            if (statusTd) {
+                                statusTd.innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
                             }
-                        }, 300);
+                            // Remove the Mark Read button
+                            row.remove();
+                        }
                     }
-                    // Refresh bell count
+                    // Also refresh bell count
                     fetchNotifications();
                 } else {
                     alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
