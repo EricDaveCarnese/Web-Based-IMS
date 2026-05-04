@@ -1388,27 +1388,36 @@
             try { var categoryEl = document.getElementById('categoryData'); if(categoryEl) categoryData = JSON.parse(categoryEl.getAttribute('data-categories') || '[]'); } catch(e) { console.error('Category data error:', e); }
             var stockChartCanvas = document.getElementById('stockChart');
             if (stockChartCanvas && categoryData && categoryData.length > 0) {
-                var labels = [], data = [], totalProducts = 0;
-                var colors = ['#2c6e62','#3a8f7e','#48b09a','#5cc4ac','#70d8be','#1a5c52','#4a7c72','#6b9c92','#8bbcb2','#a3d4ca'];
-                for (var i = 0; i < categoryData.length; i++) {
-                    labels.push(categoryData[i].category_name);
-                    var count = categoryData[i].products_count || 0;
-                    data.push(count);
-                    totalProducts += count;
-                }
-                new Chart(stockChartCanvas.getContext('2d'), { type: 'pie', data: { labels: labels, datasets: [{ data: data, backgroundColor: colors.slice(0, labels.length), borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { var p = totalProducts > 0 ? ((ctx.raw / totalProducts) * 100).toFixed(1) : 0; return ctx.label + ': ' + ctx.raw + ' (' + p + '%)'; } } } } } });
-                var categoriesList = document.getElementById('categoriesList');
-                if(categoriesList) {
-                    categoriesList.innerHTML = '';
-                    for (var i = 0; i < labels.length; i++) {
-                        var percentage = totalProducts > 0 ? ((data[i] / totalProducts) * 100).toFixed(1) : 0;
-                        var categoryItem = document.createElement('div');
-                        categoryItem.className = 'category-item';
-                        categoryItem.innerHTML = '<div class="category-name"><div class="category-color" style="background:' + colors[i % colors.length] + '"></div><span>' + labels[i] + '</span></div><div class="category-stats">' + data[i] + ' (' + percentage + '%)</div>';
-                        categoriesList.appendChild(categoryItem);
-                    }
+            var labels = [], data = [], totalProducts = 0;
+            var colors = ['#2c6e62','#3a8f7e','#48b09a','#5cc4ac','#70d8be','#1a5c52','#4a7c72','#6b9c92','#8bbcb2','#a3d4ca'];
+            for (var i = 0; i < categoryData.length; i++) {
+                labels.push(categoryData[i].category_name);
+                var count = categoryData[i].products_count || 0;
+                data.push(count);
+                totalProducts += count;
+            }
+            new Chart(stockChartCanvas.getContext('2d'), { type: 'pie', data: { labels: labels, datasets: [{ data: data, backgroundColor: colors.slice(0, labels.length), borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { var p = totalProducts > 0 ? ((ctx.raw / totalProducts) * 100).toFixed(1) : 0; return ctx.label + ': ' + ctx.raw + ' (' + p + '%)'; } } } } } });
+            var categoriesList = document.getElementById('categoriesList');
+            if(categoriesList) {
+                categoriesList.innerHTML = '';
+                for (var i = 0; i < labels.length; i++) {
+                    var percentage = totalProducts > 0 ? ((data[i] / totalProducts) * 100).toFixed(1) : 0;
+                    var categoryItem = document.createElement('div');
+                    categoryItem.className = 'category-item';
+                    categoryItem.innerHTML = '<div class="category-name"><div class="category-color" style="background:' + colors[i % colors.length] + '"></div><span>' + labels[i] + '</span></div><div class="category-stats">' + data[i] + ' (' + percentage + '%)</div>';
+                    categoriesList.appendChild(categoryItem);
                 }
             }
+        } else {
+            // No category data — hide pie, center message
+            var pieSection = document.querySelector('.pie-chart-section');
+            if (pieSection) pieSection.style.display = 'none';
+            var categoriesList = document.getElementById('categoriesList');
+            if (categoriesList) {
+                categoriesList.style.cssText = 'display:flex; align-items:center; justify-content:center; width:100%; min-height:200px; color:#999; font-size:14px; text-align:center;';
+                categoriesList.innerHTML = '<div><i class="fas fa-chart-pie" style="font-size:40px; margin-bottom:10px; display:block; opacity:0.3;"></i>No category data</div>';
+            }
+        }
 
             // Sales Performance Chart
             var salesData = [];

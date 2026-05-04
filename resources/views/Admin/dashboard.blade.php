@@ -1403,6 +1403,15 @@
                         categoriesList.appendChild(categoryItem);
                     }
                 }
+            } else {
+                // No category data — hide pie, center message
+                var pieSection = document.querySelector('.pie-chart-section');
+                if (pieSection) pieSection.style.display = 'none';
+                var categoriesList = document.getElementById('categoriesList');
+                if (categoriesList) {
+                    categoriesList.style.cssText = 'display:flex; align-items:center; justify-content:center; width:100%; min-height:200px; color:#999; font-size:14px; text-align:center;';
+                    categoriesList.innerHTML = '<div><i class="fas fa-chart-pie" style="font-size:40px; margin-bottom:10px; display:block; opacity:0.3;"></i>No category data</div>';
+                }
             }
 
             // Sales Performance Chart
