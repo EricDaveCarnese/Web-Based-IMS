@@ -452,11 +452,6 @@
         .autocomplete-item strong {
             color: rgb(44, 110, 98);
         }
-        .no-results {
-            padding: 12px 16px;
-            text-align: center;
-            color: #999;
-        }
 
         /* Filter Container */
         .filter-container {
@@ -1084,7 +1079,7 @@
                         </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="no-results">
+                                <td colspan="6" style="text-align: center; padding: 40px;">
                                     <i class="fas fa-history" style="font-size: 48px; color: #ccc;"></i>
                                     <p>No activity logs found</p>
                                 </td>

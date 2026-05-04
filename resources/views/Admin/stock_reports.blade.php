@@ -1014,7 +1014,10 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" style="text-align:center; padding:40px;">No stock reports found</span></td>
+                                <td colspan="6" style="text-align:center; padding:40px;">
+                                    <i class="fa-solid fa-bell-slash" style="font-size: 48px; color: #ccc;"></i>
+                                    <span> stock reports found</span>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
