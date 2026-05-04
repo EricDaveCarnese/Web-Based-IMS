@@ -2214,7 +2214,7 @@ private function checkAndSyncLowStockAlerts()
     foreach ($lowStockProducts as $product) {
         $existingAlert = StockReport::where('product_id', $product->id)
             ->where('user_name', 'System (Auto Alert)')
-            ->whereIn('status', ['pending', 'read', 'ordered'])  
+            ->whereIn('status', ['pending', 'read', 'ordered', 'resolved'])  
             ->first();
         
         if ($existingAlert) {
