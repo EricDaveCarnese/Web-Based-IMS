@@ -1016,7 +1016,7 @@
                             <tr>
                                 <td colspan="6" style="text-align:center; padding:40px;">
                                     <i class="fa-solid fa-bell-slash" style="font-size: 48px; color: #ccc;"></i>
-                                    <span> stock reports found</span>
+                                    <p>No Stock Reports Found</p>
                                 </td>
                             </tr>
                         @endforelse

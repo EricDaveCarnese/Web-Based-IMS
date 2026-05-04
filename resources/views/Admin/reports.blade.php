@@ -1618,7 +1618,7 @@
         tbody.innerHTML = '';
         
         if (!transactions || transactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No transactions found for selected filters</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;"><i class="fa-solid fa-receipt" style="font-size: 48px; color: #ccc;"></i><p>No transactions found for selected filters</p></td></tr>';
             return;
         }
         
@@ -1863,7 +1863,7 @@
     function updateCategoryList(categories) {
         const container = document.getElementById('categoriesList');
         if (!categories || categories.length === 0) { 
-            container.innerHTML = '<div style="text-align:center; color:#999; display:flex; align-items:center; justify-content:center;">No category data</div>'; 
+            container.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:200px; color:#999; text-align:center;">No category data</div>'; 
             return; 
         }
         
