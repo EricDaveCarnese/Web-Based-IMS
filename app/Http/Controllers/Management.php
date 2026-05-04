@@ -2226,25 +2226,24 @@ private function checkAndSyncLowStockAlerts()
                 $existingAlert->save();
             }
         } else {
-            $adminUser = UserManagement::where('role', 'admin')->first();
-            StockReport::updateOrCreate(
-                [
-                    'product_id' => $product->id,
-                    'user_name' => 'System (Auto Alert)',
-                    'status' => 'pending',
-                ],
-                [
-                    'user_id'         => $adminUser ? $adminUser->id : 1,
-                    'product_name'    => $product->product_name,
-                    'current_stock'   => $product->quantity,
-                    'min_stock_level' => $product->min_stock_level,
-                    'message'         => ($product->quantity == 0)
-                        ? "OUT OF STOCK ALERT: {$product->product_name} is completely out of stock! Current stock: 0 units. Minimum required: {$product->min_stock_level} units. Immediate restock needed!"
-                        : "LOW STOCK ALERT: {$product->product_name} has reached critical low stock level. Current stock: {$product->quantity} units. Minimum required: {$product->min_stock_level} units. Please restock soon!",
-                    'user_notified'   => false,
-                    'notify_users'    => false,
-                ]
-            );
+            try{
+                $adminUser = UserManagement::where('role', 'admin')->first();
+                    StockReport::create([
+                        'user_id'         => $adminUser ? $adminUser->id : 1,
+                        'user_name'       => 'System (Auto Alert)',
+                        'product_id'      => $product->id,
+                        'product_name'    => $product->product_name,
+                        'current_stock'   => $product->quantity,
+                        'min_stock_level' => $product->min_stock_level,
+                        'message'         => ($product->quantity == 0)
+                            ? "OUT OF STOCK ALERT: {$product->product_name} is completely out of stock! Current stock: 0 units. Minimum required: {$product->min_stock_level} units. Immediate restock needed!"
+                            : "LOW STOCK ALERT: {$product->product_name} has reached critical low stock level. Current stock: {$product->quantity} units. Minimum required: {$product->min_stock_level} units. Please restock soon!",
+                        'status'          => 'pending',
+                        'user_notified'   => false,
+                        'notify_users'    => false,
+                    ]);
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            }
         }
     }
     
