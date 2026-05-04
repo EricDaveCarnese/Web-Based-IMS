@@ -1187,10 +1187,11 @@
                                     <span class="batch-badge" >
                                         {{ $purchase->batch_number ?? 'BATCH-' . str_pad($purchase->id, 4, '0', STR_PAD_LEFT) }}
                                     </span>
-                                </span>
+                                </td>
                                 <td><strong>{{ $purchase->supplier->supplier_name ?? 'N/A' }}</strong></td>
                                 <td>{{ $purchase->purchase_date ? $purchase->purchase_date->format('M j, Y g:i A') : 'N/A' }}</span></td>
-                                <td>₱{{ number_format($purchase->purchaseDetails->sum(function($detail) { return $detail->quantity * $detail->cost_price; }), 2) }}</span></td>
+                                <td>₱{{ number_format($purchase->purchaseDetails->sum(function($detail) { return $detail->quantity * $detail->cost_price; }), 2) }}
+                                </td>
                                 <td>
                                     @if($purchase->status == 'completed')
                                         <span class="badge-success"><i class="fa-solid fa-check"></i> Completed</span>
@@ -1199,7 +1200,7 @@
                                     @else
                                         <span class="badge-danger"><i class="fa-solid fa-ban"></i> Canceled</span>
                                     @endif
-                                </span>
+                                </td>
                                 <td>
                                     <button class="view-details-btn" onclick="viewPurchaseDetails('{{ $purchase->id }}')">
                                         <i class="fas fa-eye"></i> View
@@ -1220,14 +1221,14 @@
                                             <i class="fas fa-ban"></i> Canceled
                                         </span>
                                     @endif
-                                </span>
+                                </td>
                             </tr>
                             @empty
                             <tr>
                                 <td colspan="7" style="text-align: center; padding: 40px;">
                                     <i class="fas fa-shopping-cart" style="font-size: 48px; color: #ccc;"></i>
                                     <p style="margin-top: 10px;">No purchase orders found</p>
-                                </span>
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>

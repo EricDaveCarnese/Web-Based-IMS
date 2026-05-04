@@ -468,8 +468,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); 
         }
         .table-container { 
-            max-height: 500px; 
-            min-height: 500px; 
+            max-height: 500px;
             overflow-y: auto; 
             overflow-x: auto; 
             border-radius: 12px; 
@@ -1426,10 +1425,9 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" style="text-align: center;padding: 40px;">
-                                        <i class="fas fa-shopping-cart" style="font-size: 48px; color: #ccc" ></i>
-                                        <p>No purchase orders found</p>
-                                        NonNull
+                                    <td colspan="7" style="text-align: center; padding: 40px;">
+                                        <i class="fas fa-shopping-cart" style="font-size: 48px; color: #ccc;"></i>
+                                        <p style="margin-top: 10px;">No purchase orders found</p>
                                     </td>
                                 </tr>
                             @endforelse
