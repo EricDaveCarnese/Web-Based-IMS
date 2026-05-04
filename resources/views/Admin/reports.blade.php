@@ -1863,7 +1863,7 @@
     function updateCategoryList(categories) {
         const container = document.getElementById('categoriesList');
         if (!categories || categories.length === 0) { 
-            container.innerHTML = '<div style="text-align:center; color:#999;">No category data</div>'; 
+            container.innerHTML = '<div style="text-align:center; color:#999; display:flex; align-items:center; justify-content:center;">No category data</div>'; 
             return; 
         }
         
