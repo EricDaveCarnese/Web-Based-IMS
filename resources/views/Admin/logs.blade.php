@@ -1079,7 +1079,7 @@
                         </tr>
                         @empty
                             <tr>
-                                <td colspan="6" style="text-align: center; padding: 40px;">
+                                <td colspan="5" style="text-align: center; padding: 40px;">
                                     <i class="fas fa-history" style="font-size: 48px; color: #ccc;"></i>
                                     <p>No activity logs found</p>
                                 </td>
