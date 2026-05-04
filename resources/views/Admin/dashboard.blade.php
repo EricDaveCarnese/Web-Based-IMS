@@ -1514,7 +1514,7 @@
                 var html = '';
                 for (var i = 0; i < details.length; i++) {
                     var item = details[i];
-                    html += '<tr>'
+                    html += '<td>'
                         + '<td>' + (i + 1) + '<\/td>'
                         + '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '<\/td>'
                         + '<td style="text-align:center">' + item.quantity + '<\/td>'
@@ -1712,16 +1712,35 @@
                     actionButton = '<button class="btn-order" onclick="createPurchaseOrder(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + notif.id + ')"><i class="fas fa-shopping-cart"></i> Create PO</button>';
                 }
                 
-                html += '<div class="notification-item unread" data-id="' + notif.id + '">' +
-                    '<div class="notification-title"><strong>' + escapeHtml(notif.product_name) + '</strong><span class="notification-time">' + notif.time_ago + '</span></div>' +
-                    '<div class="notification-message"><strong>Reported by: </strong>' + escapeHtml(notif.user_name) + '<br><strong>Current Stock: </strong>' + notif.current_stock + ' units (Min: ' + notif.min_stock_level + ')<br><small>' + escapeHtml(notif.message.substring(0, 100)) + (notif.message.length > 100 ? '...' : '') + '</small></div>' +
-                    '<div class="notification-buttons">' + actionButton + '<button class="btn-read" onclick="markAsRead(' + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button></div>' +
-                '</div>';
+                html += `
+                    <div class="notification-item unread" data-id="${notif.id}">
+                        <div class="notification-title">
+                            <strong>${escapeHtml(notif.product_name)}</strong>
+                            <span class="notification-time">${notif.time_ago}</span>
+                        </div>
+                        <div class="notification-message">
+                            <strong>Reported by: </strong>${escapeHtml(notif.user_name)}<br>
+                            <strong>Current Stock: </strong>${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
+                            <small>${escapeHtml(notif.message.substring(0, 100))}${notif.message.length > 100 ? '...' : ''}</small>
+                        </div>
+                        <div class="notification-buttons">
+                            ${actionButton}
+                            <button class="btn-read" onclick="markAsRead(${notif.id})"><i class="fas fa-check"></i> Mark Read</button>
+                        </div>
+                    </div>
+                `;
             }
             list.innerHTML = html;
         }
         
         function openDamageEditModal(productId, productName, damageQuantity, reportId) {
+            // ==================== ADDED CONFIRMATION DIALOG ====================
+            var confirmMessage = 'Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.';
+            if (!confirm(confirmMessage)) {
+                return; // User cancelled, do nothing
+            }
+            // ==================== END OF ADDED CONFIRMATION ====================
+            
             showToastMessage('Loading product for damage report (' + damageQuantity + ' units)...', '#fd7e14');
             sessionStorage.setItem('edit_product_id', productId);
             sessionStorage.setItem('edit_product_name', productName);

@@ -1496,18 +1496,23 @@
                 actionButton = '<button class="btn-order" onclick="createPurchaseOrder(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + notif.id + ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
             }
             
-            html += '<div class="notification-item unread" data-id="' + notif.id + '" style="border-left: 3px solid ' + stockColor + ';">' +
-                '<div class="notification-title">' +
-                    '<strong>' + escapeHtml(notif.product_name) + '</strong>' +
-                    '<span class="notification-time">' + notif.time_ago + '</span>' +
-                '</div>' +
-                '<div class="notification-message">' +
-                    '<strong>Reported by:</strong> ' + escapeHtml(notif.user_name) + '<br>' +
-                    '<strong>Current Stock:</strong> <strong' + stockColor + ';">' + notif.current_stock + '</strong> units (Min: ' + notif.min_stock_level + ')<br>' +
-                    '<small>' + escapeHtml(notif.message.substring(0, 100)) + (notif.message.length > 100 ? '...' : '') + '</small>' +
-                '</div>' +
-                '<div class="notification-buttons">' + actionButton + '<button class="btn-read" onclick="markAsRead(' + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button></div>' +
-            '</div>';
+            html += `
+                    <div class="notification-item unread" data-id="${notif.id}">
+                        <div class="notification-title">
+                            <strong>${escapeHtml(notif.product_name)}</strong>
+                            <span class="notification-time">${notif.time_ago}</span>
+                        </div>
+                        <div class="notification-message">
+                            <strong>Reported by: </strong>${escapeHtml(notif.user_name)}<br>
+                            <strong>Current Stock: </strong>${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
+                            <small>${escapeHtml(notif.message.substring(0, 100))}${notif.message.length > 100 ? '...' : ''}</small>
+                        </div>
+                        <div class="notification-buttons">
+                            ${actionButton}
+                            <button class="btn-read" onclick="markAsRead(${notif.id})"><i class="fas fa-check"></i> Mark Read</button>
+                        </div>
+                    </div>
+                `;
         }
         list.innerHTML = html;
     }
@@ -1528,14 +1533,12 @@
                     item.style.transition = 'opacity 0.3s ease';
                     setTimeout(function() {
                         item.remove();
-                        // Check if dropdown is now empty
                         var list = document.getElementById('notificationList');
                         if (list && list.querySelectorAll('.notification-item').length === 0) {
                             list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
                         }
                     }, 300);
                 }
-                // Refresh bell count
                 fetchNotifications();
             } else {
                 alert('Failed to mark as read: ' + (data.message || 'Unknown error'));

@@ -13,7 +13,7 @@
             padding: 0; 
             box-sizing: border-box; 
             font-family: 'Poppins', sans-serif; 
-    }
+        }
         body { 
             background-color: #f8fafc; 
         }
@@ -226,6 +226,11 @@
         .notification-item { 
             padding: 12px 15px; 
             border-bottom: 1px solid #e2e8f0; 
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        .notification-item:hover { 
+            background: #f8f9fa; 
         }
         .notification-item.unread { 
             background: #e8f5e9; 
@@ -237,11 +242,15 @@
             margin-bottom: 5px; 
             display: flex; 
             justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap;
+            gap: 5px;
         }
         .notification-message { 
             font-size: 12px; 
             color: #6c757d; 
             margin-bottom: 8px; 
+            line-height: 1.4;
         }
         .notification-time { 
             font-size: 10px; 
@@ -251,6 +260,7 @@
             display: flex; 
             gap: 8px; 
             margin-top: 8px; 
+            flex-wrap: wrap;
         }
         .btn-order { 
             background: #28a745;
@@ -260,6 +270,10 @@
             font-size: 11px; 
             cursor: pointer; 
             border: none; 
+            transition: all 0.2s;
+        }
+        .btn-order:hover { 
+            background: #1e7e34; 
         }
         .btn-read { 
             background: #6c757d; 
@@ -269,6 +283,23 @@
             font-size: 11px; 
             cursor: pointer; 
             border: none; 
+            transition: all 0.2s;
+        }
+        .btn-read:hover { 
+            background: #5a6268; 
+        }
+        .btn-edit-damage { 
+            background: #fd7e14; 
+            color: white; 
+            padding: 4px 10px; 
+            border-radius: 15px; 
+            font-size: 11px; 
+            cursor: pointer; 
+            border: none; 
+            transition: all 0.2s;
+        }
+        .btn-edit-damage:hover { 
+            background: #e6690a; 
         }
         .notification-footer { 
             padding: 10px 15px; 
@@ -285,6 +316,16 @@
             padding: 30px; 
             text-align: center; 
             color: #9ca3af; 
+        }
+        .resolved-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .options { 
@@ -312,6 +353,10 @@
             border-radius: 25px; 
             font-size: 14px; 
             outline: none; 
+        }
+        .search-input:focus {
+            border-color: rgb(44, 110, 98);
+            box-shadow: 0 0 0 3px rgba(44, 110, 98, 0.1);
         }
         .search-btn { 
             background: linear-gradient(180deg, rgb(15, 43, 61) 0%, rgb(25, 110, 114) 100%); 
@@ -1064,21 +1109,17 @@
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success) {
-                    // Update the table row visually without page reload
                     var row = document.querySelector('button[onclick*="markAsRead(\'' + reportId + '\')"]');
                     if (row) {
                         var tr = row.closest('tr');
                         if (tr) {
-                            // Replace status badge
                             var statusTd = tr.querySelectorAll('td')[3];
                             if (statusTd) {
                                 statusTd.innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
                             }
-                            // Remove the Mark Read button
                             row.remove();
                         }
                     }
-                    // Also refresh bell count
                     fetchNotifications();
                 } else {
                     alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
@@ -1199,7 +1240,7 @@
             });
         }
         
-        //NOTIFICATION DROPDOWN
+        // ==================== NOTIFICATION DROPDOWN FUNCTIONS (FIXED) ====================
         function fetchNotifications() {
             fetch('/admin/stock-reports/notifications', {
                 method: 'GET',
@@ -1244,6 +1285,9 @@
             for (let i = 0; i < notifications.length; i++) {
                 const notif = notifications[i];
                 const isDamage = notif.message && notif.message.includes('DAMAGE REPORT');
+                const isSystemAlert = notif.user_name === 'System (Auto Alert)';
+                const isOutOfStock = notif.current_stock === 0;
+                const stockColor = isOutOfStock ? '#dc3545' : (notif.current_stock <= notif.min_stock_level ? '#fd7e14' : '#28a745');
                 
                 let damageQty = 1;
                 if (isDamage) {
@@ -1251,22 +1295,34 @@
                     if (qtyMatch) damageQty = parseInt(qtyMatch[1]);
                 }
                 
+                let actionButton = '';
+                if (isDamage) {
+                    if (notif.is_resolved) {
+                        actionButton = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
+                    } else {
+                        actionButton = `<button class="btn-edit-damage" onclick="handleDamageReport(${notif.product_id}, '${escapeHtml(notif.product_name).replace(/'/g, "\\'")}', '${escapeHtml(notif.message).replace(/'/g, "\\'")}', ${notif.id})"><i class="fas fa-edit"></i> Edit & Reduce (${damageQty} units)</button>`;
+                    }
+                } else {
+                    actionButton = `<button class="btn-order" onclick="createPurchaseOrder(${notif.product_id}, '${escapeHtml(notif.product_name).replace(/'/g, "\\'")}', ${notif.id})"><i class="fas fa-shopping-cart"></i> ${isSystemAlert ? 'Restock Now' : 'Create PO'}</button>`;
+                }
+                
+                const shortMessage = notif.message && notif.message.length > 120
+                    ? notif.message.substring(0, 120) + '...'
+                    : (notif.message || '');
+                
                 html += `
-                    <div class="notification-item unread" data-id="${notif.id}">
+                    <div class="notification-item unread" data-id="${notif.id}" style="border-left: 3px solid ${stockColor};">
                         <div class="notification-title">
                             <strong>${escapeHtml(notif.product_name)}</strong>
                             <span class="notification-time">${notif.time_ago}</span>
                         </div>
                         <div class="notification-message">
-                            Reported by: ${escapeHtml(notif.user_name)}<br>
-                            Current Stock: ${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
-                            <small>${escapeHtml(notif.message.substring(0, 100))}${notif.message.length > 100 ? '...' : ''}</small>
+                            <strong>Reported by: </strong>${escapeHtml(notif.user_name)}<br>
+                            <strong>Current Stock: </strong>${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
+                            <small>${escapeHtml(shortMessage)}</small>
                         </div>
                         <div class="notification-buttons">
-                            ${isDamage ? 
-                                `<button class="btn-edit-product" onclick="handleDamageReport(${notif.product_id}, '${escapeHtml(notif.product_name).replace(/'/g, "\\'")}', '${escapeHtml(notif.message).replace(/'/g, "\\'")}', ${notif.id})"><i class="fas fa-edit"></i> Edit & Reduce</button>` : 
-                                `<button class="btn-create-po" onclick="createPurchaseOrder(${notif.product_id}, '${escapeHtml(notif.product_name).replace(/'/g, "\\'")}', ${notif.id})"><i class="fas fa-shopping-cart"></i> Create PO</button>`
-                            }
+                            ${actionButton}
                             <button class="btn-read" onclick="markAsRead(${notif.id})"><i class="fas fa-check"></i> Mark Read</button>
                         </div>
                     </div>
@@ -1274,47 +1330,48 @@
             }
             list.innerHTML = html;
         }
+        
         // ==================== CUSTOM PAGINATION ====================
-    function renderPagination() {
-        var currentPage = parseInt(document.getElementById('currentPage').value);
-        var lastPage = parseInt(document.getElementById('lastPage').value);
-        var paginationContainer = document.getElementById('customPagination');
-        if (!paginationContainer || lastPage <= 1) return;
-        var html = '<div class="custom-pagination">';
-        if (currentPage > 1) html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
-        else html += '<span class="page-disabled">&lt;</span>';
-        var startPage = Math.max(1, currentPage - 2);
-        var endPage = Math.min(lastPage, currentPage + 2);
-        if (currentPage <= 3) endPage = Math.min(lastPage, 5);
-        if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
-        if (startPage > 1) {
-            html += '<a href="#" class="page-link" data-page="1">1</a>';
-            if (startPage > 2) html += '<span class="page-dots">...</span>';
-        }
-        for (var i = startPage; i <= endPage; i++) {
-            if (i === currentPage) html += '<span class="page-active">' + i + '</span>';
-            else html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
-        }
-        if (endPage < lastPage) {
-            if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
-            html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
-        }
-        if (currentPage < lastPage) html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
-        else html += '<span class="page-disabled">&gt;</span>';
-        html += '</div>';
-        paginationContainer.innerHTML = html;
-        document.querySelectorAll('.page-link').forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                var page = this.getAttribute('data-page');
-                if (page) {
-                    var urlParams = new URLSearchParams(window.location.search);
-                    urlParams.set('page', page);
-                    window.location.href = window.location.pathname + '?' + urlParams.toString();
-                }
+        function renderPagination() {
+            var currentPage = parseInt(document.getElementById('currentPage').value);
+            var lastPage = parseInt(document.getElementById('lastPage').value);
+            var paginationContainer = document.getElementById('customPagination');
+            if (!paginationContainer || lastPage <= 1) return;
+            var html = '<div class="custom-pagination">';
+            if (currentPage > 1) html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
+            else html += '<span class="page-disabled">&lt;</span>';
+            var startPage = Math.max(1, currentPage - 2);
+            var endPage = Math.min(lastPage, currentPage + 2);
+            if (currentPage <= 3) endPage = Math.min(lastPage, 5);
+            if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
+            if (startPage > 1) {
+                html += '<a href="#" class="page-link" data-page="1">1</a>';
+                if (startPage > 2) html += '<span class="page-dots">...</span>';
+            }
+            for (var i = startPage; i <= endPage; i++) {
+                if (i === currentPage) html += '<span class="page-active">' + i + '</span>';
+                else html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
+            }
+            if (endPage < lastPage) {
+                if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
+                html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
+            }
+            if (currentPage < lastPage) html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
+            else html += '<span class="page-disabled">&gt;</span>';
+            html += '</div>';
+            paginationContainer.innerHTML = html;
+            document.querySelectorAll('.page-link').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var page = this.getAttribute('data-page');
+                    if (page) {
+                        var urlParams = new URLSearchParams(window.location.search);
+                        urlParams.set('page', page);
+                        window.location.href = window.location.pathname + '?' + urlParams.toString();
+                    }
+                });
             });
-        });
-    }
+        }
         
         // Notification bell toggle
         const bell = document.getElementById('notificationBell');
@@ -1329,10 +1386,10 @@
         document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
         
         document.addEventListener('DOMContentLoaded', function() {
-        renderPagination();
-        fetchNotifications();
-        setInterval(fetchNotifications, 30000);
-    });
+            renderPagination();
+            fetchNotifications();
+            setInterval(fetchNotifications, 30000);
+        });
     </script>
 </body>
 </html>

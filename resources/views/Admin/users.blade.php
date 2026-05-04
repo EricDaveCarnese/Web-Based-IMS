@@ -1573,24 +1573,24 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
             if (submitBtn) submitBtn.disabled = false;
         }
 
-        // ==================== NOTIFICATION DROPDOWN FUNCTIONS ====================
+        // ==================== NOTIFICATION DROPDOWN FUNCTIONS (FIXED) ====================
         function fetchNotifications() {
             fetch('/admin/stock-reports/notifications', {
                 method: 'GET',
                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' }
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
                 if (data.success) {
                     updateNotificationBell(data.unread_count);
                     renderNotificationDropdown(data.notifications);
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(function(error) { console.error('Error:', error); });
         }
         
         function updateNotificationBell(count) {
-            const badge = document.querySelector('.notification-badge');
+            var badge = document.querySelector('.notification-badge');
             if (badge) {
                 if (count > 0) {
                     badge.textContent = count;
@@ -1602,53 +1602,48 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
         }
         
         function renderNotificationDropdown(notifications) {
-            const list = document.getElementById('notificationList');
+            var list = document.getElementById('notificationList');
             if (!list) return;
+            
             if (!notifications || notifications.length === 0) {
                 list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i><p>No pending stock reports</p></div>';
                 return;
             }
-            let html = '';
-            for (let i = 0; i < notifications.length; i++) {
-                const notif = notifications[i];
-                const isDamage = notif.message && notif.message.includes('DAMAGE REPORT');
+            
+            var html = '';
+            for (var i = 0; i < notifications.length; i++) {
+                var notif = notifications[i];
+                var isDamage = notif.message && notif.message.includes('DAMAGE REPORT');
+                var isSystemAlert = notif.user_name === 'System (Auto Alert)';
+                var isOutOfStock = notif.current_stock === 0;
+                var stockColor = isOutOfStock ? '#dc3545' : (notif.current_stock <= notif.min_stock_level ? '#fd7e14' : '#28a745');
                 
-                let actionButton = '';
+                var actionButton = '';
                 if (isDamage) {
                     if (notif.is_resolved) {
                         actionButton = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
                     } else {
-                        actionButton = `<button class="btn-edit-damage" onclick="editProductAndReduceStock(${notif.product_id}, '${escapeHtml(notif.product_name).replace(/'/g, "\\'")}', '${escapeHtml(notif.message).replace(/'/g, "\\'")}')"><i class="fas fa-edit"></i> Edit & Reduce</button>`;
+                        var damageQty = notif.damage_quantity || 1;
+                        actionButton = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + damageQty + ', ' + notif.id + ')"><i class="fas fa-edit"></i> Edit & Reduce (' + damageQty + ' units)</button>';
                     }
                 } else {
-                    actionButton = `<button class="btn-order" onclick="createPurchaseOrder(${notif.product_id}, '${escapeHtml(notif.product_name).replace(/'/g, "\\'")}', ${notif.id})"><i class="fas fa-shopping-cart"></i> Create PO</button>`;
+                    actionButton = '<button class="btn-order" onclick="createPurchaseOrder(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + notif.id + ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
                 }
                 
-                html += `
-                    <div class="notification-item unread" data-id="${notif.id}">
-                        <div class="notification-title">
-                            <strong>${escapeHtml(notif.product_name)}</strong>
-                            <span class="notification-time">${notif.time_ago}</span>
-                        </div>
-                        <div class="notification-message">
-                            Reported by: ${escapeHtml(notif.user_name)}<br>
-                            Current Stock: ${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
-                            <small>${escapeHtml(notif.message.substring(0, 100))}${notif.message.length > 100 ? '...' : ''}</small>
-                        </div>
-                        <div class="notification-buttons">
-                            ${actionButton}
-                            <button class="btn-read" onclick="markAsRead(${notif.id})"><i class="fas fa-check"></i> Mark Read</button>
-                        </div>
-                    </div>
-                `;
+                html += '<div class="notification-item unread" data-id="' + notif.id + '" style="border-left: 3px solid ' + stockColor + ';">' +
+                    '<div class="notification-title">' +
+                        '<strong>' + escapeHtml(notif.product_name) + '</strong>' +
+                        '<span class="notification-time">' + notif.time_ago + '</span>' +
+                    '</div>' +
+                    '<div class="notification-message">' +
+                        '<strong>Reported by: </strong>' + escapeHtml(notif.user_name) + '<br>' +
+                        '<strong>Current Stock: </strong>' + notif.current_stock + 'units (Min: ' + notif.min_stock_level + ')<br>' +
+                        '<small>' + escapeHtml(notif.message.substring(0, 100)) + (notif.message.length > 100 ? '...' : '') + '</small>' +
+                    '</div>' +
+                    '<div class="notification-buttons">' + actionButton + '<button class="btn-read" onclick="markAsRead(' + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button></div>' +
+                '</div>';
             }
             list.innerHTML = html;
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
         }
         
         function markAsRead(reportId) {
@@ -1681,7 +1676,7 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
         }
         
         function createPurchaseOrder(productId, productName, reportId) {
-            if (confirm(`Create purchase order for "${productName}"?`)) {
+            if (confirm('Create purchase order for "' + productName + '"?')) {
                 sessionStorage.setItem('prefill_product_id', productId);
                 sessionStorage.setItem('prefill_product_name', productName);
                 sessionStorage.setItem('prefill_report_id', reportId);
@@ -1690,22 +1685,22 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
             }
         }
         
-        function editProductAndReduceStock(productId, productName, message) {
-            let damageQuantity = 1;
-            const quantityMatch = message.match(/Quantity affected:\s*(\d+)/i);
-            if (quantityMatch) damageQuantity = parseInt(quantityMatch[1]);
-            if (confirm(`Product: ${productName}\nDamaged Quantity: ${damageQuantity} units\n\nClick OK to edit product and reduce stock by ${damageQuantity} units.`)) {
-                sessionStorage.setItem('edit_product_id', productId);
-                sessionStorage.setItem('edit_product_name', productName);
-                sessionStorage.setItem('damage_quantity', damageQuantity);
-                sessionStorage.setItem('edit_from_damage_report', 'true');
-                window.location.href = '/admin/products?edit_damage=1&product_id=' + productId + '&damage_qty=' + damageQuantity;
+        function editProductAndReduceStock(productId, productName, damageQuantity, reportId) {
+            if (confirm('Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.')) {
+                window.location.href = '/admin/products?edit_damage=1&product_id=' + productId + '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
             }
         }
         
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         // Notification bell toggle
-        const bell = document.getElementById('notificationBell');
-        const dropdown = document.getElementById('notificationDropdown');
+        var bell = document.getElementById('notificationBell');
+        var dropdown = document.getElementById('notificationDropdown');
         if (bell) {
             bell.addEventListener('click', function(e) { 
                 e.stopPropagation(); 
@@ -1715,9 +1710,6 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
         }
         document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
         
-        // Initial fetch for badge count
-        fetchNotifications();
-
         // ==================== CUSTOM PAGINATION ====================
         function renderPagination() {
             const currentPage = parseInt(document.getElementById('currentPage').value);
@@ -1766,6 +1758,7 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
             initializePasswordToggles();
             validatePasswords('add_password', 'add_password_confirm', 'add_password_error', 'add_user_submit');
             validatePasswords('edit_password', 'edit_password_confirm', 'edit_password_error', 'edit_user_submit');
+            fetchNotifications();
             setInterval(fetchNotifications, 30000);
         });
     </script>

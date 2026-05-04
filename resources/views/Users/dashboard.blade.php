@@ -1208,11 +1208,6 @@
                 <div class="stat-number">₱{{ number_format($pendingSales ?? 0, 2) }}</div>
                 <div class="stat-sub">awaiting payment</div>
             </div>
-            <div class="stats-container">
-                <h3>Active Users</h3>
-                <div class="stat-number">{{ \App\Models\UserManagement::count() }}</div>
-                <div class="stat-sub">system users</div>
-            </div>
         </div>
 
         <div class="dashboard-row">
