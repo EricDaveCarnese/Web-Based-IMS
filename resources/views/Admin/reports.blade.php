@@ -1862,10 +1862,18 @@
     //UPDATE CATEGORY LIST
     function updateCategoryList(categories) {
         const container = document.getElementById('categoriesList');
+        const pieSection = document.querySelector('.pie-chart-section');
+        
         if (!categories || categories.length === 0) { 
-            container.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:200px; color:#999; text-align:center;">No category data</div>'; 
+            if (pieSection) pieSection.style.display = 'none';
+            container.style.cssText = 'display:flex; align-items:center; justify-content:center; width:100%; min-height:200px; color:#999; font-size:14px; text-align:center;';
+            container.innerHTML = '<div><i class="fas fa-chart-pie" style="font-size:40px; margin-bottom:10px; display:block; opacity:0.3;"></i>No category data</div>'; 
             return; 
         }
+
+        // Reset styles when there IS data
+        if (pieSection) pieSection.style.display = '';
+        container.style.cssText = '';
         
         const totalStock = categories.reduce((sum, c) => sum + c.totalItems, 0);
         const pieColors = ['#2c6e62', '#3a8f7e', '#48b09a', '#5cc4ac', '#70d8be', '#1a5c52', '#4a7c72', '#6b9c92', '#8bbcb2', '#a3d4ca'];
