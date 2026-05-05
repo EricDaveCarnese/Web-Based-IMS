@@ -1622,7 +1622,7 @@
         link.addEventListener('click', () => { navLinksContainer.classList.remove('active'); });
     });
 
-    // ==================== PASSWORD TOGGLE EYE ====================
+    //PASSWORD TOGGLE EYE 
     function initializePasswordToggles() {
         document.querySelectorAll('.toggle-password').forEach(function(eyeIcon) {
             eyeIcon.addEventListener('click', function() {
@@ -1643,7 +1643,7 @@
         });
     }
 
-    // ==================== INLINE PASSWORD MATCH VALIDATION ====================
+    //INLINE PASSWORD MATCH VALIDATION 
     function initPasswordMatchValidation() {
         const passwordInput = document.getElementById('register_password');
         const confirmInput = document.getElementById('register_password_confirm');
@@ -1676,7 +1676,7 @@
         });
     }
 
-    // ==================== FORM VALIDATION ON SUBMIT ====================
+    //FORM VALIDATION ON SUBMIT
     function validatePasswordMatch(event) {
         const password = document.getElementById('register_password').value;
         const confirmPassword = document.getElementById('register_password_confirm').value;
@@ -1693,7 +1693,7 @@
         return true;
     }
 
-    // ==================== LOGIN MODAL FUNCTIONS ====================
+    //LOGIN MODAL FUNCTIONS 
     const loginModal = document.getElementById('loginModal');
     const loginModalContainer = document.getElementById('loginModalContainer');
     let isModalRegisterMode = false;

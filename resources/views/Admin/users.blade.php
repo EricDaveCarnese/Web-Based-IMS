@@ -1261,7 +1261,7 @@
                                 </td>
                                 <td>
                                     @if (Auth::id() != $user->id)
-                                        <button class="edit-button" onclick='editUser("{{ $user->id }}", "{{ addslashes($user->fullname) }}", "{{ $user->email }}", "{{ $user->role }}")'>
+                                        <button class="edit-button" onclick='editUser("{{ $user->id }}", "{{ addslashes($user->fullname) }}", "{{ $user->email }}", "{{ $user->role }}", false)'>
                                             <i class="fa-solid fa-edit"></i> Edit
                                         </button>
                                         <form method="POST" action="{{ route('admin.user.delete', $user->id) }}" style="display: inline;" onsubmit="return confirm('Delete user {{ addslashes($user->fullname) }}?')">
@@ -1270,7 +1270,7 @@
                                                 <i class="fa-solid fa-trash"></i> Delete</button>
                                         </form>
                                     @else
-                                        <button class="edit-button" onclick='editUser("{{ $user->id }}", "{{ addslashes($user->fullname) }}", "{{ $user->email }}", "{{ $user->role }}")'>
+                                        <button class="edit-button" onclick='editUser("{{ $user->id }}", "{{ addslashes($user->fullname) }}", "{{ $user->email }}", "{{ $user->role }}", true)'>
                                             <i class="fa-solid fa-edit"></i> Edit
                                         </button>
                                         <span style="color: gray; font-size: 12px;">
@@ -1307,119 +1307,125 @@
     <script>
 
         function showAlertMessage(message, type) {
-        var alertContainer = document.getElementById('dynamicAlertContainer');
-            if (!alertContainer) return;
-                
-            var alertDiv = document.createElement('div');
-            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
-            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
-                
-            alertContainer.innerHTML = '';
-            alertContainer.appendChild(alertDiv);
-                
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-                
+    var alertContainer = document.getElementById('dynamicAlertContainer');
+    if (!alertContainer) return;
+        
+    var alertDiv = document.createElement('div');
+    alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+    alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
+        
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alertDiv);
+        
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+    setTimeout(function() {
+        if (alertDiv && alertDiv.parentElement) {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transition = 'opacity 0.5s ease';
             setTimeout(function() {
-                if (alertDiv && alertDiv.parentElement) {
-                    alertDiv.style.opacity = '0';
-                    alertDiv.style.transition = 'opacity 0.5s ease';
-                        setTimeout(function() {
-                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
-                    }, 500);
-                }
-            }, 3000);
+                if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+            }, 500);
         }
+    }, 3000);
+}
 
-        function autoCloseSessionAlerts() {
-            var sessionAlerts = document.querySelectorAll('.session-alert');
-            sessionAlerts.forEach(function(alert) {
-                setTimeout(function() {
-                    alert.style.opacity = '0';
-                    alert.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        if (alert && alert.parentElement) alert.remove();
-                    }, 500);
-                }, 3000);
-            });
-        }
+function autoCloseSessionAlerts() {
+    var sessionAlerts = document.querySelectorAll('.session-alert');
+    sessionAlerts.forEach(function(alert) {
+        setTimeout(function() {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alert && alert.parentElement) alert.remove();
+            }, 500);
+        }, 3000);
+    });
+}
 
-        // Get user data from hidden div for autocomplete
-        var userDataElement = document.getElementById('userData');
-        var allUsers = [];
-        
-        if (userDataElement) {
-            try {
-                var usersJson = userDataElement.getAttribute('data-users');
-                allUsers = JSON.parse(usersJson);
-            } catch(e) { allUsers = []; }
+var userDataElement = document.getElementById('userData');
+var allUsers = [];
+
+if (userDataElement) {
+    try {
+        var usersJson = userDataElement.getAttribute('data-users');
+        allUsers = JSON.parse(usersJson);
+    } catch(e) { allUsers = []; }
+}
+
+// Autocomplete functionality
+var searchInput = document.getElementById('searchInput');
+var autocompleteDropdown = document.getElementById('autocompleteDropdown');
+var searchTimeout;
+
+function showSuggestions() {
+    if (!searchInput) return;
+    var query = searchInput.value.trim().toLowerCase();
+    if (query.length === 0) { 
+        if (autocompleteDropdown) autocompleteDropdown.classList.remove('show'); 
+        return; 
+    }
+    var matches = [];
+    if (allUsers && allUsers.length > 0) {
+        for (var i = 0; i < allUsers.length; i++) {
+            var user = allUsers[i];
+            if (!user) continue;
+            var fullname = (user.fullname || '').toLowerCase();
+            var email = (user.email || '').toLowerCase();
+            if (fullname.includes(query) || email.includes(query)) { matches.push(user); }
+            if (matches.length >= 10) break;
         }
-        
-        // Autocomplete functionality
-        var searchInput = document.getElementById('searchInput');
-        var autocompleteDropdown = document.getElementById('autocompleteDropdown');
-        var searchTimeout;
-        
-        function showSuggestions() {
-            if (!searchInput) return;
-            var query = searchInput.value.trim().toLowerCase();
-            if (query.length === 0) { if (autocompleteDropdown) autocompleteDropdown.classList.remove('show'); return; }
-            var matches = [];
-            if (allUsers && allUsers.length > 0) {
-                for (var i = 0; i < allUsers.length; i++) {
-                    var user = allUsers[i];
-                    if (!user) continue;
-                    var fullname = (user.fullname || '').toLowerCase();
-                    var email = (user.email || '').toLowerCase();
-                    if (fullname.includes(query) || email.includes(query)) { matches.push(user); }
-                    if (matches.length >= 10) break;
-                }
-            }
-            if (matches.length > 0 && autocompleteDropdown) {
-                var html = '';
-                for (var i = 0; i < matches.length; i++) {
-                    var u = matches[i];
-                    var highlightedName = u.fullname.replace(new RegExp('(' + query + ')', 'gi'), '<strong>$1</strong>');
-                    var escapedName = u.fullname.replace(/'/g, "\\'");
-                    html += '<div class="autocomplete-item" onclick="selectUser(\'' + escapedName + '\')"><div>' + highlightedName + '</div><div class="product-price">' + u.email + '</div></div>';
-                }
-                autocompleteDropdown.innerHTML = html;
-                autocompleteDropdown.classList.add('show');
-            } else if (autocompleteDropdown) {
-                autocompleteDropdown.innerHTML = '<div class="no-results">No users found matching "' + query + '"</div>';
-                autocompleteDropdown.classList.add('show');
-            }
+    }
+    if (matches.length > 0 && autocompleteDropdown) {
+        var html = '';
+        for (var i = 0; i < matches.length; i++) {
+            var u = matches[i];
+            var highlightedName = u.fullname.replace(new RegExp('(' + query + ')', 'gi'), '<strong>$1</strong>');
+            var escapedName = u.fullname.replace(/'/g, "\\'");
+            html += '<div class="autocomplete-item" onclick="selectUser(\'' + escapedName + '\')"><div>' + highlightedName + '</div><div class="product-price">' + u.email + '</div></div>';
         }
-        
-        function selectUser(userName) {
-            if (searchInput) searchInput.value = userName;
+        autocompleteDropdown.innerHTML = html;
+        autocompleteDropdown.classList.add('show');
+    } else if (autocompleteDropdown) {
+        autocompleteDropdown.innerHTML = '<div class="no-results">No users found matching "' + query + '"</div>';
+        autocompleteDropdown.classList.add('show');
+    }
+}
+
+function selectUser(userName) {
+    if (searchInput) searchInput.value = userName;
+    if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
+    performSearch();
+}
+
+function performSearch() {
+    if (!searchInput) return;
+    var query = searchInput.value.trim();
+    var url = new URL(window.location.href);
+    if (query) url.searchParams.set('search', query);
+    else url.searchParams.delete('search');
+    window.location.href = url.toString();
+}
+
+if (searchInput) {
+    searchInput.addEventListener('input', function() { 
+        clearTimeout(searchTimeout); 
+        searchTimeout = setTimeout(showSuggestions, 300); 
+    });
+    document.addEventListener('click', function(e) {
+        if (autocompleteDropdown && searchInput && !searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+            autocompleteDropdown.classList.remove('show');
+        }
+    });
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
             if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
             performSearch();
         }
-        
-        function performSearch() {
-            if (!searchInput) return;
-            var query = searchInput.value.trim();
-            var url = new URL(window.location.href);
-            if (query) url.searchParams.set('search', query);
-            else url.searchParams.delete('search');
-            window.location.href = url.toString();
-        }
-        
-        if (searchInput) {
-            searchInput.addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(showSuggestions, 300); });
-            document.addEventListener('click', function(e) {
-                if (autocompleteDropdown && searchInput && !searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
-                    autocompleteDropdown.classList.remove('show');
-                }
-            });
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
-                    performSearch();
-                }
-            });
-        }
-        // ==================== PASSWORD TOGGLE EYE FUNCTION ====================
+    });
+}
+
+//PASSWORD TOGGLE EYE FUNCTION
 function initializePasswordToggles() {
     document.querySelectorAll('.toggle-password').forEach(function(eyeIcon) {
         eyeIcon.addEventListener('click', function() {
@@ -1439,8 +1445,8 @@ function initializePasswordToggles() {
         });
     });
 }
-        
-        // ==================== PASSWORD MATCH VALIDATION ====================
+
+//PASSWORD MATCH VALIDATION
 function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
     var password = document.getElementById(passwordId);
     var confirm = document.getElementById(confirmId);
@@ -1448,7 +1454,6 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
     var submitBtn = document.getElementById(submitBtnId);
     
     function checkMatch() {
-        // For edit form, both fields can be empty (keep current password)
         var isEditForm = passwordId === 'edit_password';
         if (isEditForm && !password.value && !confirm.value) {
             error.classList.remove('show');
@@ -1484,7 +1489,6 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
     });
     if (confirm) confirm.addEventListener('input', checkMatch);
     
-    // Also validate on form submit
     var form = submitBtn ? submitBtn.closest('form') : null;
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -1495,272 +1499,311 @@ function validatePasswords(passwordId, confirmId, errorId, submitBtnId) {
         });
     }
 }
+
+//ADD USER MODAL
+function resetAddForm() {
+    var addPassword = document.getElementById('add_password');
+    var addConfirm = document.getElementById('add_password_confirm');
+    if (addPassword) addPassword.value = '';
+    if (addConfirm) addConfirm.value = '';
+    var errorEl = document.getElementById('add_password_error');
+    if (errorEl) errorEl.classList.remove('show');
+    var submitBtn = document.getElementById('add_user_submit');
+    if (submitBtn) submitBtn.disabled = false;
+}
+
+//EDIT USER MODAL
+function resetEditForm() {
+    var editPassword = document.getElementById('edit_password');
+    var editConfirm = document.getElementById('edit_password_confirm');
+    if (editPassword) editPassword.value = '';
+    if (editConfirm) editConfirm.value = '';
+    var errorEl = document.getElementById('edit_password_error');
+    if (errorEl) errorEl.classList.remove('show');
+    var submitBtn = document.getElementById('edit_user_submit');
+    if (submitBtn) submitBtn.disabled = false;
+
+    // Re-enable and show role buttons on reset
+    var roleContainer = document.getElementById('role_buttons_container');
+    if (roleContainer) roleContainer.style.display = 'flex';
+    var adminRadio = document.getElementById('edit_role_admin');
+    var userRadio = document.getElementById('edit_role_user');
+    if (adminRadio) adminRadio.disabled = false;
+    if (userRadio) userRadio.disabled = false;
+}
+
+function editUser(id, fullname, email, role, isSelf) {
+    document.getElementById('edit_fullname').value = fullname;
+    document.getElementById('edit_email').value = email;
+    if (role === 'admin') document.getElementById('edit_role_admin').checked = true;
+    else document.getElementById('edit_role_user').checked = true;
+
+    // Reset password fields
+    var editPassword = document.getElementById('edit_password');
+    var editConfirm = document.getElementById('edit_password_confirm');
+    if (editPassword) editPassword.value = '';
+    if (editConfirm) editConfirm.value = '';
+    var errorEl = document.getElementById('edit_password_error');
+    if (errorEl) errorEl.classList.remove('show');
+    var submitBtn = document.getElementById('edit_user_submit');
+    if (submitBtn) submitBtn.disabled = false;
+
+    // Hide role selector if editing own account
+    var roleContainer = document.getElementById('role_buttons_container');
+    if (roleContainer) {
+        if (isSelf) {
+            roleContainer.style.display = 'none';
+            document.getElementById('edit_role_admin').disabled = true;
+            document.getElementById('edit_role_user').disabled = true;
+        } else {
+            roleContainer.style.display = 'flex';
+            document.getElementById('edit_role_admin').disabled = false;
+            document.getElementById('edit_role_user').disabled = false;
+        }
+    }
+
+    var form = document.getElementById('editUserForm');
+    form.action = '/admin/user/update/' + id;
+    document.getElementById('edit_modal_container').classList.add('show');
+}
+
+//NOTIFICATION FUNCTIONS
+function fetchNotifications() {
+    fetch('/admin/stock-reports/notifications', {
+        method: 'GET',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            updateNotificationBell(data.unread_count);
+            renderNotificationDropdown(data.notifications);
+        }
+    })
+    .catch(function(error) { console.error('Error:', error); });
+}
+
+function updateNotificationBell(count) {
+    var badge = document.querySelector('.notification-badge');
+    if (badge) {
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+function renderNotificationDropdown(notifications) {
+    var list = document.getElementById('notificationList');
+    if (!list) return;
+    
+    if (!notifications || notifications.length === 0) {
+        list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i><p>No pending stock reports</p></div>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < notifications.length; i++) {
+        var notif = notifications[i];
+        var isDamage = notif.message && notif.message.includes('DAMAGE REPORT');
+        var isSystemAlert = notif.user_name === 'System (Auto Alert)';
+        var isOutOfStock = notif.current_stock === 0;
+        var stockColor = isOutOfStock ? '#dc3545' : (notif.current_stock <= notif.min_stock_level ? '#fd7e14' : '#28a745');
         
-        // Add User Modal
-        var open_modal = document.getElementById('open_modal');
-        var modal_container = document.getElementById('modal_container');
-        var close_modal = document.getElementById('close_modal');
-        if (open_modal) open_modal.onclick = function() { 
+        var actionButton = '';
+        if (isDamage) {
+            if (notif.is_resolved) {
+                actionButton = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
+            } else {
+                var damageQty = notif.damage_quantity || 1;
+                actionButton = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + damageQty + ', ' + notif.id + ')"><i class="fas fa-edit"></i> Edit & Reduce (' + damageQty + ' units)</button>';
+            }
+        } else {
+            actionButton = '<button class="btn-order" onclick="createPurchaseOrder(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + notif.id + ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
+        }
+        
+        html += '<div class="notification-item unread" data-id="' + notif.id + '" style="border-left: 3px solid ' + stockColor + ';">' +
+            '<div class="notification-title">' +
+                '<strong>' + escapeHtml(notif.product_name) + '</strong>' +
+                '<span class="notification-time">' + notif.time_ago + '</span>' +
+            '</div>' +
+            '<div class="notification-message">' +
+                '<strong>Reported by: </strong>' + escapeHtml(notif.user_name) + '<br>' +
+                '<strong>Current Stock: </strong>' + notif.current_stock + ' units (Min: ' + notif.min_stock_level + ')<br>' +
+                '<small>' + escapeHtml(notif.message.substring(0, 100)) + (notif.message.length > 100 ? '...' : '') + '</small>' +
+            '</div>' +
+            '<div class="notification-buttons">' + actionButton + '<button class="btn-read" onclick="markAsRead(' + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button></div>' +
+        '</div>';
+    }
+    list.innerHTML = html;
+}
+
+function markAsRead(reportId) {
+    fetch('{{ route("admin.stock.report.read") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ report_id: reportId })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
+            if (item) {
+                item.style.opacity = '0';
+                item.style.transition = 'opacity 0.3s ease';
+                setTimeout(function() {
+                    item.remove();
+                    var list = document.getElementById('notificationList');
+                    if (list && list.querySelectorAll('.notification-item').length === 0) {
+                        list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
+                    }
+                }, 300);
+            }
+            fetchNotifications();
+        } else {
+            alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(function(error) { console.error('Error:', error); });
+}
+
+function createPurchaseOrder(productId, productName, reportId) {
+    if (confirm('Create purchase order for "' + productName + '"?')) {
+        sessionStorage.setItem('prefill_product_id', productId);
+        sessionStorage.setItem('prefill_product_name', productName);
+        sessionStorage.setItem('prefill_report_id', reportId);
+        sessionStorage.setItem('prefill_from_stock_report', 'true');
+        window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId + '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
+    }
+}
+
+function editProductAndReduceStock(productId, productName, damageQuantity, reportId) {
+    if (confirm('Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.')) {
+        window.location.href = '/admin/products?edit_damage=1&product_id=' + productId + '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+//CUSTOM PAGINATION
+function renderPagination() {
+    const currentPage = parseInt(document.getElementById('currentPage').value);
+    const lastPage = parseInt(document.getElementById('lastPage').value);
+    const paginationContainer = document.getElementById('customPagination');
+    if (!paginationContainer || lastPage <= 1) return;
+    let html = '<div class="custom-pagination">';
+    if (currentPage > 1) html += `<a href="#" class="page-link" data-page="${currentPage - 1}">&lt;</a>`;
+    else html += `<span class="page-disabled">&lt;</span>`;
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(lastPage, currentPage + 2);
+    if (currentPage <= 3) endPage = Math.min(lastPage, 5);
+    if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
+    if (startPage > 1) {
+        html += `<a href="#" class="page-link" data-page="1">1</a>`;
+        if (startPage > 2) html += `<span class="page-dots">...</span>`;
+    }
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === currentPage) html += `<span class="page-active">${i}</span>`;
+        else html += `<a href="#" class="page-link" data-page="${i}">${i}</a>`;
+    }
+    if (endPage < lastPage) {
+        if (endPage < lastPage - 1) html += `<span class="page-dots">...</span>`;
+        html += `<a href="#" class="page-link" data-page="${lastPage}">${lastPage}</a>`;
+    }
+    if (currentPage < lastPage) html += `<a href="#" class="page-link" data-page="${currentPage + 1}">&gt;</a>`;
+    else html += `<span class="page-disabled">&gt;</span>`;
+    html += '</div>';
+    paginationContainer.innerHTML = html;
+    document.querySelectorAll('.page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = this.getAttribute('data-page');
+            if (page) {
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('page', page);
+                window.location.href = window.location.pathname + '?' + urlParams.toString();
+            }
+        });
+    });
+}
+
+//DOM CONTENT LOADED
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Add User Modal
+    var open_modal = document.getElementById('open_modal');
+    var modal_container = document.getElementById('modal_container');
+    var close_modal = document.getElementById('close_modal');
+
+    if (open_modal) {
+        open_modal.onclick = function() {
             modal_container.classList.add('show');
             resetAddForm();
         };
-        if (close_modal) close_modal.onclick = function() { 
+    }
+    if (close_modal) {
+        close_modal.onclick = function() {
             modal_container.classList.remove('show');
             resetAddForm();
         };
-        if (modal_container) modal_container.onclick = function(e) { 
+    }
+    if (modal_container) {
+        modal_container.onclick = function(e) {
             if (e.target === modal_container) {
                 modal_container.classList.remove('show');
                 resetAddForm();
             }
         };
-        
-        function resetAddForm() {
-            var addPassword = document.getElementById('add_password');
-            var addConfirm = document.getElementById('add_password_confirm');
-            if (addPassword) addPassword.value = '';
-            if (addConfirm) addConfirm.value = '';
-            var errorEl = document.getElementById('add_password_error');
-            if (errorEl) errorEl.classList.remove('show');
-            var submitBtn = document.getElementById('add_user_submit');
-            if (submitBtn) submitBtn.disabled = false;
-        }
+    }
 
-        // Edit User Modal
-        var edit_modal_container = document.getElementById('edit_modal_container');
-        var close_edit_modal = document.getElementById('close_edit_modal');
+    // Edit User Modal
+    var edit_modal_container = document.getElementById('edit_modal_container');
+    var close_edit_modal = document.getElementById('close_edit_modal');
 
-        function editUser(id, fullname, email, role) {
-            document.getElementById('edit_fullname').value = fullname;
-            document.getElementById('edit_email').value = email;
-            if (role === 'admin') document.getElementById('edit_role_admin').checked = true;
-            else document.getElementById('edit_role_user').checked = true;
-            
-            // Reset password fields
-            var editPassword = document.getElementById('edit_password');
-            var editConfirm = document.getElementById('edit_password_confirm');
-            if (editPassword) editPassword.value = '';
-            if (editConfirm) editConfirm.value = '';
-            var errorEl = document.getElementById('edit_password_error');
-            if (errorEl) errorEl.classList.remove('show');
-            var submitBtn = document.getElementById('edit_user_submit');
-            if (submitBtn) submitBtn.disabled = false;
-            
-            var form = document.getElementById('editUserForm');
-            form.action = '/admin/user/update/' + id;
-            edit_modal_container.classList.add('show');
-        }
-
-        if (close_edit_modal) close_edit_modal.onclick = function() { 
+    if (close_edit_modal) {
+        close_edit_modal.onclick = function() {
             edit_modal_container.classList.remove('show');
             resetEditForm();
         };
-        if (edit_modal_container) edit_modal_container.onclick = function(e) { 
+    }
+    if (edit_modal_container) {
+        edit_modal_container.onclick = function(e) {
             if (e.target === edit_modal_container) {
                 edit_modal_container.classList.remove('show');
                 resetEditForm();
             }
         };
-        
-        function resetEditForm() {
-            var editPassword = document.getElementById('edit_password');
-            var editConfirm = document.getElementById('edit_password_confirm');
-            if (editPassword) editPassword.value = '';
-            if (editConfirm) editConfirm.value = '';
-            var errorEl = document.getElementById('edit_password_error');
-            if (errorEl) errorEl.classList.remove('show');
-            var submitBtn = document.getElementById('edit_user_submit');
-            if (submitBtn) submitBtn.disabled = false;
-        }
+    }
 
-        // ==================== NOTIFICATION DROPDOWN FUNCTIONS (FIXED) ====================
-        function fetchNotifications() {
-            fetch('/admin/stock-reports/notifications', {
-                method: 'GET',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    updateNotificationBell(data.unread_count);
-                    renderNotificationDropdown(data.notifications);
-                }
-            })
-            .catch(function(error) { console.error('Error:', error); });
-        }
-        
-        function updateNotificationBell(count) {
-            var badge = document.querySelector('.notification-badge');
-            if (badge) {
-                if (count > 0) {
-                    badge.textContent = count;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
-        }
-        
-        function renderNotificationDropdown(notifications) {
-            var list = document.getElementById('notificationList');
-            if (!list) return;
-            
-            if (!notifications || notifications.length === 0) {
-                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i><p>No pending stock reports</p></div>';
-                return;
-            }
-            
-            var html = '';
-            for (var i = 0; i < notifications.length; i++) {
-                var notif = notifications[i];
-                var isDamage = notif.message && notif.message.includes('DAMAGE REPORT');
-                var isSystemAlert = notif.user_name === 'System (Auto Alert)';
-                var isOutOfStock = notif.current_stock === 0;
-                var stockColor = isOutOfStock ? '#dc3545' : (notif.current_stock <= notif.min_stock_level ? '#fd7e14' : '#28a745');
-                
-                var actionButton = '';
-                if (isDamage) {
-                    if (notif.is_resolved) {
-                        actionButton = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
-                    } else {
-                        var damageQty = notif.damage_quantity || 1;
-                        actionButton = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + damageQty + ', ' + notif.id + ')"><i class="fas fa-edit"></i> Edit & Reduce (' + damageQty + ' units)</button>';
-                    }
-                } else {
-                    actionButton = '<button class="btn-order" onclick="createPurchaseOrder(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + notif.id + ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
-                }
-                
-                html += '<div class="notification-item unread" data-id="' + notif.id + '" style="border-left: 3px solid ' + stockColor + ';">' +
-                    '<div class="notification-title">' +
-                        '<strong>' + escapeHtml(notif.product_name) + '</strong>' +
-                        '<span class="notification-time">' + notif.time_ago + '</span>' +
-                    '</div>' +
-                    '<div class="notification-message">' +
-                        '<strong>Reported by: </strong>' + escapeHtml(notif.user_name) + '<br>' +
-                        '<strong>Current Stock: </strong>' + notif.current_stock + 'units (Min: ' + notif.min_stock_level + ')<br>' +
-                        '<small>' + escapeHtml(notif.message.substring(0, 100)) + (notif.message.length > 100 ? '...' : '') + '</small>' +
-                    '</div>' +
-                    '<div class="notification-buttons">' + actionButton + '<button class="btn-read" onclick="markAsRead(' + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button></div>' +
-                '</div>';
-            }
-            list.innerHTML = html;
-        }
-        
-        function markAsRead(reportId) {
-            fetch('{{ route("admin.stock.report.read") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ report_id: reportId })
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
-                    if (item) {
-                        item.style.opacity = '0';
-                        item.style.transition = 'opacity 0.3s ease';
-                        setTimeout(function() {
-                            item.remove();
-                            var list = document.getElementById('notificationList');
-                            if (list && list.querySelectorAll('.notification-item').length === 0) {
-                                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
-                            }
-                        }, 300);
-                    }
-                    fetchNotifications();
-                } else {
-                    alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(function(error) { console.error('Error:', error); });
-        }
-        
-        function createPurchaseOrder(productId, productName, reportId) {
-            if (confirm('Create purchase order for "' + productName + '"?')) {
-                sessionStorage.setItem('prefill_product_id', productId);
-                sessionStorage.setItem('prefill_product_name', productName);
-                sessionStorage.setItem('prefill_report_id', reportId);
-                sessionStorage.setItem('prefill_from_stock_report', 'true');
-                window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId + '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
-            }
-        }
-        
-        function editProductAndReduceStock(productId, productName, damageQuantity, reportId) {
-            if (confirm('Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.')) {
-                window.location.href = '/admin/products?edit_damage=1&product_id=' + productId + '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
-            }
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            var div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Notification bell toggle
-        var bell = document.getElementById('notificationBell');
-        var dropdown = document.getElementById('notificationDropdown');
-        if (bell) {
-            bell.addEventListener('click', function(e) { 
-                e.stopPropagation(); 
-                dropdown.classList.toggle('show'); 
-                if (dropdown.classList.contains('show')) fetchNotifications();
-            });
-        }
-        document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
-        
-        // ==================== CUSTOM PAGINATION ====================
-        function renderPagination() {
-            const currentPage = parseInt(document.getElementById('currentPage').value);
-            const lastPage = parseInt(document.getElementById('lastPage').value);
-            const paginationContainer = document.getElementById('customPagination');
-            if (!paginationContainer || lastPage <= 1) return;
-            let html = '<div class="custom-pagination">';
-            if (currentPage > 1) html += `<a href="#" class="page-link" data-page="${currentPage - 1}">&lt;</a>`;
-            else html += `<span class="page-disabled">&lt;</span>`;
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(lastPage, currentPage + 2);
-            if (currentPage <= 3) endPage = Math.min(lastPage, 5);
-            if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
-            if (startPage > 1) {
-                html += `<a href="#" class="page-link" data-page="1">1</a>`;
-                if (startPage > 2) html += `<span class="page-dots">...</span>`;
-            }
-            for (let i = startPage; i <= endPage; i++) {
-                if (i === currentPage) html += `<span class="page-active">${i}</span>`;
-                else html += `<a href="#" class="page-link" data-page="${i}">${i}</a>`;
-            }
-            if (endPage < lastPage) {
-                if (endPage < lastPage - 1) html += `<span class="page-dots">...</span>`;
-                html += `<a href="#" class="page-link" data-page="${lastPage}">${lastPage}</a>`;
-            }
-            if (currentPage < lastPage) html += `<a href="#" class="page-link" data-page="${currentPage + 1}">&gt;</a>`;
-            else html += `<span class="page-disabled">&gt;</span>`;
-            html += '</div>';
-            paginationContainer.innerHTML = html;
-            document.querySelectorAll('.page-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = this.getAttribute('data-page');
-                    if (page) {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        urlParams.set('page', page);
-                        window.location.href = window.location.pathname + '?' + urlParams.toString();
-                    }
-                });
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            renderPagination();
-            autoCloseSessionAlerts();
-            initializePasswordToggles();
-            validatePasswords('add_password', 'add_password_confirm', 'add_password_error', 'add_user_submit');
-            validatePasswords('edit_password', 'edit_password_confirm', 'edit_password_error', 'edit_user_submit');
-            fetchNotifications();
-            setInterval(fetchNotifications, 30000);
+    // Notification bell toggle
+    var bell = document.getElementById('notificationBell');
+    var dropdown = document.getElementById('notificationDropdown');
+    if (bell) {
+        bell.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+            if (dropdown.classList.contains('show')) fetchNotifications();
         });
+    }
+    document.addEventListener('click', function() { 
+        if (dropdown) dropdown.classList.remove('show'); 
+    });
+
+    renderPagination();
+    autoCloseSessionAlerts();
+    initializePasswordToggles();
+    validatePasswords('add_password', 'add_password_confirm', 'add_password_error', 'add_user_submit');
+    validatePasswords('edit_password', 'edit_password_confirm', 'edit_password_error', 'edit_user_submit');
+    fetchNotifications();
+    setInterval(fetchNotifications, 10000);
+});
     </script>
 </body>
 </html>

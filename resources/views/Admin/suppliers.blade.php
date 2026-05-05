@@ -1590,21 +1590,18 @@
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success) {
-                    // Remove item from bell dropdown immediately
                     var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
                     if (item) {
                         item.style.opacity = '0';
                         item.style.transition = 'opacity 0.3s ease';
                         setTimeout(function() {
                             item.remove();
-                            // Check if dropdown is now empty
                             var list = document.getElementById('notificationList');
                             if (list && list.querySelectorAll('.notification-item').length === 0) {
                                 list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
                             }
                         }, 300);
                     }
-                    // Refresh bell count
                     fetchNotifications();
                 } else {
                     alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
@@ -1683,12 +1680,11 @@
             });
         }
 
-        // Initial fetch for badge count and auto-refresh
         document.addEventListener('DOMContentLoaded', function() {
             autoCloseSessionAlerts();
             renderPagination();
             fetchNotifications();
-            setInterval(fetchNotifications, 30000);
+            setInterval(fetchNotifications, 10000);
         });
     </script>
 </body>

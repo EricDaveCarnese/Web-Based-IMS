@@ -1469,7 +1469,7 @@
             if (statusFilter) statusFilter.addEventListener('change', filterAndDisplay);
         });
 
-        // ==================== VIEW TRANSACTION DETAILS ====================
+        //VIEW TRANSACTION DETAILS
         function viewSaleDetails(id) {
             if (!id || id === '') { 
                 alert('No reference ID available for this transaction'); 
@@ -1483,7 +1483,7 @@
             document.getElementById('sale_date_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('sale_status_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('sale_total').textContent = '₱0.00';
-            document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...<\/td><\/tr>';
+            document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...</td></tr>';
             
             fetch('/admin/sale/details/' + id, { 
                 method: 'GET', 
@@ -1510,23 +1510,23 @@
                 var totalUnits = 0;
                 for (var i = 0; i < details.length; i++) totalUnits += details[i].quantity;
                 document.getElementById('sale_items_count').innerHTML = '(' + details.length + ' product type' + (details.length !== 1 ? 's' : '') + ', ' + totalUnits + ' unit' + (totalUnits !== 1 ? 's' : '') + ')';
-                if (details.length === 0) { document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found<\/td><\/tr>'; return; }
+                if (details.length === 0) { document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>'; return; }
                 var html = '';
                 for (var i = 0; i < details.length; i++) {
                     var item = details[i];
-                    html += '<td>'
-                        + '<td>' + (i + 1) + '<\/td>'
-                        + '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '<\/td>'
-                        + '<td style="text-align:center">' + item.quantity + '<\/td>'
-                        + '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>'
-                        + '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>'
-                        + '<\/tr>';
+                    html += '<tr>'
+                        + '<td>' + (i + 1) + '</td>'
+                        + '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '</td>'
+                        + '<td style="text-align:center">' + item.quantity + '</td>'
+                        + '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>'
+                        + '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>'
+                        + '</tr>';
                 }
                 document.getElementById('sale_items_table').innerHTML = html;
             })
             .catch(function(err) { 
                 console.error('Sale details error:', err); 
-                document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading sale details: ' + err.message + '<\/td><\/tr>'; 
+                document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading sale details: ' + err.message + '</td></tr>'; 
             });
         }
 
@@ -1544,7 +1544,7 @@
             document.getElementById('purchase_batch').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('purchase_status').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             document.getElementById('purchase_total').textContent = '₱0.00';
-            document.getElementById('purchase_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading purchase details...<\/td><\/tr>';
+            document.getElementById('purchase_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading purchase details...</td></tr>';
             
             fetch('/admin/purchase/details/' + id, { 
                 method: 'GET', 
@@ -1588,18 +1588,18 @@
                 }
                 
                 if (items.length === 0) { 
-                    document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found<\/td><\/tr>'; 
+                    document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>'; 
                 } else {
                     var itemsHtml = '';
                     for (var i = 0; i < items.length; i++) {
                         var item = items[i];
                         itemsHtml += '<tr>' +
-                            '<td>' + (i + 1) + '<\/td>' +
-                            '<td>' + escapeHtml(item.product_name || 'N/A') + '<\/td>' +
-                            '<td style="text-align:center">' + (item.quantity || 0) + '<\/td>' +
-                            '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                            '<td style="text-align:right">₱' + parseFloat(item.total || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '<\/td>' +
-                        '<\/tr>';
+                            '<td>' + (i + 1) + '</td>' +
+                            '<td>' + escapeHtml(item.product_name || 'N/A') + '</td>' +
+                            '<td style="text-align:center">' + (item.quantity || 0) + '</td>' +
+                            '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                            '<td style="text-align:right">₱' + parseFloat(item.total || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                        '</tr>';
                     }
                     document.getElementById('purchase_items_table').innerHTML = itemsHtml;
                 }
@@ -1608,7 +1608,7 @@
             })
             .catch(function(err) { 
                 console.error('Purchase details error:', err); 
-                document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading purchase details: ' + err.message + '<\/td><\/tr>'; 
+                document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading purchase details: ' + err.message + '</td></tr>'; 
             });
         }
 
@@ -1619,7 +1619,6 @@
             return div.innerHTML;
         }
 
-        // Modal Close Handlers
         var saleModal = document.getElementById('saleDetailsModal');
         var closeSaleModal = document.getElementById('close_sale_modal');
         var purchaseModal = document.getElementById('purchaseDetailsModal');
@@ -1629,7 +1628,7 @@
         if (closePurchaseModal) closePurchaseModal.onclick = function() { purchaseModal.classList.remove('show'); };
         if (purchaseModal) purchaseModal.onclick = function(e) { if (e.target === purchaseModal) purchaseModal.classList.remove('show'); };
 
-        // ==================== CUSTOM PAGINATION ====================
+        //CUSTOM PAGINATION
         function renderPagination() {
             const currentPage = parseInt(document.getElementById('currentPage').value);
             const lastPage = parseInt(document.getElementById('lastPage').value);
@@ -1667,7 +1666,7 @@
             setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
         }
 
-        // ==================== NOTIFICATION FUNCTIONS ====================
+        //NOTIFICATION FUNCTIONS
         function fetchNotifications() {
             fetch('/admin/stock-reports/notifications', { method: 'GET', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(response) { return response.json(); })
@@ -1734,12 +1733,10 @@
         }
         
         function openDamageEditModal(productId, productName, damageQuantity, reportId) {
-            // ==================== ADDED CONFIRMATION DIALOG ====================
             var confirmMessage = 'Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.';
             if (!confirm(confirmMessage)) {
-                return; // User cancelled, do nothing
+                return; 
             }
-            // ==================== END OF ADDED CONFIRMATION ====================
             
             showToastMessage('Loading product for damage report (' + damageQuantity + ' units)...', '#fd7e14');
             sessionStorage.setItem('edit_product_id', productId);
@@ -1789,7 +1786,6 @@
             }
         }
         
-        // Notification bell toggle
         var bell = document.getElementById('notificationBell');
         var dropdown = document.getElementById('notificationDropdown');
         if (bell) {
@@ -1797,11 +1793,10 @@
         }
         document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
         
-        // Initialize
         autoCloseSessionAlerts();
         renderPagination();
         fetchNotifications();
-        setInterval(fetchNotifications, 30000);
+        setInterval(fetchNotifications, 10000);
     </script>
 </body>
 </html>

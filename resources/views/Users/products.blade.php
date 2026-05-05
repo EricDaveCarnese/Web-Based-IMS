@@ -1227,11 +1227,12 @@
                     <tbody id="productsTableBody">
                         @forelse($products as $product)
                         <tr>
-                            <td><span>{{ $product->id }}</span>
-                            <td><span><strong>{{ $product->product_name }}</strong></span>
+                            <td><span>{{ $product->id }}</span></td>
+                            <td><span><strong>{{ $product->product_name }}</strong></span></td>
                             <td class="description-cell">
                                 <span class="short-desc">
-                                    <small>{{ Str::limit($product->description, 80) }}</small></span>
+                                    <small>{{ Str::limit($product->description, 80) }}</small>
+                                </span>
                                 <span class="full-desc" style="display:none;">{{ $product->description }}</span>
                                 @if(strlen($product->description) > 80)
                                     <a href="javascript:void(0)" class="toggle-description">Show more</a>
@@ -1380,7 +1381,6 @@
         var damageModal = document.getElementById('damage_modal_container');
         var closeDamageModal = document.getElementById('close_damage_modal');
         
-        // Attach click handlers to all Report Damage buttons
         function attachDamageButtonHandlers() {
             var reportButtons = document.querySelectorAll('.report-damage-btn');
             for (var i = 0; i < reportButtons.length; i++) {
@@ -1462,20 +1462,16 @@
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success) {
-                    // Close modal
                     damageModal.classList.remove('show');
                     
-                    // Show success alert bar at top (like dashboard)
                     showAlertMessage('✓ Damage report sent to admin successfully!', 'success');
                     
-                    // Change the button to show "✓ Report Sent" temporarily
                     if (currentButton) {
                         var originalButtonHtml = currentButton.innerHTML;
                         currentButton.innerHTML = '<i class="fas fa-check-circle"></i> ✓ Report Sent';
                         currentButton.classList.add('report-sent');
                         currentButton.disabled = true;
                         
-                        // After 3 seconds, restore the button
                         setTimeout(function() {
                             if (currentButton) {
                                 currentButton.innerHTML = originalButtonHtml;
@@ -1500,7 +1496,7 @@
             });
         });
 
-        // ==================== SEARCH FUNCTIONALITY ====================
+        //SEARCH FUNCTIONALITY
         var productDataElement = document.getElementById('productData');
         var allProducts = [];
         
@@ -1864,7 +1860,7 @@
         });
 
         fetchUserNotifications();
-        setInterval(fetchUserNotifications, 30000);
+        setInterval(fetchUserNotifications, 10000);
     </script>
 </body>
 </html>

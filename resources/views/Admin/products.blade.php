@@ -1242,12 +1242,10 @@
         }
     var CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-    // Product data for autocomplete 
     var allProducts = [];
     try { allProducts = JSON.parse(document.getElementById('productData').dataset.products); }
     catch(e) {}
 
-    // Search / Filter
     function performSearch() {
         var q  = document.getElementById('searchInput').value.trim();
         var st = document.getElementById('filterStatus').value;
@@ -1319,7 +1317,6 @@
         restoreAllFields();
     }
 
-    // Toast
     function showToast(msg, color) {
         var old = document.querySelector('.toast-message');
         if (old) old.remove();
@@ -1331,7 +1328,6 @@
         setTimeout(function(){ if (t.parentElement) t.remove(); }, 3500);
     }
 
-    // Field state management
     var LOCK_FIELDS = ['edit_product_name','edit_description','edit_category_id','edit_supplier_id','edit_price','edit_min_stock'];
 
     function lockFieldsForDamage() {
@@ -1354,7 +1350,6 @@
             qty.style.cursor = '';
             qty.classList.remove('field-readonly-visual');
         }
-        // Hide lock icon in damage mode
         var lockIcon = document.getElementById('quantityLockIcon');
         if (lockIcon) lockIcon.style.display = 'none';
     }
@@ -1370,14 +1365,12 @@
             f.style.opacity = '';
             f.style.cursor = '';
         });
-        // Disable quantity in normal mode
         var qty = document.getElementById('edit_quantity');
         if (qty) {
             qty.setAttribute('readonly', true);
             qty.classList.add('field-readonly-visual');
             qty.style.cursor = 'not-allowed';
         }
-        // Show lock icon, hide hint
         var lockIcon = document.getElementById('quantityLockIcon');
         if (lockIcon) lockIcon.style.display = 'inline';
         var hint = document.getElementById('quantityHint');
@@ -1413,8 +1406,7 @@
             document.getElementById('editProductForm').action   = '/admin/product/update/' + p.id;
 
             removeDamageNotice();
-            restoreAllFields(); // this disables quantity in normal mode
-
+            restoreAllFields(); 
             openModal('edit_modal_container');
             showToast('Product loaded!', '#28a745');
         })
@@ -1455,18 +1447,15 @@
             qty.value = newStock;
             qty.classList.add('damage-highlight');
 
-            // Show hint below quantity
             var hint = document.getElementById('quantityHint');
             if (hint) {
                 hint.style.display = 'block';
                 hint.innerHTML = 'Auto-deducted: ' + currentStock + ' − ' + damageQty + ' = <strong>' + newStock + '</strong> units';
             }
 
-            // Lock everything except quantity
             removeDamageNotice();
             lockFieldsForDamage();
 
-            // Add damage notice banner
             var notice = document.createElement('div');
             notice.className = 'damage-notice';
             notice.innerHTML =
@@ -1484,7 +1473,6 @@
     }
     window.editProductForDamage = editProductForDamage;
 
-    // Create PO (navigates to purchases page with URL params)
     window.createPO = function(pid, pname, rid) {
         if (confirm('Create Purchase Order for "' + pname + '"?\n\nYou will be redirected to the Purchases page.')) {
             window.location.href = '/admin/purchases?open_modal=1&product_id=' + pid
@@ -1512,7 +1500,6 @@
         .catch(function(e){ console.error(e); });
     };
 
-    // Check URL params for damage-mode auto-open
     (function checkUrlParams(){
         var params  = new URLSearchParams(window.location.search);
         var pid     = params.get('product_id');
@@ -1609,21 +1596,18 @@
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                // Remove item from bell dropdown immediately
                 var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
                 if (item) {
                     item.style.opacity = '0';
                     item.style.transition = 'opacity 0.3s ease';
                     setTimeout(function() {
                         item.remove();
-                        // Check if dropdown is now empty
                         var list = document.getElementById('notificationList');
                         if (list && list.querySelectorAll('.notification-item').length === 0) {
                             list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
                         }
                     }, 300);
                 }
-                // Refresh bell count
                 fetchNotifications();
             } else {
                 alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
@@ -1676,7 +1660,7 @@
         autoCloseSessionAlerts();
         renderPagination();
         fetchNotifications();
-        setInterval(fetchNotifications, 30000);
+        setInterval(fetchNotifications, 10000);
     });
     </script>
 </body>

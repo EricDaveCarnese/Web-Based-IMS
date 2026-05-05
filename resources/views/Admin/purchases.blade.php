@@ -1502,7 +1502,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            //DOM ELEMENTS 
             var supplierSelect = document.getElementById('supplier_select');
             var productSelect = document.getElementById('product_select');
             var costPriceInput = document.getElementById('cost_price_input');
@@ -1510,7 +1509,6 @@
             var dueDateInput = document.getElementById('due_date_input');
             var quantityInput = document.getElementById('quantity_input');
 
-            // Store all original product options
             var allProductOptions = [];
             if (productSelect) {
                 for (var i = 0; i < productSelect.options.length; i++) {
@@ -1649,7 +1647,6 @@
                 }
             }
 
-            //EVENT LISTENERS
             if (supplierSelect)
                 supplierSelect.addEventListener('change', filterProductsBySupplier);
             if (productSelect)
@@ -1726,7 +1723,6 @@
                 }
             }
 
-            //SET MINIMUM DUE DATE
             if (dueDateInput) {
                 var tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1736,7 +1732,6 @@
                 dueDateInput.min = yyyy + '-' + mm + '-' + dd;
             }
 
-            //PO# & SUPPLIER AUTOCOMPLETE SEARCH
             var allPurchaseOrders = [];
             var purchaseOrdersDataEl = document.getElementById('purchaseOrdersData');
             if (purchaseOrdersDataEl) {
@@ -1906,7 +1901,7 @@
                 });
             }
 
-            // ==================== MODAL CONTROLS ====================
+            //MODAL CONTROLS
             var openModal = document.getElementById('open_modal');
             var modalContainer = document.getElementById('modal_container');
             var closeModalBtn = document.getElementById('close_modal');
@@ -2086,10 +2081,8 @@
             }
             renderPagination();
 
-            //CALL AUTO-OPEN MODAL FUNCTION
             setTimeout(checkAndOpenModalFromStockReport, 500);
 
-            //NOTIFICATION FUNCTIONS
             function fetchNotifications() {
                 fetch('/admin/stock-reports/notifications', {
                     method: 'GET',
@@ -2189,21 +2182,18 @@
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (data.success) {
-                        // Remove item from bell dropdown immediately
                         var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
                         if (item) {
                             item.style.opacity = '0';
                             item.style.transition = 'opacity 0.3s ease';
                             setTimeout(function() {
                                 item.remove();
-                                // Check if dropdown is now empty
                                 var list = document.getElementById('notificationList');
                                 if (list && list.querySelectorAll('.notification-item').length === 0) {
                                     list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
                                 }
                             }, 300);
                         }
-                        // Refresh bell count
                         fetchNotifications();
                     } else {
                         alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
@@ -2247,7 +2237,7 @@
             autoCloseSessionAlerts();
             renderPagination();
             fetchNotifications();
-            setInterval(fetchNotifications, 30000);
+            setInterval(fetchNotifications, 10000);
         });
     </script>
 </body>

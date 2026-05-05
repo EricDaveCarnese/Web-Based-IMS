@@ -874,50 +874,50 @@
                                     @endif
                                 </td>
                                 <td>
-                                @php
-                                    $isDamageMsg = str_contains($notification->message, 'DAMAGE');
-                                    $isLowStockMsg = str_contains($notification->message, 'GOOD NEWS') 
-                                                || str_contains($notification->message, 'Purchase Order');
-                                @endphp
+                                    @php
+                                        $isDamageMsg = str_contains($notification->message, 'DAMAGE');
+                                        $isLowStockMsg = str_contains($notification->message, 'GOOD NEWS') 
+                                                    || str_contains($notification->message, 'Purchase Order');
+                                    @endphp
 
-                                @if($isDamageResolved)
-                                    <span class="po-completed" style="background-color: rgb(0, 157, 47); color:white;">
-                                        <i class="fas fa-check-circle"></i> Damage Resolved
-                                    </span>
+                                    @if($isDamageResolved)
+                                        <span class="po-completed" style="background-color: rgb(0, 157, 47); color:white;">
+                                            <i class="fas fa-check-circle"></i> Damage Resolved
+                                        </span>
 
-                                @elseif($poStatus == 'completed')
-                                    <span class="po-completed">
-                                        <i class="fas fa-check-double"></i> PO Completed
-                                    </span>
+                                    @elseif($poStatus == 'completed')
+                                        <span class="po-completed">
+                                            <i class="fas fa-check-double"></i> PO Completed
+                                        </span>
 
-                                @elseif($poStatus == 'pending')
-                                    <span class="po-pending">
-                                        <i class="fas fa-clock"></i> PO Pending
-                                    </span>
+                                    @elseif($poStatus == 'pending')
+                                        <span class="po-pending">
+                                            <i class="fas fa-clock"></i> PO Pending
+                                        </span>
 
-                                @elseif($poStatus)
-                                    <span class="po-pending">
-                                        <i class="fas fa-shopping-cart"></i> PO Created
-                                    </span>
+                                    @elseif($poStatus)
+                                        <span class="po-pending">
+                                            <i class="fas fa-shopping-cart"></i> PO Created
+                                        </span>
 
-                                @elseif($isDamageMsg && !$isDamageResolved)
-                                    <span style="background:#fff3cd; color:#856404; padding:6px 12px;
-                                                border-radius:20px; font-size:12px; font-weight:600;
-                                                display:inline-flex; align-items:center; gap:6px;
-                                                min-width:130px; justify-content:center; white-space:nowrap;">
-                                        <i class="fas fa-hourglass-half"></i> Awaiting Review
-                                    </span>
+                                    @elseif($isDamageMsg && !$isDamageResolved)
+                                        <span style="background:#fff3cd; color:#856404; padding:6px 12px;
+                                                    border-radius:20px; font-size:12px; font-weight:600;
+                                                    display:inline-flex; align-items:center; gap:6px;
+                                                    min-width:130px; justify-content:center; white-space:nowrap;">
+                                            <i class="fas fa-hourglass-half"></i> Awaiting Review
+                                        </span>
 
-                                @else
-                                    {{-- Low stock / PO not yet created --}}
-                                    <span style="background:#f5c21c; color:#857f04; padding:6px 12px;
-                                                border-radius:20px; font-size:12px; font-weight:600;
-                                                display:inline-flex; align-items:center; gap:6px;
-                                                min-width:130px; justify-content:center; white-space:nowrap;">
-                                        <i class="fas fa-hourglass-half"></i> Pending Action
-                                    </span>
-                                @endif
-                            </td>
+                                    @else
+                                        {{-- Low stock / PO not yet created --}}
+                                        <span style="background:#f5c21c; color:#857f04; padding:6px 12px;
+                                                    border-radius:20px; font-size:12px; font-weight:600;
+                                                    display:inline-flex; align-items:center; gap:6px;
+                                                    min-width:130px; justify-content:center; white-space:nowrap;">
+                                            <i class="fas fa-hourglass-half"></i> Pending Action
+                                        </span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if($notification->status == 'pending')
                                         <button class="btn-mark-read" onclick="markAsRead('{{ $notification->id }}')"><i class="fas fa-check"></i> Mark Read</button>
@@ -1232,7 +1232,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             renderPagination();
             fetchUserNotifications();
-            setInterval(fetchUserNotifications, 30000);
+            setInterval(fetchUserNotifications, 10000);
         });
 
         // Bell toggle

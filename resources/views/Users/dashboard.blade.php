@@ -1485,7 +1485,6 @@
             document.getElementById('sale_total').textContent = '₱0.00';
             document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...</td></tr>';
             
-            // FIXED: Use correct user route for sale details
             fetch('/user/sales/' + id + '/details', { 
                 method: 'GET', 
                 headers: { 
@@ -1538,13 +1537,12 @@
             return div.innerHTML;
         }
 
-        // Modal Close Handlers
         var saleModal = document.getElementById('saleDetailsModal');
         var closeSaleModal = document.getElementById('close_sale_modal');
         if (closeSaleModal) closeSaleModal.onclick = function() { saleModal.classList.remove('show'); };
         if (saleModal) saleModal.onclick = function(e) { if (e.target === saleModal) saleModal.classList.remove('show'); };
 
-        // ==================== CUSTOM PAGINATION ====================
+        //CUSTOM PAGINATION
         function renderPagination() {
             const currentPage = parseInt(document.getElementById('currentPage').value);
             const lastPage = parseInt(document.getElementById('lastPage').value);
@@ -1573,7 +1571,7 @@
             });
         }
 
-        // ==================== UNIFIED USER NOTIFICATION FUNCTIONS ====================
+        //UNIFIED USER NOTIFICATION FUNCTIONS 
 function fetchUserNotifications() {
     fetch('/user/notifications/bell', {
         method: 'GET',
@@ -1621,12 +1619,10 @@ function renderNotificationDropdown(notifications) {
         var isDamageResolved = notif.is_resolved
             || (notif.message && notif.message.includes('DAMAGE RESOLVED'));
 
-        // Resolved badge (shown alongside mark read for damage resolved items)
         var resolvedBadge = isDamageResolved
             ? '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Admin Resolved</span>'
             : '';
 
-        // Action button — always show Mark Read for pending, show Read label otherwise
         var actionButton = notif.status === 'pending'
             ? resolvedBadge + '<button class="btn-read-notif" onclick="markUserNotificationAsRead('
                 + notif.id + ')"><i class="fas fa-check"></i> Mark Read</button>'
@@ -1731,7 +1727,7 @@ document.addEventListener('click', function(e) {
 });
     autoCloseSessionAlerts();
     fetchUserNotifications();
-    setInterval(fetchUserNotifications, 30000);
+    setInterval(fetchUserNotifications, 10000);
     </script>
 </body>
 </html>

@@ -1320,7 +1320,6 @@
         }
     }
     
-    // Confirmation for delete category
     function confirmDeleteCategory(categoryName) {
         return confirm('Delete category "' + categoryName + '"?\n\nProducts in this category will NOT be deleted, but they will become uncategorized.\n\nThis action cannot be undone. Continue?');
     }
@@ -1405,7 +1404,7 @@
         });
     }
     
-    // ==================== ADD CATEGORY MODAL ====================
+    //ADD CATEGORY MODAL
     var open_modal = document.getElementById('open_modal');
     var modal_container = document.getElementById('modal_container');
     var close_modal = document.getElementById('close_modal');
@@ -1414,7 +1413,7 @@
     if (close_modal) close_modal.onclick = function() { modal_container.classList.remove('show'); };
     if (modal_container) modal_container.onclick = function(e) { if (e.target === modal_container) modal_container.classList.remove('show'); };
 
-    // ==================== EDIT CATEGORY MODAL ====================
+    //EDIT CATEGORY MODAL
     var edit_modal_container = document.getElementById('edit_modal_container');
     var close_edit_modal = document.getElementById('close_edit_modal');
 
@@ -1430,7 +1429,7 @@
     if (close_edit_modal) close_edit_modal.onclick = function() { edit_modal_container.classList.remove('show'); };
     if (edit_modal_container) edit_modal_container.onclick = function(e) { if (e.target === edit_modal_container) edit_modal_container.classList.remove('show'); };
 
-    // ==================== NOTIFICATION DROPDOWN FUNCTIONS ====================
+    //NOTIFICATION DROPDOWN FUNCTIONS
     function showToast(message, bgColor) {
         var existing = document.querySelector('.toast-message');
         if (existing) existing.remove();
@@ -1526,7 +1525,6 @@
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                // Remove item from bell dropdown immediately
                 var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
                 if (item) {
                     item.style.opacity = '0';
@@ -1563,7 +1561,7 @@
         }
     }
     
-    // ==================== NOTIFICATION BELL TOGGLE ====================
+    //NOTIFICATION BELL TOGGLE 
     var bell = document.getElementById('notificationBell');
     var dropdown = document.getElementById('notificationDropdown');
     if (bell) {
@@ -1575,7 +1573,7 @@
     }
     document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
     
-    // ==================== CUSTOM PAGINATION ====================
+    //CUSTOM PAGINATION
     function renderPagination() {
         var currentPage = parseInt(document.getElementById('currentPage').value);
         var lastPage = parseInt(document.getElementById('lastPage').value);
@@ -1621,7 +1619,7 @@
         autoCloseSessionAlerts();
         renderPagination();
         fetchNotifications();
-        setInterval(fetchNotifications, 30000);
+        setInterval(fetchNotifications, 10000);
     });
 </script>
 </body>

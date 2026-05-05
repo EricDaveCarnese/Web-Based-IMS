@@ -972,7 +972,7 @@
                                         </div>
                                         <div>{!! $reporterBadge !!}</div>
                                     </div>
-                                </span>
+                                </td>
                                 <td>
                                     <strong>{{ $report->product_name }}</strong><br>
                                     @php
@@ -1005,7 +1005,7 @@
                                     @else
                                         <span class="status-read"><i class="fas fa-eye"></i> {{ ucfirst($report->status) }}</span>
                                     @endif
-                                </span>
+                                </td>
                                 <td>
                                     @if($purchaseOrder)
                                         @if($purchaseOrder->status == 'completed')
@@ -1109,17 +1109,19 @@
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success) {
-                    var row = document.querySelector('button[onclick*="markAsRead(\'' + reportId + '\')"]');
-                    if (row) {
-                        var tr = row.closest('tr');
-                        if (tr) {
-                            var statusTd = tr.querySelectorAll('td')[3];
-                            if (statusTd) {
-                                statusTd.innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
+                    var allButtons = document.querySelectorAll('.btn-mark-read');
+                    allButtons.forEach(function(btn) {
+                        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(String(reportId))) {
+                            var tr = btn.closest('tr');
+                            if (tr) {
+                                var statusTd = tr.querySelectorAll('td')[3];
+                                if (statusTd) {
+                                    statusTd.innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
+                                }
+                                btn.remove();
                             }
-                            row.remove();
                         }
-                    }
+                    });
                     fetchNotifications();
                 } else {
                     alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
@@ -1217,14 +1219,12 @@
             applyFilters();
         }
         
-        // Add event listeners for autocomplete
         if (searchInput) {
             searchInput.addEventListener('input', function() {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(showSuggestions, 300);
             });
             
-            // Close dropdown when clicking outside
             document.addEventListener('click', function(e) {
                 if (autocompleteDropdown && searchInput && !searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
                     autocompleteDropdown.classList.remove('show');
@@ -1240,7 +1240,7 @@
             });
         }
         
-        // ==================== NOTIFICATION DROPDOWN FUNCTIONS (FIXED) ====================
+        //NOTIFICATION DROPDOWN FUNCTIONS (FIXED)
         function fetchNotifications() {
             fetch('/admin/stock-reports/notifications', {
                 method: 'GET',
@@ -1331,7 +1331,7 @@
             list.innerHTML = html;
         }
         
-        // ==================== CUSTOM PAGINATION ====================
+        //CUSTOM PAGINATION 
         function renderPagination() {
             var currentPage = parseInt(document.getElementById('currentPage').value);
             var lastPage = parseInt(document.getElementById('lastPage').value);
@@ -1388,7 +1388,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             renderPagination();
             fetchNotifications();
-            setInterval(fetchNotifications, 30000);
+            setInterval(fetchNotifications, 10000);
         });
     </script>
 </body>

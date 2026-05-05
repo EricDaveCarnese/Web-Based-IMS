@@ -1362,10 +1362,14 @@
         </div>
         <div class="modal-body">
             <div class="purchase-info">
-                <strong>Supplier:</strong> <span id="purchase_supplier"></span><br>
-                <strong>Date:</strong> <span id="purchase_date"></span><br>
-                <strong>Batch #:</strong> <span id="purchase_batch"></span><br>
-                <strong>Status:</strong> <span id="purchase_status"></span>
+                <strong>Supplier:</strong> 
+                    <span id="purchase_supplier"></span><br>
+                <strong>Date:</strong> 
+                    <span id="purchase_date"></span><br>
+                <strong>Batch #:</strong> 
+                    <span id="purchase_batch"></span><br>
+                <strong>Status:</strong> 
+                    <span id="purchase_status"></span>
             </div>
             <h4 style="color:rgb(151,205,200);margin-bottom:10px;">Items Purchased:</h4>
             <div style="overflow-x:auto;">
@@ -1871,7 +1875,6 @@
             return; 
         }
 
-        // Reset styles when there IS data
         if (pieSection) pieSection.style.display = '';
         container.style.cssText = '';
         
@@ -1974,21 +1977,18 @@
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                // Remove item from bell dropdown immediately
                 var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
                 if (item) {
                     item.style.opacity = '0';
                     item.style.transition = 'opacity 0.3s ease';
                     setTimeout(function() {
                         item.remove();
-                        // Check if dropdown is now empty
                         var list = document.getElementById('notificationList');
                         if (list && list.querySelectorAll('.notification-item').length === 0) {
                             list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
                         }
                     }, 300);
                 }
-                // Refresh bell count
                 fetchNotifications();
             } else {
                 alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
@@ -2066,10 +2066,9 @@
         });
     }
 
-    //INITIALIZE
     loadReportData();
     fetchNotifications();
-    setInterval(fetchNotifications, 30000);
+    setInterval(fetchNotifications, 10000);
 </script>
 </body>
 </html>

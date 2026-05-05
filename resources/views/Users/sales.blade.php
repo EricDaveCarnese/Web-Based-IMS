@@ -1579,7 +1579,6 @@
 
         const paymentStatus = document.getElementById('paymentStatus').value;
 
-        // Build items array
         const items = cart.map(i => ({ product_id: i.id, quantity: i.qty }));
 
         try {
@@ -1597,11 +1596,9 @@
             const result = await response.json();
 
             if (result.success) {
-                // Use the new alert bar instead of popup
                 showAlertMessage('Sale #' + result.sale_id + ' completed! (' + items.length + ' product type(s))', 'success');
                 newSaleModal.classList.remove('show');
                 resetCart();
-                // Refresh the page after 2 seconds to show the new sale
                 setTimeout(function() {
                     location.reload();
                 }, 2000);
@@ -1811,63 +1808,63 @@ function renderNotificationDropdown(notifications) {
     list.innerHTML = html;
 }
 
-function markUserNotificationAsRead(notificationId) {
-    fetch('{{ route("user.notification.mark-read") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ notification_id: notificationId })
-    })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        if (data.success) {
-            var item = document.querySelector('.notification-item[data-id="' + notificationId + '"]');
-            if (item) {
-                item.style.opacity = '0';
-                item.style.transition = 'opacity 0.3s ease';
-                setTimeout(function() {
-                    item.remove();
-                    var list = document.getElementById('userNotificationList');
-                    if (list && list.querySelectorAll('.notification-item').length === 0) {
-                        list.innerHTML = '<div class="no-notifications">'
-                            + '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>'
-                            + '<p>No new notifications</p></div>';
-                    }
-                }, 300);
+    function markUserNotificationAsRead(notificationId) {
+        fetch('{{ route("user.notification.mark-read") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ notification_id: notificationId })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                var item = document.querySelector('.notification-item[data-id="' + notificationId + '"]');
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transition = 'opacity 0.3s ease';
+                    setTimeout(function() {
+                        item.remove();
+                        var list = document.getElementById('userNotificationList');
+                        if (list && list.querySelectorAll('.notification-item').length === 0) {
+                            list.innerHTML = '<div class="no-notifications">'
+                                + '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>'
+                                + '<p>No new notifications</p></div>';
+                        }
+                    }, 300);
+                }
+                fetchUserNotifications();
+            } else {
+                alert('Failed to mark as read');
             }
-            fetchUserNotifications();
-        } else {
-            alert('Failed to mark as read');
-        }
-    })
-    .catch(function(error) { console.error('Error:', error); });
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    var div = document.createElement('div');
-    div.textContent = String(text);
-    return div.innerHTML;
-}
-
-// Bell toggle
-var userBell     = document.getElementById('userNotificationBell');
-var userDropdown = document.getElementById('userNotificationDropdown');
-if (userBell) {
-    userBell.addEventListener('click', function(e) {
-        e.stopPropagation();
-        userDropdown.classList.toggle('show');
-        if (userDropdown.classList.contains('show')) fetchUserNotifications();
-    });
-}
-document.addEventListener('click', function(e) {
-    if (userDropdown && !userDropdown.contains(e.target) && userBell && !userBell.contains(e.target)) {
-        userDropdown.classList.remove('show');
+        })
+        .catch(function(error) { console.error('Error:', error); });
     }
-});
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    // Bell toggle
+    var userBell     = document.getElementById('userNotificationBell');
+    var userDropdown = document.getElementById('userNotificationDropdown');
+    if (userBell) {
+        userBell.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+            if (userDropdown.classList.contains('show')) fetchUserNotifications();
+        });
+    }
+    document.addEventListener('click', function(e) {
+        if (userDropdown && !userDropdown.contains(e.target) && userBell && !userBell.contains(e.target)) {
+            userDropdown.classList.remove('show');
+        }
+    });
     //  CUSTOM PAGINATION
     function renderPagination() {
         var currentPage = parseInt(document.getElementById('currentPage').value);
@@ -1918,12 +1915,11 @@ document.addEventListener('click', function(e) {
         }
     }
 
-//  INITIALIZE
     document.addEventListener('DOMContentLoaded', function() {
         renderPagination();
         fetchUserNotifications();
         autoCloseSessionAlerts();
-        setInterval(fetchUserNotifications, 30000);
+        setInterval(fetchUserNotifications, 10000);
     });
     </script>
 </body>

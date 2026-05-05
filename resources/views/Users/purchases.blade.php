@@ -1189,7 +1189,9 @@
                                     </span>
                                 </td>
                                 <td><strong>{{ $purchase->supplier->supplier_name ?? 'N/A' }}</strong></td>
-                                <td>{{ $purchase->purchase_date ? $purchase->purchase_date->format('M j, Y g:i A') : 'N/A' }}</span></td>
+                                <td>
+                                    {{ $purchase->purchase_date ? $purchase->purchase_date->format('M j, Y g:i A') : 'N/A' }}
+                                </td>
                                 <td>₱{{ number_format($purchase->purchaseDetails->sum(function($detail) { return $detail->quantity * $detail->cost_price; }), 2) }}
                                 </td>
                                 <td>
@@ -1681,12 +1683,11 @@
             });
         }
 
-        // Init
         document.addEventListener('DOMContentLoaded', function() {
             renderPagination();
             fetchUserNotifications();
             autoCloseSessionAlerts();
-            setInterval(fetchUserNotifications, 30000);
+            setInterval(fetchUserNotifications, 10000);
         });
     </script>
 </body>
