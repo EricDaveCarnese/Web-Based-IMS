@@ -1322,370 +1322,484 @@
     </div>
 
     <script>
+// ==================== GLOBAL VARIABLES ====================
+var markAsRead, createPurchaseOrder, editProductAndReduceStock;
 
-        function showAlertMessage(message, type) {
-            var alertContainer = document.getElementById('dynamicAlertContainer');
-            if (!alertContainer) return;
-            
-            var alertDiv = document.createElement('div');
-            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
-            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
-            
-            alertContainer.innerHTML = '';
-            alertContainer.appendChild(alertDiv);
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            setTimeout(function() {
-                if (alertDiv && alertDiv.parentElement) {
-                    alertDiv.style.opacity = '0';
-                    alertDiv.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
-                    }, 500);
-                }
-            }, 3000);
+// ==================== NOTIFICATION SYSTEM ====================
+(function() {
+    var CSRF = '';
+    var lastUnreadCount = -1;
+    var pollTimer = null;
+
+    function getCSRF() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) CSRF = meta.content;
+        return CSRF;
+    }
+
+    function fetchNotifications() {
+        getCSRF();
+
+        fetch('/admin/stock-reports/notifications', {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (!data.success) return;
+
+            updateBell(data.unread_count);
+
+            var dropdown = document.getElementById('notificationDropdown');
+            var isOpen = dropdown && dropdown.classList.contains('show');
+
+            if (data.unread_count !== lastUnreadCount || isOpen) {
+                renderDropdown(data.notifications);
+                lastUnreadCount = data.unread_count;
+            }
+        })
+        .catch(function(error) {
+            console.error('Notification fetch error:', error);
+        });
+    }
+
+    function updateBell(count) {
+        var bell = document.getElementById('notificationBell');
+        if (!bell) return;
+
+        var badge = bell.querySelector('.notification-badge');
+        
+        if (!badge && count > 0) {
+            badge = document.createElement('span');
+            badge.className = 'notification-badge';
+            bell.appendChild(badge);
         }
 
-        function autoCloseSessionAlerts() {
-            var sessionAlerts = document.querySelectorAll('.session-alert');
-            sessionAlerts.forEach(function(alert) {
-                setTimeout(function() {
-                    alert.style.opacity = '0';
-                    alert.style.transition = 'opacity 0.5s ease';
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    function renderDropdown(notifs) {
+        var list = document.getElementById('notificationList');
+        if (!list) return;
+
+        if (!notifs || notifs.length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < notifs.length; i++) {
+            var n = notifs[i];
+            var isDamage = n.is_damage || (n.message && n.message.indexOf('DAMAGE REPORT') !== -1);
+            var isResolved = n.is_resolved || n.status === 'resolved';
+            var isSystemAlert = n.user_name === 'System (Auto Alert)';
+            var dqty = n.damage_quantity || 1;
+            var safeName = (n.product_name || '').replace(/'/g, "\\'");
+
+            var actionBtn = '';
+            if (isDamage) {
+                if (isResolved) {
+                    actionBtn = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
+                } else {
+                    actionBtn = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' +
+                        n.product_id + ',\'' + safeName + '\',' + dqty + ',' + n.id +
+                        ')"><i class="fas fa-edit"></i> Edit &amp; Reduce (' + dqty + ' units)</button>';
+                }
+            } else {
+                actionBtn = '<button class="btn-order" onclick="createPurchaseOrder(' +
+                    n.product_id + ',\'' + safeName + '\',' + n.id +
+                    ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
+            }
+
+            var stockLabel = (n.current_stock === 0)
+                ? '<span style="color:#dc3545;font-weight:bold;">OUT OF STOCK</span>'
+                : n.current_stock + ' units';
+
+            var shortMsg = (n.message || '').substring(0, 100);
+            if ((n.message || '').length > 100) shortMsg += '...';
+
+            html += '<div class="notification-item unread" data-nid="' + n.id + '">' +
+                '<div class="notification-title">' +
+                '<strong>' + escapeHtml(n.product_name) + '</strong>' +
+                '<span class="notification-time">' + (n.time_ago || '') + '</span>' +
+                '</div>' +
+                '<div class="notification-message">' +
+                '<strong>Reported by: </strong>' + escapeHtml(n.user_name) + '<br>' +
+                '<strong>Current Stock: </strong>' + stockLabel + ' (Min: ' + n.min_stock_level + ')<br>' +
+                '<small>' + escapeHtml(shortMsg) + '</small>' +
+                '</div>' +
+                '<div class="notification-buttons">' +
+                actionBtn +
+                '<button class="btn-read" onclick="markAsRead(' + n.id + ')">' +
+                '<i class="fas fa-check"></i> Mark Read</button>' +
+                '</div>' +
+                '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    function checkEmptyList() {
+        var list = document.getElementById('notificationList');
+        if (list && list.querySelectorAll('.notification-item').length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
+        }
+    }
+
+    // ========== GLOBAL FUNCTIONS ==========
+    markAsRead = function(reportId) {
+        getCSRF();
+
+        fetch('/admin/stock-report/mark-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ report_id: reportId })
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                var item = document.querySelector('.notification-item[data-nid="' + reportId + '"]');
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transition = 'opacity 0.3s ease';
                     setTimeout(function() {
-                        if (alert && alert.parentElement) alert.remove();
-                    }, 500);
-                }, 3000);
+                        if (item.parentElement) item.remove();
+                        checkEmptyList();
+                    }, 300);
+                }
+
+                lastUnreadCount = -1;
+                fetchNotifications();
+            } else {
+                alert('Failed: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(function(error) {
+            console.error('Mark as read error:', error);
+            alert('Network error. Please try again.');
+        });
+    };
+
+    createPurchaseOrder = function(productId, productName, reportId) {
+        if (confirm('Create purchase order for "' + productName + '"?')) {
+            sessionStorage.setItem('prefill_product_id', productId);
+            sessionStorage.setItem('prefill_product_name', productName);
+            sessionStorage.setItem('prefill_report_id', reportId);
+            sessionStorage.setItem('prefill_from_stock_report', 'true');
+            window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId +
+                '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
+        }
+    };
+
+    editProductAndReduceStock = function(productId, productName, damageQuantity, reportId) {
+        if (confirm('Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.')) {
+            window.location.href = '/admin/products?edit_damage=1&product_id=' + productId +
+                '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
+        }
+    };
+
+    // ========== INIT ==========
+    function initNotifications() {
+        var bell = document.getElementById('notificationBell');
+        var dropdown = document.getElementById('notificationDropdown');
+
+        if (bell && dropdown) {
+            bell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                if (dropdown.classList.contains('show')) {
+                    lastUnreadCount = -1;
+                    fetchNotifications();
+                }
             });
         }
-        //CONTACT NUMBER VALIDATION
-        function onlyNumbersAndAllowedChars(event) {
-            const allowedChars = /[0-9\s\(\)\+-]/;
-            const key = event.key;
-            const controlKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
-            if (controlKeys.includes(key)) return true;
-            if (!allowedChars.test(key)) {
-                event.preventDefault();
-                return false;
-            }
-            return true;
-        }
 
-        function validateContactNumber(input) {
-            let cleaned = input.value.replace(/[^0-9\s\(\)\+-]/g, '');
-            if (cleaned.length > 20) cleaned = cleaned.slice(0, 20);
-            if (cleaned !== input.value) input.value = cleaned;
-        }
+        document.addEventListener('click', function(e) {
+            if (dropdown && bell && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
 
-        //AUTOCOMPLETE FUNCTIONALITY
-        var supplierDataElement = document.getElementById('supplierData');
-        var allSuppliers = [];
-        
-        if (supplierDataElement) {
-            try {
-                var suppliersJson = supplierDataElement.getAttribute('data-suppliers');
-                allSuppliers = JSON.parse(suppliersJson);
-            } catch(e) {
-                allSuppliers = [];
-            }
+        if (pollTimer) clearInterval(pollTimer);
+        fetchNotifications();
+        pollTimer = setInterval(fetchNotifications, 10000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNotifications);
+    } else {
+        initNotifications();
+    }
+})();
+
+// ==================== HELPER FUNCTIONS ====================
+function showAlertMessage(message, type) {
+    var alertContainer = document.getElementById('dynamicAlertContainer');
+    if (!alertContainer) return;
+    
+    var alertDiv = document.createElement('div');
+    alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+    alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display=\'none\'">&times;</button>';
+    
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alertDiv);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    setTimeout(function() {
+        if (alertDiv && alertDiv.parentElement) {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+            }, 500);
         }
-        
-        var searchInput = document.getElementById('searchInput');
-        var autocompleteDropdown = document.getElementById('autocompleteDropdown');
-        var searchTimeout;
-        
-        function showSuggestions() {
-            if (!searchInput) return;
-            var query = searchInput.value.trim().toLowerCase();
-            if (query.length === 0) {
-                if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
-                return;
+    }, 3000);
+}
+
+function autoCloseSessionAlerts() {
+    var sessionAlerts = document.querySelectorAll('.session-alert');
+    sessionAlerts.forEach(function(alert) {
+        setTimeout(function() {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alert && alert.parentElement) alert.remove();
+            }, 500);
+        }, 3000);
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(message, bgColor) {
+    var existing = document.querySelector('.toast-message');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.style.background = bgColor || '#28a745';
+    toast.innerHTML = '<i class="fas fa-info-circle"></i> ' + message;
+    document.body.appendChild(toast);
+    setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
+}
+
+// ==================== SUPPLIERS PAGE LOGIC ====================
+// Contact number validation
+function onlyNumbersAndAllowedChars(event) {
+    var allowedChars = /[0-9\s\(\)\+-]/;
+    var key = event.key;
+    var controlKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+    if (controlKeys.indexOf(key) !== -1) return true;
+    if (!allowedChars.test(key)) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+}
+
+function validateContactNumber(input) {
+    var cleaned = input.value.replace(/[^0-9\s\(\)\+-]/g, '');
+    if (cleaned.length > 20) cleaned = cleaned.slice(0, 20);
+    if (cleaned !== input.value) input.value = cleaned;
+}
+
+// Autocomplete
+var supplierDataElement = document.getElementById('supplierData');
+var allSuppliers = [];
+
+if (supplierDataElement) {
+    try {
+        var suppliersJson = supplierDataElement.getAttribute('data-suppliers');
+        allSuppliers = JSON.parse(suppliersJson);
+    } catch(e) {
+        allSuppliers = [];
+    }
+}
+
+var searchInput = document.getElementById('searchInput');
+var autocompleteDropdown = document.getElementById('autocompleteDropdown');
+var searchTimeout;
+
+function showSuggestions() {
+    if (!searchInput) return;
+    var query = searchInput.value.trim().toLowerCase();
+    if (query.length === 0) {
+        if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
+        return;
+    }
+    var matches = [];
+    if (allSuppliers && allSuppliers.length > 0) {
+        for (var i = 0; i < allSuppliers.length; i++) {
+            var supplier = allSuppliers[i];
+            if (!supplier) continue;
+            var supplierName = (supplier.supplier_name || '').toLowerCase();
+            if (supplierName.indexOf(query) !== -1) {
+                matches.push(supplier);
             }
-            var matches = [];
-            if (allSuppliers && allSuppliers.length > 0) {
-                for (var i = 0; i < allSuppliers.length; i++) {
-                    var supplier = allSuppliers[i];
-                    if (!supplier) continue;
-                    var supplierName = (supplier.supplier_name || '').toLowerCase();
-                    if (supplierName.includes(query)) {
-                        matches.push(supplier);
-                    }
-                    if (matches.length >= 10) break;
-                }
-            }
-            if (matches.length > 0 && autocompleteDropdown) {
-                var html = '';
-                for (var i = 0; i < matches.length; i++) {
-                    var s = matches[i];
-                    var highlightedName = s.supplier_name.replace(new RegExp('(' + query + ')', 'gi'), '<strong>$1</strong>');
-                    var escapedName = s.supplier_name.replace(/'/g, "\\'");
-                    html += '<div class="autocomplete-item" onclick="selectSupplier(\'' + escapedName + '\')"><div> ' + highlightedName + '</div></div>';
-                }
-                autocompleteDropdown.innerHTML = html;
-                autocompleteDropdown.classList.add('show');
-            } else if (autocompleteDropdown) {
-                autocompleteDropdown.innerHTML = '<div class="no-results">No suppliers found matching "' + escapeHtml(query) + '"</div>';
-                autocompleteDropdown.classList.add('show');
-            }
+            if (matches.length >= 10) break;
         }
-        
-        function escapeHtml(text) {
-            var div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+    }
+    if (matches.length > 0 && autocompleteDropdown) {
+        var html = '';
+        for (var i = 0; i < matches.length; i++) {
+            var s = matches[i];
+            var highlightedName = s.supplier_name.replace(new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<strong>$1</strong>');
+            var escapedName = s.supplier_name.replace(/'/g, "\\'");
+            html += '<div class="autocomplete-item" onclick="selectSupplier(\'' + escapedName + '\')"><div>' + highlightedName + '</div></div>';
         }
-        
-        function selectSupplier(supplierName) {
-            if (searchInput) searchInput.value = supplierName;
+        autocompleteDropdown.innerHTML = html;
+        autocompleteDropdown.classList.add('show');
+    } else if (autocompleteDropdown) {
+        autocompleteDropdown.innerHTML = '<div class="no-results">No suppliers found matching "' + escapeHtml(query) + '"</div>';
+        autocompleteDropdown.classList.add('show');
+    }
+}
+
+function selectSupplier(supplierName) {
+    if (searchInput) searchInput.value = supplierName;
+    if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
+    performSearch();
+}
+
+function performSearch() {
+    if (!searchInput) return;
+    var query = searchInput.value.trim();
+    var url = new URL(window.location.href);
+    if (query) url.searchParams.set('search', query);
+    else url.searchParams.delete('search');
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+}
+
+if (searchInput) {
+    searchInput.addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(showSuggestions, 300); });
+    document.addEventListener('click', function(e) {
+        if (autocompleteDropdown && searchInput && !searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+            autocompleteDropdown.classList.remove('show');
+        }
+    });
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
             if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
             performSearch();
         }
-        
-        function performSearch() {
-            if (!searchInput) return;
-            var query = searchInput.value.trim();
-            var url = new URL(window.location.href);
-            if (query) url.searchParams.set('search', query);
-            else url.searchParams.delete('search');
-            url.searchParams.delete('page');
-            window.location.href = url.toString();
-        }
-        
-        if (searchInput) {
-            searchInput.addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(showSuggestions, 300); });
-            document.addEventListener('click', function(e) {
-                if (autocompleteDropdown && searchInput && !searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
-                    autocompleteDropdown.classList.remove('show');
-                }
-            });
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
-                    performSearch();
-                }
-            });
-        }
-        
-        //MODAL CONTROLS 
-        var open_modal = document.getElementById('open_modal');
-        var modal_container = document.getElementById('modal_container');
-        var close_modal = document.getElementById('close_modal');
+    });
+}
 
-        if (open_modal) open_modal.onclick = function() { modal_container.classList.add('show'); };
-        if (close_modal) close_modal.onclick = function() { modal_container.classList.remove('show'); };
-        if (modal_container) modal_container.onclick = function(e) { if (e.target === modal_container) modal_container.classList.remove('show'); };
+// Modal controls
+var open_modal = document.getElementById('open_modal');
+var modal_container = document.getElementById('modal_container');
+var close_modal = document.getElementById('close_modal');
 
-        //EDIT SUPPLIER 
-        var edit_modal_container = document.getElementById('edit_modal_container');
-        var close_edit_modal = document.getElementById('close_edit_modal');
+if (open_modal) open_modal.onclick = function() { modal_container.classList.add('show'); };
+if (close_modal) close_modal.onclick = function() { modal_container.classList.remove('show'); };
+if (modal_container) modal_container.onclick = function(e) { if (e.target === modal_container) modal_container.classList.remove('show'); };
 
-        function editSupplier(button) {
-            var supplier = JSON.parse(button.getAttribute('data-supplier'));
-            document.getElementById('edit_supplier_name').value = supplier.supplier_name;
-            document.getElementById('edit_email').value = supplier.email;
-            document.getElementById('edit_address').value = supplier.address;
-            document.getElementById('edit_contact_person').value = supplier.contact_person || '';
-            document.getElementById('edit_contact_number').value = supplier.contact_number;
-            document.getElementById('editSupplierForm').action = '/admin/supplier/update/' + supplier.id;
-            edit_modal_container.classList.add('show');
-        }
+// Edit supplier
+var edit_modal_container = document.getElementById('edit_modal_container');
+var close_edit_modal = document.getElementById('close_edit_modal');
 
-        if (close_edit_modal) close_edit_modal.onclick = function() { edit_modal_container.classList.remove('show'); };
-        if (edit_modal_container) edit_modal_container.onclick = function(e) { if (e.target === edit_modal_container) edit_modal_container.classList.remove('show'); };
+function editSupplier(button) {
+    var supplier = JSON.parse(button.getAttribute('data-supplier'));
+    document.getElementById('edit_supplier_name').value = supplier.supplier_name;
+    document.getElementById('edit_email').value = supplier.email;
+    document.getElementById('edit_address').value = supplier.address;
+    document.getElementById('edit_contact_person').value = supplier.contact_person || '';
+    document.getElementById('edit_contact_number').value = supplier.contact_number;
+    document.getElementById('editSupplierForm').action = '/admin/supplier/update/' + supplier.id;
+    edit_modal_container.classList.add('show');
+}
 
-        // NOTIFICATION DROPDOWN FUNCTIONS
-        function showToast(message, bgColor) {
-            var existing = document.querySelector('.toast-message');
-            if (existing) existing.remove();
-            var toast = document.createElement('div');
-            toast.className = 'toast-message';
-            toast.style.background = bgColor || '#28a745';
-            toast.innerHTML = '<i class="fas fa-info-circle"></i> ' + message;
-            document.body.appendChild(toast);
-            setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
-        }
-        
-        function fetchNotifications() {
-            fetch('/admin/stock-reports/notifications', {
-                method: 'GET',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    updateNotificationBell(data.unread_count);
-                    renderNotificationDropdown(data.notifications);
-                }
-            })
-            .catch(function(error) { console.error('Error:', error); });
-        }
-        
-        function updateNotificationBell(count) {
-            var badge = document.querySelector('.notification-badge');
-            if (badge) {
-                if (count > 0) {
-                    badge.textContent = count;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
-        }
-        
-        function renderNotificationDropdown(notifications) {
-            var list = document.getElementById('notificationList');
-            if (!list) return;
-            if (!notifications || notifications.length === 0) {
-                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i><p>No pending stock reports</p></div>';
-                return;
-            }
-            var html = '';
-            for (var i = 0; i < notifications.length; i++) {
-                var notif = notifications[i];
-                var isDamage = notif.message && notif.message.includes('DAMAGE REPORT');
-                var isSystemAlert = notif.user_name === 'System (Auto Alert)';
-                var isOutOfStock = notif.current_stock === 0;
-                var stockColor = isOutOfStock ? '#dc3545' : (notif.current_stock <= notif.min_stock_level ? '#fd7e14' : '#28a745');
-                
-                var actionButton = '';
-                if (isDamage) {
-                    if (notif.is_resolved) {
-                        actionButton = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
-                    } else {
-                        var damageQty = notif.damage_quantity || 1;
-                        actionButton = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + damageQty + ', ' + notif.id + ')"><i class="fas fa-edit"></i> Edit & Reduce (' + damageQty + ' units)</button>';
-                    }
-                } else {
-                    actionButton = '<button class="btn-order" onclick="createPurchaseOrder(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + notif.id + ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
-                }
-                
-                html += `
-                    <div class="notification-item unread" data-id="${notif.id}">
-                        <div class="notification-title">
-                            <strong>${escapeHtml(notif.product_name)}</strong>
-                            <span class="notification-time">${notif.time_ago}</span>
-                        </div>
-                        <div class="notification-message">
-                            <strong>Reported by: </strong>${escapeHtml(notif.user_name)}<br>
-                            <strong>Current Stock: </strong>${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
-                            <small>${escapeHtml(notif.message.substring(0, 100))}${notif.message.length > 100 ? '...' : ''}</small>
-                        </div>
-                        <div class="notification-buttons">
-                            ${actionButton}
-                            <button class="btn-read" onclick="markAsRead(${notif.id})"><i class="fas fa-check"></i> Mark Read</button>
-                        </div>
-                    </div>
-                `;
-            }
-            list.innerHTML = html;
-        }
-        
-        function markAsRead(reportId) {
-            fetch('{{ route("admin.stock.report.read") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ report_id: reportId })
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
-                    if (item) {
-                        item.style.opacity = '0';
-                        item.style.transition = 'opacity 0.3s ease';
-                        setTimeout(function() {
-                            item.remove();
-                            var list = document.getElementById('notificationList');
-                            if (list && list.querySelectorAll('.notification-item').length === 0) {
-                                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
-                            }
-                        }, 300);
-                    }
-                    fetchNotifications();
-                } else {
-                    alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(function(error) { console.error('Error:', error); });
-        }
-        
-        function createPurchaseOrder(productId, productName, reportId) {
-            if (confirm('Create purchase order for "' + productName + '"?')) {
-                sessionStorage.setItem('prefill_product_id', productId);
-                sessionStorage.setItem('prefill_product_name', productName);
-                sessionStorage.setItem('prefill_report_id', reportId);
-                sessionStorage.setItem('prefill_from_stock_report', 'true');
-                window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId + '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
-            }
-        }
-        
-        function editProductAndReduceStock(productId, productName, damageQuantity, reportId) {
-            if (confirm('Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.')) {
-                window.location.href = '/admin/products?edit_damage=1&product_id=' + productId + '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
-            }
-        }
-        
-        // Notification bell toggle
-        var bell = document.getElementById('notificationBell');
-        var dropdown = document.getElementById('notificationDropdown');
-        if (bell) {
-            bell.addEventListener('click', function(e) { 
-                e.stopPropagation(); 
-                dropdown.classList.toggle('show'); 
-                if (dropdown.classList.contains('show')) fetchNotifications();
-            });
-        }
-        document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
-        
-        //CUSTOM PAGINATION 
-        function renderPagination() {
-            var currentPage = parseInt(document.getElementById('currentPage').value);
-            var lastPage = parseInt(document.getElementById('lastPage').value);
-            var paginationContainer = document.getElementById('customPagination');
-            if (!paginationContainer || lastPage <= 1) return;
-            var html = '<div class="custom-pagination">';
-            if (currentPage > 1) html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
-            else html += '<span class="page-disabled">&lt;</span>';
-            var startPage = Math.max(1, currentPage - 2);
-            var endPage = Math.min(lastPage, currentPage + 2);
-            if (currentPage <= 3) endPage = Math.min(lastPage, 5);
-            if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
-            if (startPage > 1) {
-                html += '<a href="#" class="page-link" data-page="1">1</a>';
-                if (startPage > 2) html += '<span class="page-dots">...</span>';
-            }
-            for (var i = startPage; i <= endPage; i++) {
-                if (i === currentPage) html += '<span class="page-active">' + i + '</span>';
-                else html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
-            }
-            if (endPage < lastPage) {
-                if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
-                html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
-            }
-            if (currentPage < lastPage) html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
-            else html += '<span class="page-disabled">&gt;</span>';
-            html += '</div>';
-            paginationContainer.innerHTML = html;
-            document.querySelectorAll('.page-link').forEach(function(link) {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var page = this.getAttribute('data-page');
-                    if (page) {
-                        var urlParams = new URLSearchParams(window.location.search);
-                        urlParams.set('page', page);
-                        window.location.href = window.location.pathname + '?' + urlParams.toString();
-                    }
-                });
-            });
-        }
+if (close_edit_modal) close_edit_modal.onclick = function() { edit_modal_container.classList.remove('show'); };
+if (edit_modal_container) edit_modal_container.onclick = function(e) { if (e.target === edit_modal_container) edit_modal_container.classList.remove('show'); };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            autoCloseSessionAlerts();
-            renderPagination();
-            fetchNotifications();
-            setInterval(fetchNotifications, 10000);
+// Pagination
+function renderPagination() {
+    var currentPage = parseInt(document.getElementById('currentPage').value);
+    var lastPage = parseInt(document.getElementById('lastPage').value);
+    var paginationContainer = document.getElementById('customPagination');
+    if (!paginationContainer || lastPage <= 1) return;
+    
+    var html = '<div class="custom-pagination">';
+    if (currentPage > 1) html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
+    else html += '<span class="page-disabled">&lt;</span>';
+    
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(lastPage, currentPage + 2);
+    if (currentPage <= 3) endPage = Math.min(lastPage, 5);
+    if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
+    
+    if (startPage > 1) {
+        html += '<a href="#" class="page-link" data-page="1">1</a>';
+        if (startPage > 2) html += '<span class="page-dots">...</span>';
+    }
+    for (var i = startPage; i <= endPage; i++) {
+        if (i === currentPage) html += '<span class="page-active">' + i + '</span>';
+        else html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
+    }
+    if (endPage < lastPage) {
+        if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
+        html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
+    }
+    if (currentPage < lastPage) html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
+    else html += '<span class="page-disabled">&gt;</span>';
+    html += '</div>';
+    paginationContainer.innerHTML = html;
+    
+    document.querySelectorAll('.page-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var page = this.getAttribute('data-page');
+            if (page) {
+                var urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('page', page);
+                window.location.href = window.location.pathname + '?' + urlParams.toString();
+            }
         });
-    </script>
+    });
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', function() {
+    autoCloseSessionAlerts();
+    renderPagination();
+});
+</script>
 </body>
 </html>

@@ -1586,587 +1586,651 @@
     </div>{{-- end .main-content --}}
 
     <script>
+// ==================== GLOBAL VARIABLES ====================
+var markAsRead, createPurchaseOrder, editProductAndReduceStock;
 
-        function showAlertMessage(message, type) {
-            var alertContainer = document.getElementById('dynamicAlertContainer');
-            if (!alertContainer) return;
-            
-            var alertDiv = document.createElement('div');
-            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
-            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
-            
-            alertContainer.innerHTML = '';
-            alertContainer.appendChild(alertDiv);
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            setTimeout(function() {
-                if (alertDiv && alertDiv.parentElement) {
-                    alertDiv.style.opacity = '0';
-                    alertDiv.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
-                    }, 500);
-                }
-            }, 3000);
-        }
+// ==================== NOTIFICATION SYSTEM ====================
+(function() {
+    var CSRF = '';
+    var lastUnreadCount = -1;
+    var pollTimer = null;
 
-        function autoCloseSessionAlerts() {
-            var sessionAlerts = document.querySelectorAll('.session-alert');
-            sessionAlerts.forEach(function(alert) {
-                setTimeout(function() {
-                    alert.style.opacity = '0';
-                    alert.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        if (alert && alert.parentElement) alert.remove();
-                    }, 500);
-                }, 3000);
-            });
-        }
-
-    function escapeHtml(text) {
-        if (text === null || text === undefined) return '';
-        var d = document.createElement('div');
-        d.textContent = String(text);
-        return d.innerHTML;
+    function getCSRF() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) CSRF = meta.content;
+        return CSRF;
     }
 
-    function showUniformAlert(message, type) {
-        var existingAlerts = document.querySelectorAll('.alert-success, .alert-error');
-        existingAlerts.forEach(function(alert) { alert.remove(); });
-        
-        var alertDiv = document.createElement('div');
-        alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
-        alertDiv.innerHTML = message + '<button class="close-btn" onclick="this.parentElement.style.display=\'none\'">&times;</button>';
-        
-        var topheader = document.querySelector('.topheader');
-        if (topheader) {
-            topheader.insertAdjacentElement('afterend', alertDiv);
-        }
-        
-        setTimeout(function() { 
-            if (alertDiv) alertDiv.style.display = 'none'; 
-        }, 5000);
-    }
-
-    var cart = [];
-    function resetCart() {
-        cart = [];
-        renderCart();
-        updateTotal();
-        var productCards = document.querySelectorAll('.product-card');
-        for (var i = 0; i < productCards.length; i++) {
-            productCards[i].classList.remove('selected');
-        }
-    }
-
-    function addToCart(id, name, price, stock) {
-        if (stock <= 0) { 
-            showUniformAlert('Product is out of stock!', 'error');
-            return; 
-        }
-        
-        var existing = null;
-        for (var i = 0; i < cart.length; i++) {
-            if (cart[i].id === id) {
-                existing = cart[i];
-                break;
-            }
-        }
-        
-        if (existing) {
-            if (existing.qty + 1 > stock) { 
-                showUniformAlert('Only ' + stock + ' units available!', 'error');
-                return; 
-            }
-            existing.qty++;
-        } else {
-            cart.push({ id: id, name: name, price: parseFloat(price), qty: 1, stock: parseInt(stock) });
-        }
-        renderCart();
-        updateTotal();
-    }
-
-    function removeFromCart(id) {
-        var newCart = [];
-        for (var i = 0; i < cart.length; i++) {
-            if (cart[i].id !== id) {
-                newCart.push(cart[i]);
-            }
-        }
-        cart = newCart;
-        renderCart();
-        updateTotal();
-    }
-
-    function updateQty(id, delta) {
-        var item = null;
-        for (var i = 0; i < cart.length; i++) {
-            if (cart[i].id === id) {
-                item = cart[i];
-                break;
-            }
-        }
-        if (!item) return;
-        
-        var newQty = item.qty + delta;
-        if (newQty < 1) { 
-            removeFromCart(id); 
-            return; 
-        }
-        if (newQty > item.stock) { 
-            showUniformAlert('Only ' + item.stock + ' units available!', 'error');
-            return; 
-        }
-        item.qty = newQty;
-        renderCart();
-        updateTotal();
-    }
-
-    function renderCart() {
-        var container = document.getElementById('cartItems');
-        var btn = document.getElementById('submitSaleBtn');
-        if (!container) return;
-
-        if (cart.length === 0) {
-            container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:rgba(255,255,255,0.6);"><i class="fas fa-shopping-bag" style="font-size:48px;margin-bottom:12px;display:block;"></i>No items selected</div>';
-            if (btn) btn.disabled = true;
-            return;
-        }
-
-        var html = '';
-        for (var i = 0; i < cart.length; i++) {
-            var item = cart[i];
-            html += '<div class="cart-item">' +
-                '<div class="cart-item-info">' +
-                    '<div class="cart-item-name">' + escapeHtml(item.name) + '</div>' +
-                    '<div class="cart-item-price">₱' + item.price.toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
-                '</div>' +
-                '<div class="cart-item-quantity">' +
-                    '<button type="button" onclick="updateQty(' + item.id + ',-1)">−</button>' +
-                    '<span>' + item.qty + '</span>' +
-                    '<button type="button" onclick="updateQty(' + item.id + ',1)">+</button>' +
-                '</div>' +
-                '<div class="cart-item-subtotal">₱' + (item.price * item.qty).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
-                '<div class="cart-item-remove" onclick="removeFromCart(' + item.id + ')"><i class="fas fa-trash-alt"></i></div>' +
-            '</div>';
-        }
-        container.innerHTML = html;
-        if (btn) btn.disabled = false;
-    }
-
-    function updateTotal() {
-        var total = 0;
-        for (var i = 0; i < cart.length; i++) {
-            total += cart[i].price * cart[i].qty;
-        }
-        var fmt = total.toLocaleString(undefined, { minimumFractionDigits: 2 });
-        document.getElementById('subtotal').textContent = '₱' + fmt;
-        document.getElementById('totalAmount').textContent = '₱' + fmt;
-    }
-
-    var newSaleModal = document.getElementById('newSaleModal');
-    var openNewSaleBtn = document.getElementById('open_new_sale_modal');
-    var closeNewSaleBtn = document.getElementById('closeNewSaleModal');
-
-    if (openNewSaleBtn) {
-        openNewSaleBtn.onclick = function() { 
-            newSaleModal.classList.add('show'); 
-            resetCart(); 
-        };
-    }
-    if (closeNewSaleBtn) {
-        closeNewSaleBtn.onclick = function() { 
-            newSaleModal.classList.remove('show'); 
-            resetCart(); 
-        };
-    }
-    if (newSaleModal) {
-        newSaleModal.onclick = function(e) { 
-            if (e.target === newSaleModal) { 
-                newSaleModal.classList.remove('show'); 
-                resetCart(); 
-            } 
-        };
-    }
-
-    // Product card click
-    var productCards = document.querySelectorAll('.product-card');
-    for (var i = 0; i < productCards.length; i++) {
-        productCards[i].addEventListener('click', function() {
-            var id = parseInt(this.dataset.id);
-            var name = this.dataset.name;
-            var price = parseFloat(this.dataset.price);
-            var stock = parseInt(this.dataset.stock);
-            addToCart(id, name, price, stock);
-            this.classList.add('selected');
-            var self = this;
-            setTimeout(function() { self.classList.remove('selected'); }, 300);
-        });
-    }
-
-    // Product search filter
-    var productSearchInput = document.getElementById('productSearchInput');
-    if (productSearchInput) {
-        productSearchInput.addEventListener('input', function() {
-            var term = this.value.toLowerCase();
-            var cards = document.querySelectorAll('.product-card');
-            for (var i = 0; i < cards.length; i++) {
-                var card = cards[i];
-                if (card.dataset.name.toLowerCase().includes(term)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            }
-        });
-    }
-
-    var submitSaleBtn = document.getElementById('submitSaleBtn');
-    if (submitSaleBtn) {
-        submitSaleBtn.addEventListener('click', function() {
-            if (cart.length === 0) { 
-                showUniformAlert('Please add at least one item.', 'error');
-                return; 
-            }
-
-            this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing…';
-
-            var paymentStatus = document.getElementById('paymentStatus').value;
-            var items = [];
-            for (var i = 0; i < cart.length; i++) {
-                items.push({ product_id: cart[i].id, quantity: cart[i].qty });
-            }
-
-            fetch('{{ route("admin.sale.store") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify({ items: items, payment_status: paymentStatus }),
-            })
-            .then(function(response) { 
-                return response.json(); 
-            })
-            .then(function(result) {
-                if (result.success) {
-                    newSaleModal.classList.remove('show');
-                    resetCart();
-                    showUniformAlert('Sale #' + result.sale_id + ' recorded successfully!', 'success');
-                    setTimeout(function() { 
-                        location.reload(); 
-                    }, 2000);
-                } else {
-                    showUniformAlert(result.message || 'Error processing sale', 'error');
-                    this.disabled = false;
-                    this.innerHTML = '<i class="fas fa-credit-card"></i> Complete Sale';
-                }
-            }.bind(this))
-            .catch(function(err) {
-                console.error(err);
-                showUniformAlert('Network error. Please try again.', 'error');
-                this.disabled = false;
-                this.innerHTML = '<i class="fas fa-credit-card"></i> Complete Sale';
-            }.bind(this));
-        });
-    }
-
-    //  VIEW SALE DETAILS
-    var saleDetailsModal = document.getElementById('saleDetailsModal');
-    var closeSaleModal = document.getElementById('close_sale_modal');
-
-    function viewSaleDetails(id) {
-        saleDetailsModal.classList.add('show');
-        document.getElementById('sale_detail_id').textContent = id;
-        document.getElementById('sale_cashier').textContent = '—';
-        document.getElementById('sale_date_display').textContent = '—';
-        document.getElementById('sale_status_display').innerHTML = '';
-        document.getElementById('sale_items_count').textContent = '';
-        document.getElementById('sale_total').textContent = '₱0.00';
-        document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>';
-
-        fetch('/admin/sale/details/' + id, {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            },
-            credentials: 'same-origin',
-        })
-        .then(function(res) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return res.json();
-        })
-        .then(function(sale) {
-            if (sale.error) throw new Error(sale.error);
-            document.getElementById('sale_cashier').textContent = sale.user?.fullname || 'N/A';
-            document.getElementById('sale_date_display').textContent = sale.sale_date || 'N/A';
-            var statusClass = sale.status === 'completed' ? 'badge-success' : 'badge-warning';
-            var statusLabel = sale.status ? sale.status.charAt(0).toUpperCase() + sale.status.slice(1) : 'Unknown';
-            document.getElementById('sale_status_display').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
-            document.getElementById('sale_total').textContent = '₱' + parseFloat(sale.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 });
-
-            var details = sale.sale_details || [];
-            var totalUnits = 0;
-            for (var i = 0; i < details.length; i++) {
-                totalUnits += details[i].quantity;
-            }
-            document.getElementById('sale_items_count').textContent = '(' + details.length + ' product type' + (details.length !== 1 ? 's' : '') + ', ' + totalUnits + ' unit' + (totalUnits !== 1 ? 's' : '') + ')';
-
-            if (details.length === 0) {
-                document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>';
-                return;
-            }
-
-            var html = '';
-            for (var i = 0; i < details.length; i++) {
-                var item = details[i];
-                html += '<tr>' +
-                    '<td>' + (i + 1) + '</td>' +
-                    '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '</td>' +
-                    '<td style="text-align:center">' + item.quantity + '</td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
-                    '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
-                '</tr>';
-            }
-            document.getElementById('sale_items_table').innerHTML = html;
-        })
-        .catch(function(err) {
-            console.error('Sale details error:', err);
-            document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> ' + escapeHtml(err.message) + '<br><small>Please try again later.</small></td></tr>';
-            document.getElementById('sale_cashier').textContent = 'N/A';
-            document.getElementById('sale_date_display').textContent = 'N/A';
-            document.getElementById('sale_status_display').innerHTML = '<span class="badge-warning">Unknown</span>';
-        });
-    }
-
-    if (closeSaleModal) {
-        closeSaleModal.onclick = function() { saleDetailsModal.classList.remove('show'); };
-    }
-    if (saleDetailsModal) {
-        saleDetailsModal.onclick = function(e) { 
-            if (e.target === saleDetailsModal) saleDetailsModal.classList.remove('show'); 
-        };
-    }
-
-    window.viewSaleDetails = viewSaleDetails;
-
-    //  PROCESS PAYMENT
-    var paymentModal = document.getElementById('paymentModal');
-    var closePaymentModal = document.getElementById('close_payment_modal');
-
-    function processPayment(id, total) {
-        if (!confirm('Confirm payment for Sale #' + id + '?\nThis will deduct stock and mark the sale as completed.')) return;
-        document.getElementById('payment_sale_id').textContent = id;
-        document.getElementById('payment_total').textContent = '₱' + parseFloat(total).toLocaleString(undefined, { minimumFractionDigits: 2 });
-        document.getElementById('payment_sale_id_input').value = id;
-        document.getElementById('processPaymentForm').action = '/admin/sale/process-payment/' + id;
-        paymentModal.classList.add('show');
-    }
-
-    if (closePaymentModal) {
-        closePaymentModal.onclick = function() { paymentModal.classList.remove('show'); };
-    }
-    if (paymentModal) {
-        paymentModal.onclick = function(e) { 
-            if (e.target === paymentModal) paymentModal.classList.remove('show'); 
-        };
-    }
-
-    window.processPayment = processPayment;
-
-    //  CUSTOM PAGINATION
-    function renderPagination() {
-        var currentPage = parseInt(document.getElementById('currentPage').value);
-        var lastPage = parseInt(document.getElementById('lastPage').value);
-        var paginationContainer = document.getElementById('customPagination');
-        if (!paginationContainer || lastPage <= 1) return;
-        
-        var html = '<div class="custom-pagination">';
-        if (currentPage > 1) html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
-        else html += '<span class="page-disabled">&lt;</span>';
-        
-        var startPage = Math.max(1, currentPage - 2);
-        var endPage = Math.min(lastPage, currentPage + 2);
-        if (currentPage <= 3) endPage = Math.min(lastPage, 5);
-        if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
-        
-        if (startPage > 1) {
-            html += '<a href="#" class="page-link" data-page="1">1</a>';
-            if (startPage > 2) html += '<span class="page-dots">...</span>';
-        }
-        
-        for (var i = startPage; i <= endPage; i++) {
-            if (i === currentPage) html += '<span class="page-active">' + i + '</span>';
-            else html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
-        }
-        
-        if (endPage < lastPage) {
-            if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
-            html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
-        }
-        
-        if (currentPage < lastPage) html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
-        else html += '<span class="page-disabled">&gt;</span>';
-        html += '</div>';
-        paginationContainer.innerHTML = html;
-        
-        var pageLinks = document.querySelectorAll('.page-link');
-        for (var i = 0; i < pageLinks.length; i++) {
-            pageLinks[i].addEventListener('click', function(e) {
-                e.preventDefault();
-                var page = this.getAttribute('data-page');
-                if (page) {
-                    var urlParams = new URLSearchParams(window.location.search);
-                    urlParams.set('page', page);
-                    window.location.href = window.location.pathname + '?' + urlParams.toString();
-                }
-            });
-        }
-    }
-
-    //  NOTIFICATION FUNCTIONS
     function fetchNotifications() {
+        getCSRF();
+
         fetch('/admin/stock-reports/notifications', {
             method: 'GET',
-            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success) {
-                updateNotificationBell(data.unread_count);
-                renderNotificationDropdown(data.notifications);
+            headers: {
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         })
-        .catch(function(error) { console.error('Error:', error); });
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (!data.success) return;
+
+            updateBell(data.unread_count);
+
+            var dropdown = document.getElementById('notificationDropdown');
+            var isOpen = dropdown && dropdown.classList.contains('show');
+
+            if (data.unread_count !== lastUnreadCount || isOpen) {
+                renderDropdown(data.notifications);
+                lastUnreadCount = data.unread_count;
+            }
+        })
+        .catch(function(error) {
+            console.error('Notification fetch error:', error);
+        });
     }
-    
-    function updateNotificationBell(count) {
-        var badge = document.querySelector('.notification-badge');
+
+    function updateBell(count) {
+        var bell = document.getElementById('notificationBell');
+        if (!bell) return;
+
+        var badge = bell.querySelector('.notification-badge');
+        
+        if (!badge && count > 0) {
+            badge = document.createElement('span');
+            badge.className = 'notification-badge';
+            bell.appendChild(badge);
+        }
+
         if (badge) {
-            badge.style.display = count > 0 ? 'flex' : 'none';
-            if (count > 0) badge.textContent = count;
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
         }
     }
-    
-    function renderNotificationDropdown(notifications) {
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    function renderDropdown(notifs) {
         var list = document.getElementById('notificationList');
         if (!list) return;
-        if (!notifications || notifications.length === 0) {
-            list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i><p>No pending stock reports</p></div>';
+
+        if (!notifs || notifs.length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
             return;
         }
+
         var html = '';
-        for (var i = 0; i < notifications.length; i++) {
-            var notif = notifications[i];
-            var isDamage = notif.message && notif.message.includes('DAMAGE REPORT');
-            var isSystemAlert = notif.user_name === 'System (Auto Alert)';
-            var isOutOfStock = notif.current_stock === 0;
-            var stockColor = isOutOfStock ? '#dc3545' : (notif.current_stock <= notif.min_stock_level ? '#fd7e14' : '#28a745');
-            
-            var actionButton = '';
+        for (var i = 0; i < notifs.length; i++) {
+            var n = notifs[i];
+            var isDamage = n.is_damage || (n.message && n.message.indexOf('DAMAGE REPORT') !== -1);
+            var isResolved = n.is_resolved || n.status === 'resolved';
+            var isSystemAlert = n.user_name === 'System (Auto Alert)';
+            var dqty = n.damage_quantity || 1;
+            var safeName = (n.product_name || '').replace(/'/g, "\\'");
+
+            var actionBtn = '';
             if (isDamage) {
-                if (notif.is_resolved) {
-                    actionButton = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
+                if (isResolved) {
+                    actionBtn = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
                 } else {
-                    var damageQty = notif.damage_quantity || 1;
-                    actionButton = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + damageQty + ', ' + notif.id + ')"><i class="fas fa-edit"></i> Edit & Reduce (' + damageQty + ' units)</button>';
+                    actionBtn = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' +
+                        n.product_id + ',\'' + safeName + '\',' + dqty + ',' + n.id +
+                        ')"><i class="fas fa-edit"></i> Edit &amp; Reduce (' + dqty + ' units)</button>';
                 }
             } else {
-                actionButton = '<button class="btn-order" onclick="createPurchaseOrder(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + notif.id + ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
+                actionBtn = '<button class="btn-order" onclick="createPurchaseOrder(' +
+                    n.product_id + ',\'' + safeName + '\',' + n.id +
+                    ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
             }
-            
-            html += `
-                    <div class="notification-item unread" data-id="${notif.id}">
-                        <div class="notification-title">
-                            <strong>${escapeHtml(notif.product_name)}</strong>
-                            <span class="notification-time">${notif.time_ago}</span>
-                        </div>
-                        <div class="notification-message">
-                            <strong>Reported by: </strong>${escapeHtml(notif.user_name)}<br>
-                            <strong>Current Stock: </strong>${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
-                            <small>${escapeHtml(notif.message.substring(0, 100))}${notif.message.length > 100 ? '...' : ''}</small>
-                        </div>
-                        <div class="notification-buttons">
-                            ${actionButton}
-                            <button class="btn-read" onclick="markAsRead(${notif.id})"><i class="fas fa-check"></i> Mark Read</button>
-                        </div>
-                    </div>
-                `;
+
+            var stockLabel = (n.current_stock === 0)
+                ? '<span style="color:#dc3545;font-weight:bold;">OUT OF STOCK</span>'
+                : n.current_stock + ' units';
+
+            var shortMsg = (n.message || '').substring(0, 100);
+            if ((n.message || '').length > 100) shortMsg += '...';
+
+            html += '<div class="notification-item unread" data-nid="' + n.id + '">' +
+                '<div class="notification-title">' +
+                '<strong>' + escapeHtml(n.product_name) + '</strong>' +
+                '<span class="notification-time">' + (n.time_ago || '') + '</span>' +
+                '</div>' +
+                '<div class="notification-message">' +
+                '<strong>Reported by: </strong>' + escapeHtml(n.user_name) + '<br>' +
+                '<strong>Current Stock: </strong>' + stockLabel + ' (Min: ' + n.min_stock_level + ')<br>' +
+                '<small>' + escapeHtml(shortMsg) + '</small>' +
+                '</div>' +
+                '<div class="notification-buttons">' +
+                actionBtn +
+                '<button class="btn-read" onclick="markAsRead(' + n.id + ')">' +
+                '<i class="fas fa-check"></i> Mark Read</button>' +
+                '</div>' +
+                '</div>';
         }
         list.innerHTML = html;
     }
-    
-    function markAsRead(reportId) {
-        fetch('{{ route("admin.stock.report.read") }}', {
+
+    // ========== GLOBAL FUNCTIONS ==========
+    markAsRead = function(reportId) {
+        getCSRF();
+
+        fetch('/admin/stock-report/mark-read', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: JSON.stringify({ report_id: reportId })
         })
-        .then(function(response) { return response.json(); })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
         .then(function(data) {
             if (data.success) {
-                var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
+                var item = document.querySelector('.notification-item[data-nid="' + reportId + '"]');
                 if (item) {
                     item.style.opacity = '0';
                     item.style.transition = 'opacity 0.3s ease';
                     setTimeout(function() {
-                        item.remove();
-                        var list = document.getElementById('notificationList');
-                        if (list && list.querySelectorAll('.notification-item').length === 0) {
-                            list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
-                        }
+                        if (item.parentElement) item.remove();
+                        checkEmptyList();
                     }, 300);
                 }
+
+                lastUnreadCount = -1;
                 fetchNotifications();
             } else {
-                alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
+                alert('Failed: ' + (data.message || 'Unknown error'));
             }
         })
-        .catch(function(error) { console.error('Error:', error); });
-    }
-    
-    function createPurchaseOrder(productId, productName, reportId) {
-        if (confirm('Create purchase order for "' + productName + '"?')) {
-            window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId + '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
-        }
-    }
-    
-    function editProductAndReduceStock(productId, productName, damageQuantity, reportId) {
-        if (confirm('Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.')) {
-            window.location.href = '/admin/products?edit_damage=1&product_id=' + productId + '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
-        }
-    }
-    
-    window.createPurchaseOrder = createPurchaseOrder;
-    window.editProductAndReduceStock = editProductAndReduceStock;
-    window.markAsRead = markAsRead;
-
-    //  NOTIFICATION BELL TOGGLE
-    var bell = document.getElementById('notificationBell');
-    var dropdown = document.getElementById('notificationDropdown');
-    if (bell) {
-        bell.addEventListener('click', function(e) { 
-            e.stopPropagation(); 
-            dropdown.classList.toggle('show'); 
-            if (dropdown.classList.contains('show')) fetchNotifications();
+        .catch(function(error) {
+            console.error('Mark as read error:', error);
+            alert('Network error. Please try again.');
         });
+    };
+
+    createPurchaseOrder = function(productId, productName, reportId) {
+        if (confirm('Create purchase order for "' + productName + '"?')) {
+            window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId +
+                '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
+        }
+    };
+
+    editProductAndReduceStock = function(productId, productName, damageQuantity, reportId) {
+        if (confirm('Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.')) {
+            window.location.href = '/admin/products?edit_damage=1&product_id=' + productId +
+                '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
+        }
+    };
+
+    function checkEmptyList() {
+        var list = document.getElementById('notificationList');
+        if (list && list.querySelectorAll('.notification-item').length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
+        }
     }
-    document.addEventListener('click', function() { 
-        if (dropdown) dropdown.classList.remove('show'); 
-    });
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        autoCloseSessionAlerts();
-        renderPagination();
+
+    // ========== INIT ==========
+    function initNotifications() {
+        var bell = document.getElementById('notificationBell');
+        var dropdown = document.getElementById('notificationDropdown');
+
+        if (bell && dropdown) {
+            bell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                if (dropdown.classList.contains('show')) {
+                    lastUnreadCount = -1;
+                    fetchNotifications();
+                }
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (dropdown && bell && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        if (pollTimer) clearInterval(pollTimer);
         fetchNotifications();
-        setInterval(fetchNotifications, 10000);
+        pollTimer = setInterval(fetchNotifications, 10000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNotifications);
+    } else {
+        initNotifications();
+    }
+})();
+
+// ==================== HELPER FUNCTIONS ====================
+function showAlertMessage(message, type) {
+    var alertContainer = document.getElementById('dynamicAlertContainer');
+    if (!alertContainer) return;
+    
+    var alertDiv = document.createElement('div');
+    alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+    alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display=\'none\'">&times;</button>';
+    
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alertDiv);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    setTimeout(function() {
+        if (alertDiv && alertDiv.parentElement) {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+            }, 500);
+        }
+    }, 3000);
+}
+
+function autoCloseSessionAlerts() {
+    var sessionAlerts = document.querySelectorAll('.session-alert');
+    sessionAlerts.forEach(function(alert) {
+        setTimeout(function() {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alert && alert.parentElement) alert.remove();
+            }, 500);
+        }, 3000);
     });
+}
+
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    var d = document.createElement('div');
+    d.textContent = String(text);
+    return d.innerHTML;
+}
+
+function showUniformAlert(message, type) {
+    var existingAlerts = document.querySelectorAll('.alert-success, .alert-error');
+    existingAlerts.forEach(function(alert) { alert.remove(); });
+    
+    var alertDiv = document.createElement('div');
+    alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+    alertDiv.innerHTML = message + '<button class="close-btn" onclick="this.parentElement.style.display=\'none\'">&times;</button>';
+    
+    var topheader = document.querySelector('.topheader');
+    if (topheader) {
+        topheader.insertAdjacentElement('afterend', alertDiv);
+    }
+    
+    setTimeout(function() { 
+        if (alertDiv) alertDiv.style.display = 'none'; 
+    }, 5000);
+}
+
+// ==================== SALES PAGE LOGIC ====================
+var cart = [];
+
+function resetCart() {
+    cart = [];
+    renderCart();
+    updateTotal();
+    var productCards = document.querySelectorAll('.product-card');
+    for (var i = 0; i < productCards.length; i++) {
+        productCards[i].classList.remove('selected');
+    }
+}
+
+function addToCart(id, name, price, stock) {
+    if (stock <= 0) { 
+        showUniformAlert('Product is out of stock!', 'error');
+        return; 
+    }
+    
+    var existing = null;
+    for (var i = 0; i < cart.length; i++) {
+        if (cart[i].id === id) {
+            existing = cart[i];
+            break;
+        }
+    }
+    
+    if (existing) {
+        if (existing.qty + 1 > stock) { 
+            showUniformAlert('Only ' + stock + ' units available!', 'error');
+            return; 
+        }
+        existing.qty++;
+    } else {
+        cart.push({ id: id, name: name, price: parseFloat(price), qty: 1, stock: parseInt(stock) });
+    }
+    renderCart();
+    updateTotal();
+}
+
+function removeFromCart(id) {
+    var newCart = [];
+    for (var i = 0; i < cart.length; i++) {
+        if (cart[i].id !== id) newCart.push(cart[i]);
+    }
+    cart = newCart;
+    renderCart();
+    updateTotal();
+}
+
+function updateQty(id, delta) {
+    var item = null;
+    for (var i = 0; i < cart.length; i++) {
+        if (cart[i].id === id) { item = cart[i]; break; }
+    }
+    if (!item) return;
+    
+    var newQty = item.qty + delta;
+    if (newQty < 1) { removeFromCart(id); return; }
+    if (newQty > item.stock) { 
+        showUniformAlert('Only ' + item.stock + ' units available!', 'error');
+        return; 
+    }
+    item.qty = newQty;
+    renderCart();
+    updateTotal();
+}
+
+function renderCart() {
+    var container = document.getElementById('cartItems');
+    var btn = document.getElementById('submitSaleBtn');
+    if (!container) return;
+
+    if (cart.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:rgba(255,255,255,0.6);"><i class="fas fa-shopping-bag" style="font-size:48px;margin-bottom:12px;display:block;"></i>No items selected</div>';
+        if (btn) btn.disabled = true;
+        return;
+    }
+
+    var html = '';
+    for (var i = 0; i < cart.length; i++) {
+        var item = cart[i];
+        html += '<div class="cart-item">' +
+            '<div class="cart-item-info">' +
+                '<div class="cart-item-name">' + escapeHtml(item.name) + '</div>' +
+                '<div class="cart-item-price">₱' + item.price.toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
+            '</div>' +
+            '<div class="cart-item-quantity">' +
+                '<button type="button" onclick="updateQty(' + item.id + ',-1)">−</button>' +
+                '<span>' + item.qty + '</span>' +
+                '<button type="button" onclick="updateQty(' + item.id + ',1)">+</button>' +
+            '</div>' +
+            '<div class="cart-item-subtotal">₱' + (item.price * item.qty).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
+            '<div class="cart-item-remove" onclick="removeFromCart(' + item.id + ')"><i class="fas fa-trash-alt"></i></div>' +
+        '</div>';
+    }
+    container.innerHTML = html;
+    if (btn) btn.disabled = false;
+}
+
+function updateTotal() {
+    var total = 0;
+    for (var i = 0; i < cart.length; i++) {
+        total += cart[i].price * cart[i].qty;
+    }
+    var fmt = total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+    document.getElementById('subtotal').textContent = '₱' + fmt;
+    document.getElementById('totalAmount').textContent = '₱' + fmt;
+}
+
+// Modal controls
+var newSaleModal = document.getElementById('newSaleModal');
+var openNewSaleBtn = document.getElementById('open_new_sale_modal');
+var closeNewSaleBtn = document.getElementById('closeNewSaleModal');
+
+if (openNewSaleBtn) {
+    openNewSaleBtn.onclick = function() { newSaleModal.classList.add('show'); resetCart(); };
+}
+if (closeNewSaleBtn) {
+    closeNewSaleBtn.onclick = function() { newSaleModal.classList.remove('show'); resetCart(); };
+}
+if (newSaleModal) {
+    newSaleModal.onclick = function(e) { if (e.target === newSaleModal) { newSaleModal.classList.remove('show'); resetCart(); } };
+}
+
+// Product card click
+var productCards = document.querySelectorAll('.product-card');
+for (var i = 0; i < productCards.length; i++) {
+    productCards[i].addEventListener('click', function() {
+        addToCart(parseInt(this.dataset.id), this.dataset.name, parseFloat(this.dataset.price), parseInt(this.dataset.stock));
+        this.classList.add('selected');
+        var self = this;
+        setTimeout(function() { self.classList.remove('selected'); }, 300);
+    });
+}
+
+// Product search filter
+var productSearchInput = document.getElementById('productSearchInput');
+if (productSearchInput) {
+    productSearchInput.addEventListener('input', function() {
+        var term = this.value.toLowerCase();
+        var cards = document.querySelectorAll('.product-card');
+        for (var i = 0; i < cards.length; i++) {
+            cards[i].style.display = cards[i].dataset.name.toLowerCase().indexOf(term) !== -1 ? '' : 'none';
+        }
+    });
+}
+
+// Submit sale
+var submitSaleBtn = document.getElementById('submitSaleBtn');
+if (submitSaleBtn) {
+    submitSaleBtn.addEventListener('click', function() {
+        if (cart.length === 0) { showUniformAlert('Please add at least one item.', 'error'); return; }
+
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        var paymentStatus = document.getElementById('paymentStatus').value;
+        var items = [];
+        for (var i = 0; i < cart.length; i++) {
+            items.push({ product_id: cart[i].id, quantity: cart[i].qty });
+        }
+
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var token = csrfMeta ? csrfMeta.content : '';
+
+        var self = this;
+        fetch('/admin/sale/store', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ items: items, payment_status: paymentStatus })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(result) {
+            if (result.success) {
+                newSaleModal.classList.remove('show');
+                resetCart();
+                showUniformAlert('Sale #' + result.sale_id + ' recorded successfully!', 'success');
+                setTimeout(function() { location.reload(); }, 2000);
+            } else {
+                showUniformAlert(result.message || 'Error processing sale', 'error');
+                self.disabled = false;
+                self.innerHTML = '<i class="fas fa-credit-card"></i> Complete Sale';
+            }
+        })
+        .catch(function(err) {
+            console.error(err);
+            showUniformAlert('Network error. Please try again.', 'error');
+            self.disabled = false;
+            self.innerHTML = '<i class="fas fa-credit-card"></i> Complete Sale';
+        });
+    });
+}
+
+// View sale details
+var saleDetailsModal = document.getElementById('saleDetailsModal');
+var closeSaleModal = document.getElementById('close_sale_modal');
+
+function viewSaleDetails(id) {
+    saleDetailsModal.classList.add('show');
+    document.getElementById('sale_detail_id').textContent = id;
+    document.getElementById('sale_cashier').textContent = '—';
+    document.getElementById('sale_date_display').textContent = '—';
+    document.getElementById('sale_status_display').innerHTML = '';
+    document.getElementById('sale_items_count').textContent = '';
+    document.getElementById('sale_total').textContent = '₱0.00';
+    document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var token = csrfMeta ? csrfMeta.content : '';
+
+    fetch('/admin/sale/details/' + id, {
+        headers: {
+            'X-CSRF-TOKEN': token,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+    })
+    .then(function(sale) {
+        if (sale.error) throw new Error(sale.error);
+        document.getElementById('sale_cashier').textContent = sale.user?.fullname || 'N/A';
+        document.getElementById('sale_date_display').textContent = sale.sale_date || 'N/A';
+        var statusClass = sale.status === 'completed' ? 'badge-success' : 'badge-warning';
+        var statusLabel = sale.status ? sale.status.charAt(0).toUpperCase() + sale.status.slice(1) : 'Unknown';
+        document.getElementById('sale_status_display').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
+        document.getElementById('sale_total').textContent = '₱' + parseFloat(sale.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+        var details = sale.sale_details || [];
+        var totalUnits = 0;
+        for (var i = 0; i < details.length; i++) totalUnits += details[i].quantity;
+        document.getElementById('sale_items_count').textContent = '(' + details.length + ' product type' + (details.length !== 1 ? 's' : '') + ', ' + totalUnits + ' unit' + (totalUnits !== 1 ? 's' : '') + ')';
+
+        if (details.length === 0) {
+            document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < details.length; i++) {
+            var item = details[i];
+            html += '<tr>' +
+                '<td>' + (i + 1) + '</td>' +
+                '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '</td>' +
+                '<td style="text-align:center">' + item.quantity + '</td>' +
+                '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+            '</tr>';
+        }
+        document.getElementById('sale_items_table').innerHTML = html;
+    })
+    .catch(function(err) {
+        console.error('Sale details error:', err);
+        document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> ' + escapeHtml(err.message) + '<br><small>Please try again later.</small></td></tr>';
+        document.getElementById('sale_cashier').textContent = 'N/A';
+        document.getElementById('sale_date_display').textContent = 'N/A';
+        document.getElementById('sale_status_display').innerHTML = '<span class="badge-warning">Unknown</span>';
+    });
+}
+
+if (closeSaleModal) closeSaleModal.onclick = function() { saleDetailsModal.classList.remove('show'); };
+if (saleDetailsModal) saleDetailsModal.onclick = function(e) { if (e.target === saleDetailsModal) saleDetailsModal.classList.remove('show'); };
+
+window.viewSaleDetails = viewSaleDetails;
+
+// Process payment
+var paymentModal = document.getElementById('paymentModal');
+var closePaymentModal = document.getElementById('close_payment_modal');
+
+function processPayment(id, total) {
+    if (!confirm('Confirm payment for Sale #' + id + '?\nThis will deduct stock and mark the sale as completed.')) return;
+    document.getElementById('payment_sale_id').textContent = id;
+    document.getElementById('payment_total').textContent = '₱' + parseFloat(total).toLocaleString(undefined, { minimumFractionDigits: 2 });
+    document.getElementById('payment_sale_id_input').value = id;
+    document.getElementById('processPaymentForm').action = '/admin/sale/process-payment/' + id;
+    paymentModal.classList.add('show');
+}
+
+if (closePaymentModal) closePaymentModal.onclick = function() { paymentModal.classList.remove('show'); };
+if (paymentModal) paymentModal.onclick = function(e) { if (e.target === paymentModal) paymentModal.classList.remove('show'); };
+
+window.processPayment = processPayment;
+
+// Pagination
+function renderPagination() {
+    var currentPage = parseInt(document.getElementById('currentPage').value);
+    var lastPage = parseInt(document.getElementById('lastPage').value);
+    var paginationContainer = document.getElementById('customPagination');
+    if (!paginationContainer || lastPage <= 1) return;
+    
+    var html = '<div class="custom-pagination">';
+    if (currentPage > 1) html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
+    else html += '<span class="page-disabled">&lt;</span>';
+    
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(lastPage, currentPage + 2);
+    if (currentPage <= 3) endPage = Math.min(lastPage, 5);
+    if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
+    
+    if (startPage > 1) {
+        html += '<a href="#" class="page-link" data-page="1">1</a>';
+        if (startPage > 2) html += '<span class="page-dots">...</span>';
+    }
+    
+    for (var i = startPage; i <= endPage; i++) {
+        if (i === currentPage) html += '<span class="page-active">' + i + '</span>';
+        else html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
+    }
+    
+    if (endPage < lastPage) {
+        if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
+        html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
+    }
+    
+    if (currentPage < lastPage) html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
+    else html += '<span class="page-disabled">&gt;</span>';
+    html += '</div>';
+    paginationContainer.innerHTML = html;
+    
+    document.querySelectorAll('.page-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var page = this.getAttribute('data-page');
+            if (page) {
+                var urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('page', page);
+                window.location.href = window.location.pathname + '?' + urlParams.toString();
+            }
+        });
+    });
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', function() {
+    autoCloseSessionAlerts();
+    renderPagination();
+});
 </script>
 </body>
 </html>

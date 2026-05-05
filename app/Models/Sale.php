@@ -17,7 +17,7 @@ class Sale extends Model
     ];
 
     protected $casts = [
-        'sale_date'    => 'datetime',  // CHANGE THIS from 'date' to 'datetime'
+        'sale_date'    => 'datetime', 
         'total_amount' => 'decimal:2'
     ];
 

@@ -39,7 +39,6 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::get('/purchase/details/{id}', [Management::class, 'getPurchaseDetails'])->name('purchase.details');
     Route::get('/purchases', [Management::class, 'adminPurchases'])->name('purchases');
     Route::post('/purchase/store', [Management::class, 'storePurchase'])->name('purchase.store');
-    Route::get('/purchase/details/{id}', [Management::class, 'getPurchaseDetails'])->name('purchase.details');
     Route::post('/purchase/complete/{id}', [Management::class, 'completePurchase'])->name('purchase.complete');
     Route::post('/purchase/cancel/{id}', [Management::class, 'cancelPurchase'])->name('purchase.cancel');
     

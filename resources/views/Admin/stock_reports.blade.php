@@ -1052,6 +1052,12 @@
                                                 <button class="btn-create-po" onclick="createPurchaseOrder('{{ $report->product_id }}', '{{ addslashes($report->product_name) }}', '{{ $report->id }}')">
                                                     <i class="fas fa-shopping-cart"></i> Create PO
                                                 </button>
+                                                
+                                                @if($report->status == 'pending')
+                                                    <button class="btn-mark-read" onclick="markAsRead('{{ $report->id }}')">
+                                                        <i class="fas fa-check"></i> Mark Read
+                                                    </button>
+                                                @endif
                                             @endif
                                         @endif
                                     </div>
@@ -1076,320 +1082,420 @@
     <div id="suggestionData" style="display:none;" data-suggestions='@json(array_unique(array_merge(\App\Models\Product::pluck("product_name")->toArray(), \App\Models\StockReport::distinct()->pluck("user_name")->toArray())))'></div>
 
     <script>
-        //SEARCH AND FILTER
-        function applyFilters() {
-            const searchTerm = document.getElementById('searchReport').value.trim();
-            const statusValue = document.getElementById('statusFilter').value;
-            let url = '/admin/stock-reports';
-            let params = [];
-            if (searchTerm) params.push('search=' + encodeURIComponent(searchTerm));
-            if (statusValue !== 'all') params.push('status=' + encodeURIComponent(statusValue));
-            if (params.length) window.location.href = url + '?' + params.join('&');
-            else window.location.href = url;
-        }
-        
-        function clearFilters() {
-            window.location.href = '/admin/stock-reports';
-        }
-        
-        document.getElementById('searchBtn')?.addEventListener('click', applyFilters);
-        document.getElementById('clearFiltersBtn')?.addEventListener('click', clearFilters);
-        document.getElementById('statusFilter')?.addEventListener('change', applyFilters);
-        document.getElementById('searchReport')?.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') applyFilters();
+// ==================== GLOBAL VARIABLES ====================
+var markAsRead, createPurchaseOrder, editProductAndReduceStock;
+
+// ==================== NOTIFICATION SYSTEM ====================
+(function() {
+    var CSRF = '';
+    var lastUnreadCount = -1;
+    var pollTimer = null;
+
+    function getCSRF() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) CSRF = meta.content;
+        return CSRF;
+    }
+
+    function fetchNotifications() {
+        getCSRF();
+
+        fetch('/admin/stock-reports/notifications', {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (!data.success) return;
+
+            updateBell(data.unread_count);
+
+            var dropdown = document.getElementById('notificationDropdown');
+            var isOpen = dropdown && dropdown.classList.contains('show');
+
+            if (data.unread_count !== lastUnreadCount || isOpen) {
+                renderDropdown(data.notifications);
+                lastUnreadCount = data.unread_count;
+            }
+        })
+        .catch(function(error) {
+            console.error('Notification fetch error:', error);
         });
+    }
+
+    function updateBell(count) {
+        var bell = document.getElementById('notificationBell');
+        if (!bell) return;
+
+        var badge = bell.querySelector('.notification-badge');
         
-        //MARK AS READ
-        function markAsRead(reportId) {
-            fetch('{{ route("admin.stock.report.read") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ report_id: reportId })
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    var allButtons = document.querySelectorAll('.btn-mark-read');
-                    allButtons.forEach(function(btn) {
-                        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(String(reportId))) {
-                            var tr = btn.closest('tr');
-                            if (tr) {
-                                var statusTd = tr.querySelectorAll('td')[3];
-                                if (statusTd) {
-                                    statusTd.innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
-                                }
-                                btn.remove();
+        if (!badge && count > 0) {
+            badge = document.createElement('span');
+            badge.className = 'notification-badge';
+            bell.appendChild(badge);
+        }
+
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    function renderDropdown(notifs) {
+        var list = document.getElementById('notificationList');
+        if (!list) return;
+
+        if (!notifs || notifs.length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < notifs.length; i++) {
+            var n = notifs[i];
+            var isDamage = n.is_damage || (n.message && n.message.indexOf('DAMAGE REPORT') !== -1);
+            var isResolved = n.is_resolved || n.status === 'resolved';
+            var isSystemAlert = n.user_name === 'System (Auto Alert)';
+            var dqty = n.damage_quantity || 1;
+            var safeName = (n.product_name || '').replace(/'/g, "\\'");
+
+            var actionBtn = '';
+            if (isDamage) {
+                if (isResolved) {
+                    actionBtn = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
+                } else {
+                    actionBtn = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' +
+                        n.product_id + ',\'' + safeName + '\',' + dqty + ',' + n.id +
+                        ')"><i class="fas fa-edit"></i> Edit &amp; Reduce (' + dqty + ' units)</button>';
+                }
+            } else {
+                actionBtn = '<button class="btn-order" onclick="createPurchaseOrder(' +
+                    n.product_id + ',\'' + safeName + '\',' + n.id +
+                    ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
+            }
+
+            html += '<div class="notification-item unread" data-nid="' + n.id + '">' +
+                '<div class="notification-title">' +
+                '<strong>' + escapeHtml(n.product_name) + '</strong>' +
+                '<span class="notification-time">' + (n.time_ago || '') + '</span>' +
+                '</div>' +
+                '<div class="notification-message">' +
+                '<strong>Reported by: </strong>' + escapeHtml(n.user_name) + '<br>' +
+                '<strong>Current Stock: </strong>' + n.current_stock + ' units (Min: ' + n.min_stock_level + ')<br>' +
+                '<small>' + escapeHtml((n.message || '').substring(0, 100)) + '</small>' +
+                '</div>' +
+                '<div class="notification-buttons">' +
+                actionBtn +
+                '<button class="btn-read" onclick="markAsRead(' + n.id + ')">' +
+                '<i class="fas fa-check"></i> Mark Read</button>' +
+                '</div>' +
+                '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    function checkEmptyList() {
+        var list = document.getElementById('notificationList');
+        if (list && list.querySelectorAll('.notification-item').length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
+        }
+    }
+
+    // ========== GLOBAL FUNCTIONS ==========
+    markAsRead = function(reportId) {
+        getCSRF();
+
+        fetch('/admin/stock-report/mark-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ report_id: reportId })
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                // Remove from bell dropdown
+                var item = document.querySelector('.notification-item[data-nid="' + reportId + '"]');
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transition = 'opacity 0.3s ease';
+                    setTimeout(function() {
+                        if (item.parentElement) item.remove();
+                        checkEmptyList();
+                    }, 300);
+                }
+
+                // Update table row
+                var buttons = document.querySelectorAll('.btn-mark-read');
+                for (var i = 0; i < buttons.length; i++) {
+                    var btn = buttons[i];
+                    var onclickAttr = btn.getAttribute('onclick') || '';
+                    if (onclickAttr.indexOf(String(reportId)) !== -1) {
+                        var tr = btn.closest('tr');
+                        if (tr) {
+                            var tds = tr.querySelectorAll('td');
+                            if (tds.length >= 4) {
+                                tds[3].innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
                             }
+                            btn.remove();
                         }
-                    });
-                    fetchNotifications();
-                } else {
-                    alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(function(error) { console.error('Error:', error); });
-        }
-        
-        //CREATE PURCHASE ORDER
-        function createPurchaseOrder(productId, productName, reportId) {
-            if (confirm(`Create purchase order for "${productName}"?`)) {
-                sessionStorage.setItem('prefill_product_id', productId);
-                sessionStorage.setItem('prefill_product_name', productName);
-                sessionStorage.setItem('prefill_report_id', reportId);
-                sessionStorage.setItem('prefill_from_stock_report', 'true');
-                window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId + '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
-            }
-        }
-        
-        //HANDLE DAMAGE REPORT
-        function handleDamageReport(productId, productName, message, reportId) {
-            let damageQuantity = 1;
-            const quantityMatch = message.match(/Quantity affected:\s*(\d+)/i);
-            if (quantityMatch) {
-                damageQuantity = parseInt(quantityMatch[1]);
-            }
-            
-            if (confirm(`Product: ${productName}\nDamaged Quantity: ${damageQuantity} units\n\nProceed to edit product and reduce stock?`)) {
-                sessionStorage.setItem('damage_mode', 'true');
-                sessionStorage.setItem('damage_product_id', productId);
-                sessionStorage.setItem('damage_quantity', damageQuantity);
-                sessionStorage.setItem('damage_report_id', reportId);
-                window.location.href = '/admin/products?damage_mode=1&product_id=' + productId + '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
-            }
-        }
-        
-        //AUTOCOMPLETE SUGGESTIONS FUNCTIONALITY
-        const suggestionEl = document.getElementById('suggestionData');
-        let searchSuggestions = [];
-        if (suggestionEl) {
-            try {
-                searchSuggestions = JSON.parse(suggestionEl.getAttribute('data-suggestions')) || [];
-            } catch(e) {
-                searchSuggestions = [];
-            }
-        }
-        
-        const searchInput = document.getElementById('searchReport');
-        const autocompleteDropdown = document.getElementById('autocompleteDropdown');
-        let searchTimeout;
-        
-        function showSuggestions() {
-            if (!searchInput) return;
-            const query = searchInput.value.trim().toLowerCase();
-            
-            if (query.length === 0) {
-                if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
-                return;
-            }
-            
-            let matches = [];
-            if (searchSuggestions && searchSuggestions.length > 0) {
-                for (let i = 0; i < searchSuggestions.length; i++) {
-                    const suggestion = searchSuggestions[i];
-                    if (!suggestion) continue;
-                    const suggestionLower = String(suggestion).toLowerCase();
-                    if (suggestionLower.includes(query)) {
-                        matches.push(suggestion);
+                        break;
                     }
-                    if (matches.length >= 10) break;
                 }
+
+                lastUnreadCount = -1;
+                fetchNotifications();
+            } else {
+                alert('Failed: ' + (data.message || 'Unknown error'));
             }
-            
-            if (matches.length > 0 && autocompleteDropdown) {
-                let html = '';
-                for (let i = 0; i < matches.length; i++) {
-                    const match = matches[i];
-                    const highlightedMatch = String(match).replace(new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<strong>$1</strong>');
-                    const escapedMatch = String(match).replace(/'/g, "\\'");
-                    html += `<div class="autocomplete-item" onclick="selectSuggestion('${escapedMatch}')">
-                                <div>${highlightedMatch}</div>
-                            </div>`;
-                }
-                autocompleteDropdown.innerHTML = html;
-                autocompleteDropdown.classList.add('show');
-            } else if (autocompleteDropdown) {
-                autocompleteDropdown.innerHTML = `<div class="no-results">No results found matching "${query}"</div>`;
-                autocompleteDropdown.classList.add('show');
-            }
-        }
-        
-        function selectSuggestion(suggestion) {
-            if (searchInput) searchInput.value = suggestion;
-            if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
-            applyFilters();
-        }
-        
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(showSuggestions, 300);
-            });
-            
-            document.addEventListener('click', function(e) {
-                if (autocompleteDropdown && searchInput && !searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
-                    autocompleteDropdown.classList.remove('show');
-                }
-            });
-            
-            // Handle Enter key
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
-                    applyFilters();
-                }
-            });
-        }
-        
-        //NOTIFICATION DROPDOWN FUNCTIONS (FIXED)
-        function fetchNotifications() {
-            fetch('/admin/stock-reports/notifications', {
-                method: 'GET',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateNotificationBell(data.unread_count);
-                    renderNotificationDropdown(data.notifications);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-        
-        function updateNotificationBell(count) {
-            const badge = document.querySelector('.notification-badge');
-            if (badge) {
-                if (count > 0) {
-                    badge.textContent = count;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function renderNotificationDropdown(notifications) {
-            const list = document.getElementById('notificationList');
-            if (!list) return;
-            if (!notifications || notifications.length === 0) {
-                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i><p>No pending stock reports</p></div>';
-                return;
-            }
-            let html = '';
-            for (let i = 0; i < notifications.length; i++) {
-                const notif = notifications[i];
-                const isDamage = notif.message && notif.message.includes('DAMAGE REPORT');
-                const isSystemAlert = notif.user_name === 'System (Auto Alert)';
-                const isOutOfStock = notif.current_stock === 0;
-                const stockColor = isOutOfStock ? '#dc3545' : (notif.current_stock <= notif.min_stock_level ? '#fd7e14' : '#28a745');
-                
-                let damageQty = 1;
-                if (isDamage) {
-                    const qtyMatch = notif.message.match(/Quantity affected:\s*(\d+)/i);
-                    if (qtyMatch) damageQty = parseInt(qtyMatch[1]);
-                }
-                
-                let actionButton = '';
-                if (isDamage) {
-                    if (notif.is_resolved) {
-                        actionButton = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
-                    } else {
-                        actionButton = `<button class="btn-edit-damage" onclick="handleDamageReport(${notif.product_id}, '${escapeHtml(notif.product_name).replace(/'/g, "\\'")}', '${escapeHtml(notif.message).replace(/'/g, "\\'")}', ${notif.id})"><i class="fas fa-edit"></i> Edit & Reduce (${damageQty} units)</button>`;
-                    }
-                } else {
-                    actionButton = `<button class="btn-order" onclick="createPurchaseOrder(${notif.product_id}, '${escapeHtml(notif.product_name).replace(/'/g, "\\'")}', ${notif.id})"><i class="fas fa-shopping-cart"></i> ${isSystemAlert ? 'Restock Now' : 'Create PO'}</button>`;
-                }
-                
-                const shortMessage = notif.message && notif.message.length > 120
-                    ? notif.message.substring(0, 120) + '...'
-                    : (notif.message || '');
-                
-                html += `
-                    <div class="notification-item unread" data-id="${notif.id}" style="border-left: 3px solid ${stockColor};">
-                        <div class="notification-title">
-                            <strong>${escapeHtml(notif.product_name)}</strong>
-                            <span class="notification-time">${notif.time_ago}</span>
-                        </div>
-                        <div class="notification-message">
-                            <strong>Reported by: </strong>${escapeHtml(notif.user_name)}<br>
-                            <strong>Current Stock: </strong>${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
-                            <small>${escapeHtml(shortMessage)}</small>
-                        </div>
-                        <div class="notification-buttons">
-                            ${actionButton}
-                            <button class="btn-read" onclick="markAsRead(${notif.id})"><i class="fas fa-check"></i> Mark Read</button>
-                        </div>
-                    </div>
-                `;
-            }
-            list.innerHTML = html;
-        }
-        
-        //CUSTOM PAGINATION 
-        function renderPagination() {
-            var currentPage = parseInt(document.getElementById('currentPage').value);
-            var lastPage = parseInt(document.getElementById('lastPage').value);
-            var paginationContainer = document.getElementById('customPagination');
-            if (!paginationContainer || lastPage <= 1) return;
-            var html = '<div class="custom-pagination">';
-            if (currentPage > 1) html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
-            else html += '<span class="page-disabled">&lt;</span>';
-            var startPage = Math.max(1, currentPage - 2);
-            var endPage = Math.min(lastPage, currentPage + 2);
-            if (currentPage <= 3) endPage = Math.min(lastPage, 5);
-            if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
-            if (startPage > 1) {
-                html += '<a href="#" class="page-link" data-page="1">1</a>';
-                if (startPage > 2) html += '<span class="page-dots">...</span>';
-            }
-            for (var i = startPage; i <= endPage; i++) {
-                if (i === currentPage) html += '<span class="page-active">' + i + '</span>';
-                else html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
-            }
-            if (endPage < lastPage) {
-                if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
-                html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
-            }
-            if (currentPage < lastPage) html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
-            else html += '<span class="page-disabled">&gt;</span>';
-            html += '</div>';
-            paginationContainer.innerHTML = html;
-            document.querySelectorAll('.page-link').forEach(function(link) {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var page = this.getAttribute('data-page');
-                    if (page) {
-                        var urlParams = new URLSearchParams(window.location.search);
-                        urlParams.set('page', page);
-                        window.location.href = window.location.pathname + '?' + urlParams.toString();
-                    }
-                });
-            });
-        }
-        
-        // Notification bell toggle
-        const bell = document.getElementById('notificationBell');
-        const dropdown = document.getElementById('notificationDropdown');
-        if (bell) {
-            bell.addEventListener('click', function(e) { 
-                e.stopPropagation(); 
-                dropdown.classList.toggle('show'); 
-                if (dropdown.classList.contains('show')) fetchNotifications();
-            });
-        }
-        document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            renderPagination();
-            fetchNotifications();
-            setInterval(fetchNotifications, 10000);
+        })
+        .catch(function(error) {
+            console.error('Mark as read error:', error);
+            alert('Network error. Please try again.');
         });
-    </script>
+    };
+
+    createPurchaseOrder = function(productId, productName, reportId) {
+        if (confirm('Create purchase order for "' + productName + '"?')) {
+            sessionStorage.setItem('prefill_product_id', productId);
+            sessionStorage.setItem('prefill_product_name', productName);
+            sessionStorage.setItem('prefill_report_id', reportId);
+            sessionStorage.setItem('prefill_from_stock_report', 'true');
+            window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId +
+                '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
+        }
+    };
+
+    editProductAndReduceStock = function(productId, productName, damageQuantity, reportId) {
+        if (confirm('Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.')) {
+            window.location.href = '/admin/products?edit_damage=1&product_id=' + productId +
+                '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
+        }
+    };
+
+    window.handleDamageReport = function(productId, productName, message, reportId) {
+        var damageQuantity = 1;
+        var quantityMatch = message.match(/Quantity affected:\s*(\d+)/i);
+        if (quantityMatch) damageQuantity = parseInt(quantityMatch[1]);
+        editProductAndReduceStock(productId, productName, damageQuantity, reportId);
+    };
+
+    // ========== INIT ==========
+    function initNotifications() {
+        var bell = document.getElementById('notificationBell');
+        var dropdown = document.getElementById('notificationDropdown');
+
+        if (bell && dropdown) {
+            bell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                if (dropdown.classList.contains('show')) {
+                    lastUnreadCount = -1;
+                    fetchNotifications();
+                }
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (dropdown && bell && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        if (pollTimer) clearInterval(pollTimer);
+        fetchNotifications();
+        pollTimer = setInterval(fetchNotifications, 10000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNotifications);
+    } else {
+        initNotifications();
+    }
+})();
+
+// ==================== HELPER FUNCTIONS ====================
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+// ==================== STOCK REPORTS PAGE LOGIC ====================
+function applyFilters() {
+    var searchTerm = document.getElementById('searchReport').value.trim();
+    var statusValue = document.getElementById('statusFilter').value;
+    var url = '/admin/stock-reports';
+    var params = [];
+    if (searchTerm) params.push('search=' + encodeURIComponent(searchTerm));
+    if (statusValue !== 'all') params.push('status=' + encodeURIComponent(statusValue));
+    if (params.length) window.location.href = url + '?' + params.join('&');
+    else window.location.href = url;
+}
+
+function clearFilters() {
+    window.location.href = '/admin/stock-reports';
+}
+
+document.getElementById('searchBtn').addEventListener('click', applyFilters);
+document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
+document.getElementById('searchReport').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') applyFilters();
+});
+
+// Autocomplete
+var suggestionEl = document.getElementById('suggestionData');
+var searchSuggestions = [];
+if (suggestionEl) {
+    try {
+        searchSuggestions = JSON.parse(suggestionEl.getAttribute('data-suggestions')) || [];
+    } catch(e) {
+        searchSuggestions = [];
+    }
+}
+
+var searchInput = document.getElementById('searchReport');
+var autocompleteDropdown = document.getElementById('autocompleteDropdown');
+var searchTimeout;
+
+function showSuggestions() {
+    if (!searchInput) return;
+    var query = searchInput.value.trim().toLowerCase();
+    
+    if (query.length === 0) {
+        if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
+        return;
+    }
+    
+    var matches = [];
+    if (searchSuggestions && searchSuggestions.length > 0) {
+        for (var i = 0; i < searchSuggestions.length; i++) {
+            var suggestion = searchSuggestions[i];
+            if (!suggestion) continue;
+            if (String(suggestion).toLowerCase().indexOf(query) !== -1) {
+                matches.push(suggestion);
+            }
+            if (matches.length >= 10) break;
+        }
+    }
+    
+    if (matches.length > 0 && autocompleteDropdown) {
+        var html = '';
+        for (var i = 0; i < matches.length; i++) {
+            var match = matches[i];
+            var highlightedMatch = String(match).replace(new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<strong>$1</strong>');
+            var escapedMatch = String(match).replace(/'/g, "\\'");
+            html += '<div class="autocomplete-item" onclick="selectSuggestion(\'' + escapedMatch + '\')"><div>' + highlightedMatch + '</div></div>';
+        }
+        autocompleteDropdown.innerHTML = html;
+        autocompleteDropdown.classList.add('show');
+    } else if (autocompleteDropdown) {
+        autocompleteDropdown.innerHTML = '<div class="no-results">No results found matching "' + escapeHtml(query) + '"</div>';
+        autocompleteDropdown.classList.add('show');
+    }
+}
+
+function selectSuggestion(suggestion) {
+    if (searchInput) searchInput.value = suggestion;
+    if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
+    applyFilters();
+}
+
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(showSuggestions, 300);
+    });
+    document.addEventListener('click', function(e) {
+        if (autocompleteDropdown && searchInput && !searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+            autocompleteDropdown.classList.remove('show');
+        }
+    });
+}
+
+// Pagination
+function renderPagination() {
+    var currentPage = parseInt(document.getElementById('currentPage').value);
+    var lastPage = parseInt(document.getElementById('lastPage').value);
+    var paginationContainer = document.getElementById('customPagination');
+    if (!paginationContainer || lastPage <= 1) return;
+    
+    var html = '<div class="custom-pagination">';
+    if (currentPage > 1) html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
+    else html += '<span class="page-disabled">&lt;</span>';
+    
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(lastPage, currentPage + 2);
+    if (currentPage <= 3) endPage = Math.min(lastPage, 5);
+    if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
+    
+    if (startPage > 1) {
+        html += '<a href="#" class="page-link" data-page="1">1</a>';
+        if (startPage > 2) html += '<span class="page-dots">...</span>';
+    }
+    for (var i = startPage; i <= endPage; i++) {
+        if (i === currentPage) html += '<span class="page-active">' + i + '</span>';
+        else html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
+    }
+    if (endPage < lastPage) {
+        if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
+        html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
+    }
+    if (currentPage < lastPage) html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
+    else html += '<span class="page-disabled">&gt;</span>';
+    html += '</div>';
+    paginationContainer.innerHTML = html;
+    
+    document.querySelectorAll('.page-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var page = this.getAttribute('data-page');
+            if (page) {
+                var urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('page', page);
+                window.location.href = window.location.pathname + '?' + urlParams.toString();
+            }
+        });
+    });
+}
+
+window.applyFilters = applyFilters;
+window.clearFilters = clearFilters;
+window.selectSuggestion = selectSuggestion;
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderPagination();
+});
+</script>
 </body>
 </html>

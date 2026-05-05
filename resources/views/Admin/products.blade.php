@@ -1203,465 +1203,605 @@
     <div id="productData" style="display:none;" data-products='@json($allProducts ?? [])'></div>
 
     <script>
+// ==================== GLOBAL VARIABLES ====================
+var markAsRead, createPurchaseOrder, editProductAndReduceStock;
 
-        function showAlertMessage(message, type) {
-            var alertContainer = document.getElementById('dynamicAlertContainer');
-            if (!alertContainer) return;
-            
-            var alertDiv = document.createElement('div');
-            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
-            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
-            
-            alertContainer.innerHTML = '';
-            alertContainer.appendChild(alertDiv);
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            setTimeout(function() {
-                if (alertDiv && alertDiv.parentElement) {
-                    alertDiv.style.opacity = '0';
-                    alertDiv.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
-                    }, 500);
-                }
-            }, 3000);
-        }
+// ==================== NOTIFICATION SYSTEM ====================
+(function() {
+    var CSRF = '';
+    var lastUnreadCount = -1;
+    var pollTimer = null;
 
-        function autoCloseSessionAlerts() {
-            var sessionAlerts = document.querySelectorAll('.session-alert');
-            sessionAlerts.forEach(function(alert) {
-                setTimeout(function() {
-                    alert.style.opacity = '0';
-                    alert.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        if (alert && alert.parentElement) alert.remove();
-                    }, 500);
-                }, 3000);
-            });
-        }
-    var CSRF = document.querySelector('meta[name="csrf-token"]').content;
-
-    var allProducts = [];
-    try { allProducts = JSON.parse(document.getElementById('productData').dataset.products); }
-    catch(e) {}
-
-    function performSearch() {
-        var q  = document.getElementById('searchInput').value.trim();
-        var st = document.getElementById('filterStatus').value;
-        var url = new URL(window.location.href);
-        if (q)  url.searchParams.set('search', q); else url.searchParams.delete('search');
-        if (st && st !== 'all') url.searchParams.set('status', st); else url.searchParams.delete('status');
-        url.searchParams.delete('page');
-        window.location.href = url;
-    }
-    function applyFilter() { performSearch(); }
-
-    // Autocomplete
-    var siEl  = document.getElementById('searchInput');
-    var acDdEl = document.getElementById('autocompleteDropdown');
-    var acTimer;
-    function showSuggestions() {
-        var q = (siEl.value || '').trim().toLowerCase();
-        if (!q) { acDdEl.classList.remove('show'); return; }
-        var matches = allProducts.filter(function(p){ return (p.product_name||'').toLowerCase().includes(q); }).slice(0,10);
-        if (!matches.length) {
-            acDdEl.innerHTML = '<div class="no-results">No products matching "' + q + '"</div>';
-        } else {
-            acDdEl.innerHTML = matches.map(function(p){
-                var hl = p.product_name.replace(new RegExp('(' + q + ')','gi'), '<strong>$1</strong>');
-                return '<div class="autocomplete-item" onclick="selectProduct(\'' + p.product_name.replace(/'/g,"\\'") + '\')">' +
-                       hl + '<div class="autocomplete-price">₱' + parseFloat(p.price).toLocaleString() + '</div></div>';
-            }).join('');
-        }
-        acDdEl.classList.add('show');
-    }
-    function selectProduct(name) { siEl.value = name; acDdEl.classList.remove('show'); performSearch(); }
-    if (siEl) {
-        siEl.addEventListener('input', function(){ clearTimeout(acTimer); acTimer = setTimeout(showSuggestions, 300); });
-        siEl.addEventListener('keypress', function(e){ if (e.key==='Enter'){ acDdEl.classList.remove('show'); performSearch(); } });
-    }
-    document.addEventListener('click', function(e){
-        if (acDdEl && siEl && !siEl.contains(e.target) && !acDdEl.contains(e.target)) acDdEl.classList.remove('show');
-    });
-
-    // Description toggle
-    document.querySelectorAll('.toggle-description').forEach(function(l){
-        l.onclick = function(e){
-            e.preventDefault();
-            var p  = this.closest('.description-cell');
-            var sh = p.querySelector('.short-desc');
-            var fu = p.querySelector('.full-desc');
-            if (fu.style.display === 'none' || !fu.style.display) {
-                sh.style.display = 'none'; fu.style.display = 'inline'; this.textContent = 'Show less';
-            } else {
-                sh.style.display = 'inline'; fu.style.display = 'none'; this.textContent = 'Show more';
-            }
-        };
-    });
-
-    // Modal helpers 
-    function openModal(id)  { document.getElementById(id).classList.add('show'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-    document.getElementById('open_modal').onclick    = function(){ openModal('modal_container'); };
-    document.getElementById('close_modal').onclick   = function(){ closeModal('modal_container'); };
-    document.getElementById('modal_container').onclick = function(e){ if(e.target===this) closeModal('modal_container'); };
-
-    document.getElementById('close_edit_modal').onclick = function(){ closeEditModalClean(); };
-    document.getElementById('edit_modal_container').onclick = function(e){ if(e.target===this) closeEditModalClean(); };
-
-    function closeEditModalClean() {
-        closeModal('edit_modal_container');
-        removeDamageNotice();
-        restoreAllFields();
+    function getCSRF() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) CSRF = meta.content;
+        return CSRF;
     }
 
-    function showToast(msg, color) {
-        var old = document.querySelector('.toast-message');
-        if (old) old.remove();
-        var t = document.createElement('div');
-        t.className = 'toast-message';
-        t.style.background = color || '#28a745';
-        t.innerHTML = '<i class="fas fa-info-circle"></i> ' + msg;
-        document.body.appendChild(t);
-        setTimeout(function(){ if (t.parentElement) t.remove(); }, 3500);
-    }
-
-    var LOCK_FIELDS = ['edit_product_name','edit_description','edit_category_id','edit_supplier_id','edit_price','edit_min_stock'];
-
-    function lockFieldsForDamage() {
-        LOCK_FIELDS.forEach(function(id) {
-            var f = document.getElementById(id);
-            if (!f) return;
-            f.setAttribute('readonly', true);
-            f.classList.add('field-readonly-visual');
-            if (f.tagName === 'SELECT' || f.tagName === 'TEXTAREA') {
-                f.style.pointerEvents = 'none';
-                f.style.opacity = '0.6';
-                f.style.cursor = 'not-allowed';
-            }
-        });
-        var qty = document.getElementById('edit_quantity');
-        if (qty) {
-            qty.removeAttribute('readonly');
-            qty.style.pointerEvents = '';
-            qty.style.opacity = '';
-            qty.style.cursor = '';
-            qty.classList.remove('field-readonly-visual');
-        }
-        var lockIcon = document.getElementById('quantityLockIcon');
-        if (lockIcon) lockIcon.style.display = 'none';
-    }
-    function restoreAllFields() {
-        var all = ['edit_product_name','edit_description','edit_category_id','edit_supplier_id',
-                'edit_price','edit_min_stock','edit_quantity'];
-        all.forEach(function(id) {
-            var f = document.getElementById(id);
-            if (!f) return;
-            f.removeAttribute('readonly');
-            f.classList.remove('field-readonly-visual', 'damage-highlight');
-            f.style.pointerEvents = '';
-            f.style.opacity = '';
-            f.style.cursor = '';
-        });
-        var qty = document.getElementById('edit_quantity');
-        if (qty) {
-            qty.setAttribute('readonly', true);
-            qty.classList.add('field-readonly-visual');
-            qty.style.cursor = 'not-allowed';
-        }
-        var lockIcon = document.getElementById('quantityLockIcon');
-        if (lockIcon) lockIcon.style.display = 'inline';
-        var hint = document.getElementById('quantityHint');
-        if (hint) hint.style.display = 'none';
-    }
-
-    function removeDamageNotice() {
-        var n = document.querySelector('#editModalBody .damage-notice');
-        if (n) n.remove();
-    }
-
-    // Edit product (normal)
-    function editProduct(productId) {
-        showToast('Loading product…', '#17a2b8');
-        fetch('/admin/product/' + productId + '/data', {
-            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (!data.success || !data.product) {
-                alert('Error loading product: ' + (data.message || 'Unknown error'));
-                return;
-            }
-            var p = data.product;
-            document.getElementById('edit_product_name').value  = p.product_name    || '';
-            document.getElementById('edit_description').value   = p.description     || '';
-            document.getElementById('edit_price').value         = p.price           || '';
-            document.getElementById('edit_quantity').value      = p.quantity        || '';
-            document.getElementById('edit_min_stock').value     = p.min_stock_level || '';
-            document.getElementById('edit_category_id').value   = p.category_id     || '';
-            document.getElementById('edit_supplier_id').value   = p.supplier_id     || '';
-            document.getElementById('edit_damage_report_id').value = '';
-            document.getElementById('editProductForm').action   = '/admin/product/update/' + p.id;
-
-            removeDamageNotice();
-            restoreAllFields(); 
-            openModal('edit_modal_container');
-            showToast('Product loaded!', '#28a745');
-        })
-        .catch(function(err) { alert('Error: ' + err.message); });
-    }
-    window.editProduct = editProduct;
-
-    // Edit product for DAMAGE (from notification bell or stock-report page)
-    function editProductForDamage(productId, damageQty, reportId) {
-        damageQty = parseInt(damageQty) || 1;
-        showToast('Loading damage report…', '#fd7e14');
-
-        fetch('/admin/product/' + productId + '/data', {
-            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (!data.success || !data.product) {
-                alert('Product not found');
-                return;
-            }
-            var p = data.product;
-
-            // Fill all fields so they submit correctly
-            document.getElementById('edit_product_name').value  = p.product_name    || '';
-            document.getElementById('edit_description').value   = p.description     || '';
-            document.getElementById('edit_price').value         = p.price           || '';
-            document.getElementById('edit_min_stock').value     = p.min_stock_level || '';
-            document.getElementById('edit_category_id').value   = p.category_id     || '';
-            document.getElementById('edit_supplier_id').value   = p.supplier_id     || '';
-            document.getElementById('edit_damage_report_id').value = reportId || '';
-            document.getElementById('editProductForm').action   = '/admin/product/update/' + p.id;
-
-            // Auto-deduct damage quantity
-            var currentStock = parseInt(p.quantity) || 0;
-            var newStock     = Math.max(0, currentStock - damageQty);
-            var qty = document.getElementById('edit_quantity');
-            qty.value = newStock;
-            qty.classList.add('damage-highlight');
-
-            var hint = document.getElementById('quantityHint');
-            if (hint) {
-                hint.style.display = 'block';
-                hint.innerHTML = 'Auto-deducted: ' + currentStock + ' − ' + damageQty + ' = <strong>' + newStock + '</strong> units';
-            }
-
-            removeDamageNotice();
-            lockFieldsForDamage();
-
-            var notice = document.createElement('div');
-            notice.className = 'damage-notice';
-            notice.innerHTML =
-                '<i class="fas fa-exclamation-triangle"></i> <strong>DAMAGE REPORT MODE</strong><br>' +
-                'Damaged: <strong>' + damageQty + '</strong> units · ' +
-                'New stock: <strong>' + newStock + '</strong> units<br>' +
-                '<small>All fields are locked. Click "Update Product" to confirm.</small>';
-            var body = document.getElementById('editModalBody');
-            body.insertBefore(notice, body.firstChild);
-
-            openModal('edit_modal_container');
-            showToast('Ready — click Update Product to confirm deduction', '#fd7e14');
-        })
-        .catch(function(err) { alert('Error: ' + err.message); });
-    }
-    window.editProductForDamage = editProductForDamage;
-
-    window.createPO = function(pid, pname, rid) {
-        if (confirm('Create Purchase Order for "' + pname + '"?\n\nYou will be redirected to the Purchases page.')) {
-            window.location.href = '/admin/purchases?open_modal=1&product_id=' + pid
-                + '&product_name=' + encodeURIComponent(pname)
-                + (rid ? '&report_id=' + rid : '');
-        }
-    };
-
-    // Mark report as read (bell)
-    window.markRead = function(id) {
-        fetch('{{ route("admin.stock.report.read") }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-            body: JSON.stringify({ report_id: id })
-        })
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-            if (d.success) {
-                showToast('Report marked as read', '#28a745');
-                fetchNotifications();
-            } else {
-                showToast(d.message || 'Could not mark as read', '#dc3545');
-            }
-        })
-        .catch(function(e){ console.error(e); });
-    };
-
-    (function checkUrlParams(){
-        var params  = new URLSearchParams(window.location.search);
-        var pid     = params.get('product_id');
-        var dqty    = params.get('damage_qty');
-        var rid     = params.get('report_id');
-        if (pid && dqty) {
-            window.history.replaceState({}, document.title, window.location.pathname);
-            setTimeout(function(){ editProductForDamage(pid, parseInt(dqty), rid); }, 600);
-        }
-    })();
-
-    // Notification bell
     function fetchNotifications() {
+        getCSRF();
+
         fetch('/admin/stock-reports/notifications', {
-            headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' }
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
         })
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-            if (!d.success) return;
-            var badge = document.getElementById('notifBadge');
-            if (d.unread_count > 0) {
-                if (!badge) {
-                    badge = document.createElement('span');
-                    badge.id = 'notifBadge';
-                    badge.className = 'notification-badge';
-                    document.getElementById('notificationBell').appendChild(badge);
-                }
-                badge.textContent = d.unread_count;
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (!data.success) return;
+
+            updateBell(data.unread_count);
+
+            var dropdown = document.getElementById('notificationDropdown');
+            var isOpen = dropdown && dropdown.classList.contains('show');
+
+            if (data.unread_count !== lastUnreadCount || isOpen) {
+                renderDropdown(data.notifications);
+                lastUnreadCount = data.unread_count;
+            }
+        })
+        .catch(function(error) {
+            console.error('Notification fetch error:', error);
+        });
+    }
+
+    function updateBell(count) {
+        var bell = document.getElementById('notificationBell');
+        if (!bell) return;
+
+        var badge = document.getElementById('notifBadge');
+        
+        if (!badge && count > 0) {
+            badge = document.createElement('span');
+            badge.id = 'notifBadge';
+            badge.className = 'notification-badge';
+            bell.appendChild(badge);
+        }
+
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
                 badge.style.display = 'flex';
             } else {
-                if (badge) badge.style.display = 'none';
+                badge.style.display = 'none';
             }
-            renderNotifications(d.notifications);
-        })
-        .catch(function(e){ console.error('Notification fetch error', e); });
+        }
     }
 
-    function renderNotifications(notifs) {
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    function renderDropdown(notifs) {
         var list = document.getElementById('notificationList');
         if (!list) return;
-        if (!notifs || !notifs.length) {
-            list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:2rem;margin-bottom:8px;"></i><p>No pending alerts</p></div>';
+
+        if (!notifs || notifs.length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
             return;
         }
 
         var html = '';
-        notifs.forEach(function(n){
-            var isDamage = n.is_damage || (n.message && n.message.includes('DAMAGE REPORT'));
-            var dqty     = n.damage_quantity || 1;
-            var isResolved = (n.status === 'resolved');
-            var pname    = (n.product_name || '').replace(/'/g, "\\'");
+        for (var i = 0; i < notifs.length; i++) {
+            var n = notifs[i];
+            var isDamage = n.is_damage || (n.message && n.message.indexOf('DAMAGE REPORT') !== -1);
+            var isResolved = n.is_resolved || n.status === 'resolved';
+            var isSystemAlert = n.user_name === 'System (Auto Alert)';
+            var dqty = n.damage_quantity || 1;
+            var safeName = (n.product_name || '').replace(/'/g, "\\'");
 
             var actionBtn = '';
             if (isDamage) {
                 if (isResolved) {
                     actionBtn = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
                 } else {
-                    actionBtn = '<button class="btn-edit-damage" onclick="editProductForDamage(' + n.product_id + ',' + dqty + ',' + n.id + ')">'
-                              + '<i class="fas fa-edit"></i> Edit &amp; Reduce (' + dqty + ' units)</button>';
+                    actionBtn = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' +
+                        n.product_id + ',\'' + safeName + '\',' + dqty + ',' + n.id +
+                        ')"><i class="fas fa-edit"></i> Edit &amp; Reduce (' + dqty + ' units)</button>';
                 }
             } else {
-                actionBtn = '<button class="btn-order" onclick="createPO(' + n.product_id + ',\'' + pname + '\',' + n.id + ')">'
-                          + '<i class="fas fa-shopping-cart"></i> Create PO</button>';
+                actionBtn = '<button class="btn-order" onclick="createPurchaseOrder(' +
+                    n.product_id + ',\'' + safeName + '\',' + n.id +
+                    ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
             }
 
-            var stockLabel = (n.current_stock == 0)
+            var stockLabel = (n.current_stock === 0)
                 ? '<span style="color:#dc3545;font-weight:bold;">OUT OF STOCK</span>'
                 : n.current_stock + ' units';
 
-            html += '<div class="notification-item unread" data-id="' + n.id + '">'
-                + '<div class="notification-title">'
-                +   '<strong>' + (n.product_name || '') + '</strong>'
-                +   '<span class="notification-time">' + (n.time_ago || '') + '</span>'
-                + '</div>'
-                + '<div class="notification-message">'
-                +   '<b>Reported by:</b> ' + (n.user_name || '') + '<br>'
-                +   '<b>Current Stock:</b> ' + stockLabel + ' (Min: ' + n.min_stock_level + ')<br>'
-                +   '<small>' + ((n.message||'').substring(0,120)) + ((n.message||'').length>120?'…':'') + '</small>'
-                + '</div>'
-                + '<div class="notification-buttons">'
-                +   actionBtn
-                +   '<button class="btn-read" onclick="markRead(' + n.id + ')"><i class="fas fa-check"></i> Mark Read</button>'
-                + '</div>'
-                + '</div>';
-        });
+            var shortMsg = (n.message || '').substring(0, 100);
+            if ((n.message || '').length > 100) shortMsg += '...';
+
+            html += '<div class="notification-item unread" data-nid="' + n.id + '">' +
+                '<div class="notification-title">' +
+                '<strong>' + escapeHtml(n.product_name) + '</strong>' +
+                '<span class="notification-time">' + (n.time_ago || '') + '</span>' +
+                '</div>' +
+                '<div class="notification-message">' +
+                '<strong>Reported by: </strong>' + escapeHtml(n.user_name) + '<br>' +
+                '<strong>Current Stock: </strong>' + stockLabel + ' (Min: ' + n.min_stock_level + ')<br>' +
+                '<small>' + escapeHtml(shortMsg) + '</small>' +
+                '</div>' +
+                '<div class="notification-buttons">' +
+                actionBtn +
+                '<button class="btn-read" onclick="markAsRead(' + n.id + ')">' +
+                '<i class="fas fa-check"></i> Mark Read</button>' +
+                '</div>' +
+                '</div>';
+        }
         list.innerHTML = html;
     }
-    function markAsRead(reportId) {
-        fetch('{{ route("admin.stock.report.read") }}', {
+
+    function updateTableRow(reportId) {
+        var buttons = document.querySelectorAll('.btn-mark-read');
+        for (var i = 0; i < buttons.length; i++) {
+            var btn = buttons[i];
+            var onclickAttr = btn.getAttribute('onclick') || '';
+            if (onclickAttr.indexOf(String(reportId)) !== -1) {
+                var tr = btn.closest('tr');
+                if (tr) {
+                    var tds = tr.querySelectorAll('td');
+                    if (tds.length >= 4) {
+                        tds[3].innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
+                    }
+                    btn.remove();
+                }
+                break;
+            }
+        }
+    }
+
+    function checkEmptyList() {
+        var list = document.getElementById('notificationList');
+        if (list && list.querySelectorAll('.notification-item').length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
+        }
+    }
+
+    // ========== GLOBAL FUNCTIONS ==========
+    markAsRead = function(reportId) {
+        getCSRF();
+
+        fetch('/admin/stock-report/mark-read', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             body: JSON.stringify({ report_id: reportId })
         })
-        .then(function(response) { return response.json(); })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
         .then(function(data) {
             if (data.success) {
-                var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
+                var item = document.querySelector('.notification-item[data-nid="' + reportId + '"]');
                 if (item) {
                     item.style.opacity = '0';
                     item.style.transition = 'opacity 0.3s ease';
                     setTimeout(function() {
-                        item.remove();
-                        var list = document.getElementById('notificationList');
-                        if (list && list.querySelectorAll('.notification-item').length === 0) {
-                            list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
-                        }
+                        if (item.parentElement) item.remove();
+                        checkEmptyList();
                     }, 300);
                 }
+
+                updateTableRow(reportId);
+
+                lastUnreadCount = -1;
                 fetchNotifications();
             } else {
-                alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
+                alert('Failed: ' + (data.message || 'Unknown error'));
             }
         })
-        .catch(function(error) { console.error('Error:', error); });
-    }
-
-    var bellEl     = document.getElementById('notificationBell');
-    var dropdownEl = document.getElementById('notificationDropdown');
-    if (bellEl) {
-        bellEl.onclick = function(e) {
-            e.stopPropagation();
-            dropdownEl.classList.toggle('show');
-            if (dropdownEl.classList.contains('show')) fetchNotifications();
-        };
-    }
-    document.addEventListener('click', function(){
-        if (dropdownEl) dropdownEl.classList.remove('show');
-    });
-
-    // Pagination
-    function renderPagination() {
-        var cur  = parseInt(document.getElementById('currentPage').value);
-        var last = parseInt(document.getElementById('lastPage').value);
-        var cont = document.getElementById('customPagination');
-        if (!cont || last <= 1) return;
-        var html = '<div class="custom-pagination">';
-        html += cur > 1 ? '<a data-page="' + (cur-1) + '">&lt;</a>' : '<span>&lt;</span>';
-        var s = Math.max(1,cur-2), e = Math.min(last,cur+2);
-        if (cur<=3) e = Math.min(last,5);
-        if (cur>=last-2) s = Math.max(1,last-4);
-        if (s>1) { html += '<a data-page="1">1</a>'; if (s>2) html += '<span>…</span>'; }
-        for (var i=s;i<=e;i++) html += (i===cur) ? '<span class="page-active">'+i+'</span>' : '<a data-page="'+i+'">'+i+'</a>';
-        if (e<last) { if(e<last-1) html+='<span>…</span>'; html+='<a data-page="'+last+'">'+last+'</a>'; }
-        html += cur < last ? '<a data-page="' + (cur+1) + '">&gt;</a>' : '<span>&gt;</span>';
-        html += '</div>';
-        cont.innerHTML = html;
-        cont.querySelectorAll('a[data-page]').forEach(function(a){
-            a.onclick = function(e){
-                e.preventDefault();
-                var url = new URL(window.location.href);
-                url.searchParams.set('page', this.dataset.page);
-                window.location.href = url;
-            };
+        .catch(function(error) {
+            console.error('Mark as read error:', error);
+            alert('Network error. Please try again.');
         });
+    };
+
+    createPurchaseOrder = function(productId, productName, reportId) {
+        if (confirm('Create Purchase Order for "' + productName + '"?\n\nYou will be redirected to the Purchases page.')) {
+            window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId +
+                '&product_name=' + encodeURIComponent(productName) +
+                (reportId ? '&report_id=' + reportId : '');
+        }
+    };
+
+    editProductAndReduceStock = function(productId, productName, damageQuantity, reportId) {
+        var msg = 'Product: ' + productName + '\n' +
+            'Damaged Quantity: ' + damageQuantity + ' units\n\n' +
+            'Click OK to edit product and reduce stock by ' + damageQuantity + ' units.';
+        
+        if (!confirm(msg)) return;
+
+        window.location.href = '/admin/products?edit_damage=1&product_id=' + productId +
+            '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
+    };
+
+    // ========== INIT ==========
+    function initNotifications() {
+        var bell = document.getElementById('notificationBell');
+        var dropdown = document.getElementById('notificationDropdown');
+
+        if (bell && dropdown) {
+            bell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                if (dropdown.classList.contains('show')) {
+                    lastUnreadCount = -1;
+                    fetchNotifications();
+                }
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (dropdown && bell && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        if (pollTimer) clearInterval(pollTimer);
+        fetchNotifications();
+        pollTimer = setInterval(fetchNotifications, 10000);
     }
 
-    document.addEventListener('DOMContentLoaded', function(){
-        autoCloseSessionAlerts();
-        renderPagination();
-        fetchNotifications();
-        setInterval(fetchNotifications, 10000);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNotifications);
+    } else {
+        initNotifications();
+    }
+})();
+
+// ==================== ALERT HELPERS ====================
+function showAlertMessage(message, type) {
+    var alertContainer = document.getElementById('dynamicAlertContainer');
+    if (!alertContainer) return;
+    
+    var alertDiv = document.createElement('div');
+    alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+    alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display=\'none\'">&times;</button>';
+    
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alertDiv);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    setTimeout(function() {
+        if (alertDiv && alertDiv.parentElement) {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+            }, 500);
+        }
+    }, 3000);
+}
+
+function autoCloseSessionAlerts() {
+    var sessionAlerts = document.querySelectorAll('.session-alert');
+    sessionAlerts.forEach(function(alert) {
+        setTimeout(function() {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alert && alert.parentElement) alert.remove();
+            }, 500);
+        }, 3000);
     });
-    </script>
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(msg, color) {
+    var old = document.querySelector('.toast-message');
+    if (old) old.remove();
+    var t = document.createElement('div');
+    t.className = 'toast-message';
+    t.style.background = color || '#28a745';
+    t.innerHTML = '<i class="fas fa-info-circle"></i> ' + msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ if (t.parentElement) t.remove(); }, 3500);
+}
+
+// ==================== PRODUCTS PAGE LOGIC ====================
+var CSRF = document.querySelector('meta[name="csrf-token"]').content;
+
+var allProducts = [];
+try { allProducts = JSON.parse(document.getElementById('productData').dataset.products); }
+catch(e) {}
+
+function performSearch() {
+    var q  = document.getElementById('searchInput').value.trim();
+    var st = document.getElementById('filterStatus').value;
+    var url = new URL(window.location.href);
+    if (q)  url.searchParams.set('search', q); else url.searchParams.delete('search');
+    if (st && st !== 'all') url.searchParams.set('status', st); else url.searchParams.delete('status');
+    url.searchParams.delete('page');
+    window.location.href = url;
+}
+
+function applyFilter() { performSearch(); }
+
+// Autocomplete
+var siEl  = document.getElementById('searchInput');
+var acDdEl = document.getElementById('autocompleteDropdown');
+var acTimer;
+
+function showSuggestions() {
+    var q = (siEl.value || '').trim().toLowerCase();
+    if (!q) { acDdEl.classList.remove('show'); return; }
+    var matches = allProducts.filter(function(p){ return (p.product_name||'').toLowerCase().indexOf(q) !== -1; }).slice(0,10);
+    if (!matches.length) {
+        acDdEl.innerHTML = '<div class="no-results">No products matching "' + escapeHtml(q) + '"</div>';
+    } else {
+        acDdEl.innerHTML = matches.map(function(p){
+            var hl = p.product_name.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')','gi'), '<strong>$1</strong>');
+            return '<div class="autocomplete-item" onclick="selectProduct(\'' + p.product_name.replace(/'/g,"\\'") + '\')">' +
+                   hl + '<div class="autocomplete-price">₱' + parseFloat(p.price).toLocaleString() + '</div></div>';
+        }).join('');
+    }
+    acDdEl.classList.add('show');
+}
+
+function selectProduct(name) { siEl.value = name; acDdEl.classList.remove('show'); performSearch(); }
+
+if (siEl) {
+    siEl.addEventListener('input', function(){ clearTimeout(acTimer); acTimer = setTimeout(showSuggestions, 300); });
+    siEl.addEventListener('keypress', function(e){ if (e.key==='Enter'){ acDdEl.classList.remove('show'); performSearch(); } });
+}
+document.addEventListener('click', function(e){
+    if (acDdEl && siEl && !siEl.contains(e.target) && !acDdEl.contains(e.target)) acDdEl.classList.remove('show');
+});
+
+// Description toggle
+document.querySelectorAll('.toggle-description').forEach(function(l){
+    l.onclick = function(e){
+        e.preventDefault();
+        var p  = this.closest('.description-cell');
+        var sh = p.querySelector('.short-desc');
+        var fu = p.querySelector('.full-desc');
+        if (fu.style.display === 'none' || !fu.style.display) {
+            sh.style.display = 'none'; fu.style.display = 'inline'; this.textContent = 'Show less';
+        } else {
+            sh.style.display = 'inline'; fu.style.display = 'none'; this.textContent = 'Show more';
+        }
+    };
+});
+
+// Modal helpers 
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.getElementById('open_modal').onclick = function(){ openModal('modal_container'); };
+document.getElementById('close_modal').onclick = function(){ closeModal('modal_container'); };
+document.getElementById('modal_container').onclick = function(e){ if(e.target===this) closeModal('modal_container'); };
+
+document.getElementById('close_edit_modal').onclick = function(){ closeEditModalClean(); };
+document.getElementById('edit_modal_container').onclick = function(e){ if(e.target===this) closeEditModalClean(); };
+
+function closeEditModalClean() {
+    closeModal('edit_modal_container');
+    removeDamageNotice();
+    restoreAllFields();
+}
+
+var LOCK_FIELDS = ['edit_product_name','edit_description','edit_category_id','edit_supplier_id','edit_price','edit_min_stock'];
+
+function lockFieldsForDamage() {
+    LOCK_FIELDS.forEach(function(id) {
+        var f = document.getElementById(id);
+        if (!f) return;
+        f.setAttribute('readonly', true);
+        f.classList.add('field-readonly-visual');
+        if (f.tagName === 'SELECT' || f.tagName === 'TEXTAREA') {
+            f.style.pointerEvents = 'none';
+            f.style.opacity = '0.6';
+            f.style.cursor = 'not-allowed';
+        }
+    });
+    var qty = document.getElementById('edit_quantity');
+    if (qty) {
+        qty.removeAttribute('readonly');
+        qty.style.pointerEvents = '';
+        qty.style.opacity = '';
+        qty.style.cursor = '';
+        qty.classList.remove('field-readonly-visual');
+    }
+    var lockIcon = document.getElementById('quantityLockIcon');
+    if (lockIcon) lockIcon.style.display = 'none';
+}
+
+function restoreAllFields() {
+    var all = ['edit_product_name','edit_description','edit_category_id','edit_supplier_id',
+            'edit_price','edit_min_stock','edit_quantity'];
+    all.forEach(function(id) {
+        var f = document.getElementById(id);
+        if (!f) return;
+        f.removeAttribute('readonly');
+        f.classList.remove('field-readonly-visual', 'damage-highlight');
+        f.style.pointerEvents = '';
+        f.style.opacity = '';
+        f.style.cursor = '';
+    });
+    var qty = document.getElementById('edit_quantity');
+    if (qty) {
+        qty.setAttribute('readonly', true);
+        qty.classList.add('field-readonly-visual');
+        qty.style.cursor = 'not-allowed';
+    }
+    var lockIcon = document.getElementById('quantityLockIcon');
+    if (lockIcon) lockIcon.style.display = 'inline';
+    var hint = document.getElementById('quantityHint');
+    if (hint) hint.style.display = 'none';
+}
+
+function removeDamageNotice() {
+    var n = document.querySelector('#editModalBody .damage-notice');
+    if (n) n.remove();
+}
+
+// Edit product (normal)
+function editProduct(productId) {
+    showToast('Loading product...', '#17a2b8');
+    
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var token = csrfMeta ? csrfMeta.content : CSRF;
+    
+    fetch('/admin/product/' + productId + '/data', {
+        headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (!data.success || !data.product) {
+            alert('Error loading product: ' + (data.message || 'Unknown error'));
+            return;
+        }
+        var p = data.product;
+        document.getElementById('edit_product_name').value  = p.product_name    || '';
+        document.getElementById('edit_description').value   = p.description     || '';
+        document.getElementById('edit_price').value         = p.price           || '';
+        document.getElementById('edit_quantity').value      = p.quantity        || '';
+        document.getElementById('edit_min_stock').value     = p.min_stock_level || '';
+        document.getElementById('edit_category_id').value   = p.category_id     || '';
+        document.getElementById('edit_supplier_id').value   = p.supplier_id     || '';
+        document.getElementById('edit_damage_report_id').value = '';
+        document.getElementById('editProductForm').action   = '/admin/product/update/' + p.id;
+
+        removeDamageNotice();
+        restoreAllFields(); 
+        openModal('edit_modal_container');
+        showToast('Product loaded!', '#28a745');
+    })
+    .catch(function(err) { alert('Error: ' + err.message); });
+}
+
+// Edit product for DAMAGE
+function loadDamageEditForm(productId, damageQty, reportId) {
+    damageQty = parseInt(damageQty) || 1;
+    showToast('Loading damage report...', '#fd7e14');
+
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var token = csrfMeta ? csrfMeta.content : CSRF;
+
+    fetch('/admin/product/' + productId + '/data', {
+        headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (!data.success || !data.product) {
+            alert('Product not found');
+            return;
+        }
+        var p = data.product;
+
+        document.getElementById('edit_product_name').value  = p.product_name    || '';
+        document.getElementById('edit_description').value   = p.description     || '';
+        document.getElementById('edit_price').value         = p.price           || '';
+        document.getElementById('edit_min_stock').value     = p.min_stock_level || '';
+        document.getElementById('edit_category_id').value   = p.category_id     || '';
+        document.getElementById('edit_supplier_id').value   = p.supplier_id     || '';
+        document.getElementById('edit_damage_report_id').value = reportId || '';
+        document.getElementById('editProductForm').action   = '/admin/product/update/' + p.id;
+
+        var currentStock = parseInt(p.quantity) || 0;
+        var newStock = Math.max(0, currentStock - damageQty);
+        var qty = document.getElementById('edit_quantity');
+        qty.value = newStock;
+        qty.classList.add('damage-highlight');
+
+        var hint = document.getElementById('quantityHint');
+        if (hint) {
+            hint.style.display = 'block';
+            hint.innerHTML = 'Auto-deducted: ' + currentStock + ' - ' + damageQty + ' = <strong>' + newStock + '</strong> units';
+        }
+
+        removeDamageNotice();
+        lockFieldsForDamage();
+
+        var notice = document.createElement('div');
+        notice.className = 'damage-notice';
+        notice.innerHTML =
+            '<i class="fas fa-exclamation-triangle"></i> <strong>DAMAGE REPORT MODE</strong><br>' +
+            'Damaged: <strong>' + damageQty + '</strong> units - ' +
+            'New stock: <strong>' + newStock + '</strong> units<br>' +
+            '<small>All fields are locked. Click "Update Product" to confirm.</small>';
+        var body = document.getElementById('editModalBody');
+        body.insertBefore(notice, body.firstChild);
+
+        openModal('edit_modal_container');
+        showToast('Ready - click Update Product to confirm deduction', '#fd7e14');
+    })
+    .catch(function(err) { alert('Error: ' + err.message); });
+}
+
+// Expose globally
+window.editProduct = editProduct;
+
+// Check URL params for damage mode
+(function checkUrlParams(){
+    var params = new URLSearchParams(window.location.search);
+    var pid  = params.get('product_id');
+    var dqty = params.get('damage_qty');
+    var rid  = params.get('report_id');
+    if (pid && dqty) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setTimeout(function(){ loadDamageEditForm(pid, parseInt(dqty), rid); }, 600);
+    }
+})();
+
+// Pagination
+function renderPagination() {
+    var cur  = parseInt(document.getElementById('currentPage').value);
+    var last = parseInt(document.getElementById('lastPage').value);
+    var cont = document.getElementById('customPagination');
+    if (!cont || last <= 1) return;
+    
+    var html = '<div class="custom-pagination">';
+    html += cur > 1 ? '<a data-page="' + (cur-1) + '">&lt;</a>' : '<span>&lt;</span>';
+    var s = Math.max(1,cur-2), e = Math.min(last,cur+2);
+    if (cur<=3) e = Math.min(last,5);
+    if (cur>=last-2) s = Math.max(1,last-4);
+    if (s>1) { html += '<a data-page="1">1</a>'; if (s>2) html += '<span>...</span>'; }
+    for (var i=s;i<=e;i++) html += (i===cur) ? '<span class="page-active">'+i+'</span>' : '<a data-page="'+i+'">'+i+'</a>';
+    if (e<last) { if(e<last-1) html+='<span>...</span>'; html+='<a data-page="'+last+'">'+last+'</a>'; }
+    html += cur < last ? '<a data-page="' + (cur+1) + '">&gt;</a>' : '<span>&gt;</span>';
+    html += '</div>';
+    cont.innerHTML = html;
+    cont.querySelectorAll('a[data-page]').forEach(function(a){
+        a.onclick = function(e){
+            e.preventDefault();
+            var url = new URL(window.location.href);
+            url.searchParams.set('page', this.dataset.page);
+            window.location.href = url;
+        };
+    });
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded', function(){
+    autoCloseSessionAlerts();
+    renderPagination();
+});
+</script>
 </body>
 </html>

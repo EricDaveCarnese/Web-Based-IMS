@@ -1341,462 +1341,722 @@
     <div id="suggestionData" style="display:none;" data-suggestions='@json(array_unique(array_merge(\App\Models\Product::pluck("product_name")->toArray(), \App\Models\StockReport::distinct()->pluck("user_name")->toArray())))'></div>
 
     <script>
-        function showAlertMessage(message, type) {
-            var alertContainer = document.getElementById('dynamicAlertContainer');
-            if (!alertContainer) return;
-            
-            var alertDiv = document.createElement('div');
-            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
-            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
-            
-            alertContainer.innerHTML = '';
-            alertContainer.appendChild(alertDiv);
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            setTimeout(function() {
-                if (alertDiv && alertDiv.parentElement) {
-                    alertDiv.style.opacity = '0';
-                    alertDiv.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
-                    }, 500);
-                }
-            }, 3000);
-        }
+// ==================== GLOBAL VARIABLES ====================
+var markAsRead, createPurchaseOrder, openDamageEditModal;
 
-        function autoCloseSessionAlerts() {
-            var sessionAlerts = document.querySelectorAll('.session-alert');
-            sessionAlerts.forEach(function(alert) {
-                setTimeout(function() {
-                    alert.style.opacity = '0';
-                    alert.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        if (alert && alert.parentElement) alert.remove();
-                    }, 500);
-                }, 3000);
-            });
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            // Stock by Category Chart
-            var categoryData = [];
-            try { var categoryEl = document.getElementById('categoryData'); if(categoryEl) categoryData = JSON.parse(categoryEl.getAttribute('data-categories') || '[]'); } catch(e) { console.error('Category data error:', e); }
-            var stockChartCanvas = document.getElementById('stockChart');
-            if (stockChartCanvas && categoryData && categoryData.length > 0) {
-                var labels = [], data = [], totalProducts = 0;
-                var colors = ['#2c6e62','#3a8f7e','#48b09a','#5cc4ac','#70d8be','#1a5c52','#4a7c72','#6b9c92','#8bbcb2','#a3d4ca'];
-                for (var i = 0; i < categoryData.length; i++) {
-                    labels.push(categoryData[i].category_name);
-                    var count = categoryData[i].products_count || 0;
-                    data.push(count);
-                    totalProducts += count;
-                }
-                new Chart(stockChartCanvas.getContext('2d'), { type: 'pie', data: { labels: labels, datasets: [{ data: data, backgroundColor: colors.slice(0, labels.length), borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { var p = totalProducts > 0 ? ((ctx.raw / totalProducts) * 100).toFixed(1) : 0; return ctx.label + ': ' + ctx.raw + ' (' + p + '%)'; } } } } } });
-                var categoriesList = document.getElementById('categoriesList');
-                if(categoriesList) {
-                    categoriesList.innerHTML = '';
-                    for (var i = 0; i < labels.length; i++) {
-                        var percentage = totalProducts > 0 ? ((data[i] / totalProducts) * 100).toFixed(1) : 0;
-                        var categoryItem = document.createElement('div');
-                        categoryItem.className = 'category-item';
-                        categoryItem.innerHTML = '<div class="category-name"><div class="category-color" style="background:' + colors[i % colors.length] + '"></div><span>' + labels[i] + '</span></div><div class="category-stats">' + data[i] + ' (' + percentage + '%)</div>';
-                        categoriesList.appendChild(categoryItem);
-                    }
-                }
-            } else {
-                // No category data — hide pie, center message
-                var pieSection = document.querySelector('.pie-chart-section');
-                if (pieSection) pieSection.style.display = 'none';
-                var categoriesList = document.getElementById('categoriesList');
-                if (categoriesList) {
-                    categoriesList.style.cssText = 'display:flex; align-items:center; justify-content:center; width:100%; min-height:200px; color:#999; font-size:14px; text-align:center;';
-                    categoriesList.innerHTML = '<div><i class="fas fa-chart-pie" style="font-size:40px; margin-bottom:10px; display:block; opacity:0.3;"></i>No category data</div>';
-                }
+// ==================== NOTIFICATION SYSTEM (SELF-EXECUTING) ====================
+(function() {
+    var CSRF = '';
+    var lastUnreadCount = -1;
+    var pollTimer = null;
+
+    function getCSRF() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) CSRF = meta.content;
+        return CSRF;
+    }
+
+    function fetchNotifications() {
+        getCSRF();
+
+        fetch('/admin/stock-reports/notifications', {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (!data.success) return;
 
-            // Sales Performance Chart
-            var salesData = [];
-            try { var salesChartEl = document.getElementById('salesChartData'); if(salesChartEl) salesData = JSON.parse(salesChartEl.getAttribute('data-sales') || '[]'); } catch(e) { console.error('Sales data error:', e); }
-            var salesChartCanvas = document.getElementById('salesPerformanceChart');
-            if (salesChartCanvas) {
-                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                var salesValues = Array(12).fill(0);
-                for (var i = 0; i < salesData.length; i++) { if (salesData[i] && salesData[i].month) salesValues[salesData[i].month - 1] = salesData[i].total || 0; }
-                new Chart(salesChartCanvas.getContext('2d'), { type: 'line', data: { labels: months, datasets: [{ label: 'Sales Revenue', data: salesValues, borderColor: '#2c6e62', backgroundColor: 'rgba(44,110,98,0.1)', borderWidth: 3, fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return '₱' + ctx.raw.toLocaleString(); } } } } } });
+            updateBell(data.unread_count);
+
+            var dropdown = document.getElementById('notificationDropdown');
+            var isOpen = dropdown && dropdown.classList.contains('show');
+
+            if (data.unread_count !== lastUnreadCount || isOpen) {
+                renderDropdown(data.notifications);
+                lastUnreadCount = data.unread_count;
             }
-
-            // Search and Filter functionality
-            const searchInput = document.getElementById('searchInput');
-            const statusFilter = document.getElementById('statusFilter');
-            function filterAndDisplay() {
-            const searchTerm = searchInput?.value.toLowerCase() || '';
-            const statusValue = statusFilter?.value || 'all';
-            const rows = document.querySelectorAll('#transactionsTableBody tr');
-            let visibleCount = 0;
-
-            rows.forEach(row => {
-                if (row.id === 'noResultsRow') return;
-
-                const product = row.cells[2]?.textContent.toLowerCase() || '';
-                const category = row.cells[3]?.textContent.toLowerCase() || '';
-                const status = row.cells[6]?.textContent.toLowerCase() || '';
-                let show = true;
-                if (statusValue !== 'all' && status !== statusValue) show = false;
-                if (searchTerm && !product.includes(searchTerm) && !category.includes(searchTerm)) show = false;
-                row.style.display = show ? '' : 'none';
-                if (show) visibleCount++;
-            });
-
-            const tbody = document.getElementById('transactionsTableBody');
-            let noResultsRow = document.getElementById('noResultsRow');
-
-            if (visibleCount === 0) {
-                if (!noResultsRow) {
-                    noResultsRow = document.createElement('tr');
-                    noResultsRow.id = 'noResultsRow';
-                    noResultsRow.innerHTML = `<td colspan="8" style="text-align:center; padding:40px;">
-                        <i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i>
-                        <p>No transactions found</p>
-                    </td>`;
-                    tbody.appendChild(noResultsRow);
-                }
-                noResultsRow.style.display = '';
-            } else {
-                if (noResultsRow) noResultsRow.style.display = 'none';
-            }
-        }
-            if (searchInput) searchInput.addEventListener('keyup', filterAndDisplay);
-            if (statusFilter) statusFilter.addEventListener('change', filterAndDisplay);
+        })
+        .catch(function(error) {
+            console.error('Notification fetch error:', error);
         });
+    }
 
-        //VIEW TRANSACTION DETAILS
-        function viewSaleDetails(id) {
-            if (!id || id === '') { 
-                alert('No reference ID available for this transaction'); 
-                return; 
-            }
-            
-            const modal = document.getElementById('saleDetailsModal');
-            modal.classList.add('show');
-            document.getElementById('sale_detail_id').textContent = id;
-            document.getElementById('sale_cashier').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            document.getElementById('sale_date_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            document.getElementById('sale_status_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            document.getElementById('sale_total').textContent = '₱0.00';
-            document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...</td></tr>';
-            
-            fetch('/admin/sale/details/' + id, { 
-                method: 'GET', 
-                headers: { 
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
-                    'X-Requested-With': 'XMLHttpRequest', 
-                    'Accept': 'application/json' 
-                }, 
-                credentials: 'same-origin' 
-            })
-            .then(function(response) { 
-                if (!response.ok) throw new Error('HTTP ' + response.status); 
-                return response.json(); 
-            })
-            .then(function(sale) {
-                if (sale.error) throw new Error(sale.error);
-                document.getElementById('sale_cashier').innerHTML = sale.user?.fullname || 'N/A';
-                document.getElementById('sale_date_display').innerHTML = sale.sale_date || 'N/A';
-                var statusClass = sale.status === 'completed' ? 'badge-success' : 'badge-warning';
-                var statusLabel = sale.status ? sale.status.charAt(0).toUpperCase() + sale.status.slice(1) : 'Unknown';
-                document.getElementById('sale_status_display').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
-                document.getElementById('sale_total').innerHTML = '₱' + parseFloat(sale.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 });
-                var details = sale.sale_details || [];
-                var totalUnits = 0;
-                for (var i = 0; i < details.length; i++) totalUnits += details[i].quantity;
-                document.getElementById('sale_items_count').innerHTML = '(' + details.length + ' product type' + (details.length !== 1 ? 's' : '') + ', ' + totalUnits + ' unit' + (totalUnits !== 1 ? 's' : '') + ')';
-                if (details.length === 0) { document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>'; return; }
-                var html = '';
-                for (var i = 0; i < details.length; i++) {
-                    var item = details[i];
-                    html += '<tr>'
-                        + '<td>' + (i + 1) + '</td>'
-                        + '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '</td>'
-                        + '<td style="text-align:center">' + item.quantity + '</td>'
-                        + '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>'
-                        + '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>'
-                        + '</tr>';
-                }
-                document.getElementById('sale_items_table').innerHTML = html;
-            })
-            .catch(function(err) { 
-                console.error('Sale details error:', err); 
-                document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading sale details: ' + err.message + '</td></tr>'; 
-            });
+    function updateBell(count) {
+        var bell = document.getElementById('notificationBell');
+        if (!bell) return;
+
+        var badge = bell.querySelector('.notification-badge');
+        
+        if (!badge && count > 0) {
+            badge = document.createElement('span');
+            badge.className = 'notification-badge';
+            bell.appendChild(badge);
         }
 
-        function viewPurchaseDetails(id) {
-            if (!id || id === '') { 
-                alert('No reference ID available for this purchase'); 
-                return; 
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
             }
-            
-            const modal = document.getElementById('purchaseDetailsModal');
-            modal.classList.add('show');
-            document.getElementById('purchase_id').textContent = id;
-            document.getElementById('purchase_supplier').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            document.getElementById('purchase_date').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            document.getElementById('purchase_batch').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            document.getElementById('purchase_status').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-            document.getElementById('purchase_total').textContent = '₱0.00';
-            document.getElementById('purchase_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading purchase details...</td></tr>';
-            
-            fetch('/admin/purchase/details/' + id, { 
-                method: 'GET', 
-                headers: { 
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
-                    'X-Requested-With': 'XMLHttpRequest', 
-                    'Accept': 'application/json' 
-                }, 
-                credentials: 'same-origin' 
-            })
-            .then(function(response) { 
-                if (!response.ok) throw new Error('HTTP ' + response.status); 
-                return response.json(); 
-            })
-            .then(function(data) {
-                if (data.error) throw new Error(data.error);
-                
-                document.getElementById('purchase_supplier').innerHTML = data.supplier_name || 'N/A';
-                document.getElementById('purchase_date').innerHTML = data.order_date || 'N/A';
-                document.getElementById('purchase_batch').innerHTML = data.batch_number || 'N/A';
-                
-                var statusClass = data.status === 'completed' ? 'badge-success' : (data.status === 'pending' ? 'badge-warning' : 'badge');
-                var statusLabel = data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Unknown';
-                document.getElementById('purchase_status').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
-                
-                var items = [];
-                var total = 0;
-                
-                if (data.items && data.items.length > 0) {
-                    items = data.items;
-                    total = data.total_amount || 0;
-                } 
-                else if (data.product_name) {
-                    items = [{
-                        product_name: data.product_name,
-                        quantity: data.quantity || 0,
-                        cost_price: data.cost_price || 0,
-                        total: data.total || 0
-                    }];
-                    total = data.total || 0;
-                }
-                
-                if (items.length === 0) { 
-                    document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>'; 
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    function renderDropdown(notifs) {
+        var list = document.getElementById('notificationList');
+        if (!list) return;
+
+        if (!notifs || notifs.length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < notifs.length; i++) {
+            var n = notifs[i];
+            var isDamage = n.is_damage || (n.message && n.message.indexOf('DAMAGE REPORT') !== -1);
+            var isResolved = n.is_resolved || n.status === 'resolved';
+            var dqty = n.damage_quantity || 1;
+            var safeName = (n.product_name || '').replace(/'/g, "\\'");
+
+            var actionBtn = '';
+            if (isDamage) {
+                if (isResolved) {
+                    actionBtn = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
                 } else {
-                    var itemsHtml = '';
-                    for (var i = 0; i < items.length; i++) {
-                        var item = items[i];
-                        itemsHtml += '<tr>' +
-                            '<td>' + (i + 1) + '</td>' +
-                            '<td>' + escapeHtml(item.product_name || 'N/A') + '</td>' +
-                            '<td style="text-align:center">' + (item.quantity || 0) + '</td>' +
-                            '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
-                            '<td style="text-align:right">₱' + parseFloat(item.total || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
-                        '</tr>';
+                    actionBtn = '<button class="btn-edit-damage" onclick="openDamageEditModal(' +
+                        n.product_id + ',\'' + safeName + '\',' + dqty + ',' + n.id +
+                        ')"><i class="fas fa-edit"></i> Edit &amp; Reduce (' + dqty + ' units)</button>';
+                }
+            } else {
+                actionBtn = '<button class="btn-order" onclick="createPurchaseOrder(' +
+                    n.product_id + ',\'' + safeName + '\',' + n.id +
+                    ')"><i class="fas fa-shopping-cart"></i> Create PO</button>';
+            }
+
+            var stockLabel = (n.current_stock === 0)
+                ? '<span style="color:#dc3545;font-weight:bold;">OUT OF STOCK</span>'
+                : n.current_stock + ' units';
+
+            var shortMsg = (n.message || '').substring(0, 100);
+            if ((n.message || '').length > 100) shortMsg += '...';
+
+            html += '<div class="notification-item unread" data-nid="' + n.id + '">' +
+                '<div class="notification-title">' +
+                '<strong>' + escapeHtml(n.product_name) + '</strong>' +
+                '<span class="notification-time">' + (n.time_ago || '') + '</span>' +
+                '</div>' +
+                '<div class="notification-message">' +
+                '<strong>Reported by: </strong>' + escapeHtml(n.user_name) + '<br>' +
+                '<strong>Current Stock: </strong>' + stockLabel + ' (Min: ' + n.min_stock_level + ')<br>' +
+                '<small>' + escapeHtml(shortMsg) + '</small>' +
+                '</div>' +
+                '<div class="notification-buttons">' +
+                actionBtn +
+                '<button class="btn-read" onclick="markAsRead(' + n.id + ')">' +
+                '<i class="fas fa-check"></i> Mark Read</button>' +
+                '</div>' +
+                '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    function updateTableRow(reportId) {
+        var buttons = document.querySelectorAll('.btn-mark-read');
+        for (var i = 0; i < buttons.length; i++) {
+            var btn = buttons[i];
+            var onclickAttr = btn.getAttribute('onclick') || '';
+            if (onclickAttr.indexOf(String(reportId)) !== -1) {
+                var tr = btn.closest('tr');
+                if (tr) {
+                    var tds = tr.querySelectorAll('td');
+                    if (tds.length >= 4) {
+                        tds[3].innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
                     }
-                    document.getElementById('purchase_items_table').innerHTML = itemsHtml;
+                    btn.remove();
                 }
-                
-                document.getElementById('purchase_total').textContent = '₱' + parseFloat(total).toLocaleString(undefined, { minimumFractionDigits: 2 });
-            })
-            .catch(function(err) { 
-                console.error('Purchase details error:', err); 
-                document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error loading purchase details: ' + err.message + '</td></tr>'; 
-            });
+                break;
+            }
         }
+    }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            var div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+    function checkEmptyList() {
+        var list = document.getElementById('notificationList');
+        if (list && list.querySelectorAll('.notification-item').length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
         }
+    }
 
-        var saleModal = document.getElementById('saleDetailsModal');
-        var closeSaleModal = document.getElementById('close_sale_modal');
-        var purchaseModal = document.getElementById('purchaseDetailsModal');
-        var closePurchaseModal = document.getElementById('close_purchase_modal');
-        if (closeSaleModal) closeSaleModal.onclick = function() { saleModal.classList.remove('show'); };
-        if (saleModal) saleModal.onclick = function(e) { if (e.target === saleModal) saleModal.classList.remove('show'); };
-        if (closePurchaseModal) closePurchaseModal.onclick = function() { purchaseModal.classList.remove('show'); };
-        if (purchaseModal) purchaseModal.onclick = function(e) { if (e.target === purchaseModal) purchaseModal.classList.remove('show'); };
+    // ========== GLOBAL FUNCTIONS ==========
+    markAsRead = function(reportId) {
+        getCSRF();
 
-        //CUSTOM PAGINATION
-        function renderPagination() {
-            const currentPage = parseInt(document.getElementById('currentPage').value);
-            const lastPage = parseInt(document.getElementById('lastPage').value);
-            const paginationContainer = document.getElementById('customPagination');
-            if (!paginationContainer || lastPage <= 1) return;
-            let html = '<div class="custom-pagination">';
-            if (currentPage > 1) html += `<a href="#" class="page-link" data-page="${currentPage - 1}">&lt;</a>`;
-            else html += `<span class="page-disabled">&lt;</span>`;
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(lastPage, currentPage + 2);
-            if (currentPage <= 3) endPage = Math.min(lastPage, 5);
-            if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
-            if (startPage > 1) { html += `<a href="#" class="page-link" data-page="1">1</a>`; if (startPage > 2) html += `<span class="page-dots">...</span>`; }
-            for (let i = startPage; i <= endPage; i++) { if (i === currentPage) html += `<span class="page-active">${i}</span>`; else html += `<a href="#" class="page-link" data-page="${i}">${i}</a>`; }
-            if (endPage < lastPage) { if (endPage < lastPage - 1) html += `<span class="page-dots">...</span>`; html += `<a href="#" class="page-link" data-page="${lastPage}">${lastPage}</a>`; }
-            if (currentPage < lastPage) html += `<a href="#" class="page-link" data-page="${currentPage + 1}">&gt;</a>`;
-            else html += `<span class="page-disabled">&gt;</span>`;
-            html += '</div>';
-            paginationContainer.innerHTML = html;
-            document.querySelectorAll('.page-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = this.getAttribute('data-page');
-                    if (page) { const url = new URL(window.location.href); url.searchParams.set('page', page); window.location.href = url.toString(); }
-                });
-            });
-        }
-
-        function showToastMessage(message, bgColor) {
-            var toast = document.createElement('div');
-            toast.className = 'toast-message';
-            toast.style.background = bgColor || '#28a745';
-            toast.innerHTML = '<i class="fas fa-info-circle"></i> ' + message;
-            document.body.appendChild(toast);
-            setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
-        }
-
-        //NOTIFICATION FUNCTIONS
-        function fetchNotifications() {
-            fetch('/admin/stock-reports/notifications', { method: 'GET', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    updateNotificationBell(data.unread_count);
-                    renderNotificationDropdown(data.notifications);
+        fetch('/admin/stock-report/mark-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ report_id: reportId })
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                var item = document.querySelector('.notification-item[data-nid="' + reportId + '"]');
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transition = 'opacity 0.3s ease';
+                    setTimeout(function() {
+                        if (item.parentElement) item.remove();
+                        checkEmptyList();
+                    }, 300);
                 }
-            })
-            .catch(function(error) { console.error('Error:', error); });
-        }
-        
-        function updateNotificationBell(count) {
-            var badge = document.querySelector('.notification-badge');
-            if (badge) {
-                badge.style.display = count > 0 ? 'flex' : 'none';
-                if (count > 0) badge.textContent = count;
+
+                updateTableRow(reportId);
+
+                lastUnreadCount = -1;
+                fetchNotifications();
+            } else {
+                alert('Failed: ' + (data.message || 'Unknown error'));
             }
+        })
+        .catch(function(error) {
+            console.error('Mark as read error:', error);
+            alert('Network error. Please try again.');
+        });
+    };
+
+    createPurchaseOrder = function(productId, productName, reportId) {
+        if (confirm('Create purchase order for "' + productName + '"?')) {
+            sessionStorage.setItem('prefill_product_id', productId);
+            sessionStorage.setItem('prefill_product_name', productName);
+            sessionStorage.setItem('prefill_report_id', reportId);
+            sessionStorage.setItem('prefill_from_stock_report', 'true');
+            window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId +
+                '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
         }
+    };
+
+    openDamageEditModal = function(productId, productName, damageQuantity, reportId) {
+        var msg = 'Product: ' + productName + '\n' +
+            'Damaged Quantity: ' + damageQuantity + ' units\n\n' +
+            'Click OK to edit product and reduce stock by ' + damageQuantity + ' units.';
         
-        function renderNotificationDropdown(notifications) {
-            var list = document.getElementById('notificationList');
-            if (!list) return;
-            if (!notifications || notifications.length === 0) {
-                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i><p>No pending stock reports</p></div>';
-                return;
-            }
-            var html = '';
-            for (var i = 0; i < notifications.length; i++) {
-                var notif = notifications[i];
-                var isDamage = notif.message && notif.message.includes('DAMAGE REPORT');
-                var actionButton = '';
-                
-                if (isDamage) {
-                    var damageQty = notif.damage_quantity || 1;
-                    if (notif.is_resolved) {
-                        actionButton = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
-                    } else {
-                        actionButton = '<button class="btn-edit-damage" onclick="openDamageEditModal(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + damageQty + ', ' + notif.id + ')"><i class="fas fa-edit"></i> Edit & Reduce (' + damageQty + ' units)</button>';
-                    }
-                } else {
-                    actionButton = '<button class="btn-order" onclick="createPurchaseOrder(' + notif.product_id + ', \'' + escapeHtml(notif.product_name).replace(/'/g, "\\'") + '\', ' + notif.id + ')"><i class="fas fa-shopping-cart"></i> Create PO</button>';
-                }
-                
-                html += `
-                    <div class="notification-item unread" data-id="${notif.id}">
-                        <div class="notification-title">
-                            <strong>${escapeHtml(notif.product_name)}</strong>
-                            <span class="notification-time">${notif.time_ago}</span>
-                        </div>
-                        <div class="notification-message">
-                            <strong>Reported by: </strong>${escapeHtml(notif.user_name)}<br>
-                            <strong>Current Stock: </strong>${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
-                            <small>${escapeHtml(notif.message.substring(0, 100))}${notif.message.length > 100 ? '...' : ''}</small>
-                        </div>
-                        <div class="notification-buttons">
-                            ${actionButton}
-                            <button class="btn-read" onclick="markAsRead(${notif.id})"><i class="fas fa-check"></i> Mark Read</button>
-                        </div>
-                    </div>
-                `;
-            }
-            list.innerHTML = html;
+        if (!confirm(msg)) return;
+
+        if (typeof showToastMessage === 'function') {
+            showToastMessage('Loading product for damage report...', '#fd7e14');
         }
+
+        sessionStorage.setItem('edit_product_id', productId);
+        sessionStorage.setItem('edit_product_name', productName);
+        sessionStorage.setItem('damage_quantity', damageQuantity);
+        sessionStorage.setItem('damage_report_id', reportId);
+        sessionStorage.setItem('edit_from_damage_report', 'true');
         
-        function openDamageEditModal(productId, productName, damageQuantity, reportId) {
-            var confirmMessage = 'Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.';
-            if (!confirm(confirmMessage)) {
-                return; 
-            }
-            
-            showToastMessage('Loading product for damage report (' + damageQuantity + ' units)...', '#fd7e14');
-            sessionStorage.setItem('edit_product_id', productId);
-            sessionStorage.setItem('edit_product_name', productName);
-            sessionStorage.setItem('damage_quantity', damageQuantity);
-            sessionStorage.setItem('damage_report_id', reportId);
-            sessionStorage.setItem('edit_from_damage_report', 'true');
-            window.location.href = '/admin/products?edit_damage=1&product_id=' + productId + '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
-        }
-        
-        function markAsRead(reportId) {
-            fetch('{{ route("admin.stock.report.read") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ report_id: reportId })
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
-                    if (item) {
-                        item.style.opacity = '0';
-                        item.style.transition = 'opacity 0.3s ease';
-                        setTimeout(function() {
-                            item.remove();
-                            var list = document.getElementById('notificationList');
-                            if (list && list.querySelectorAll('.notification-item').length === 0) {
-                                list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
-                            }
-                        }, 300);
-                    }
-                    fetchNotifications();
-                } else {
-                    alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(function(error) { console.error('Error:', error); });
-        }
-        
-        function createPurchaseOrder(productId, productName, reportId) {
-            if (confirm('Create purchase order for "' + productName + '"?')) {
-                sessionStorage.setItem('prefill_product_id', productId);
-                sessionStorage.setItem('prefill_product_name', productName);
-                sessionStorage.setItem('prefill_report_id', reportId);
-                sessionStorage.setItem('prefill_from_stock_report', 'true');
-                window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId + '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
-            }
-        }
-        
+        window.location.href = '/admin/products?edit_damage=1&product_id=' + productId +
+            '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
+    };
+
+    // ========== INIT ==========
+    function initNotifications() {
         var bell = document.getElementById('notificationBell');
         var dropdown = document.getElementById('notificationDropdown');
-        if (bell) {
-            bell.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); if (dropdown.classList.contains('show')) fetchNotifications(); });
+
+        if (bell && dropdown) {
+            bell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                if (dropdown.classList.contains('show')) {
+                    lastUnreadCount = -1;
+                    fetchNotifications();
+                }
+            });
         }
-        document.addEventListener('click', function() { if (dropdown) dropdown.classList.remove('show'); });
-        
-        autoCloseSessionAlerts();
-        renderPagination();
+
+        document.addEventListener('click', function(e) {
+            if (dropdown && bell && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        if (pollTimer) clearInterval(pollTimer);
         fetchNotifications();
-        setInterval(fetchNotifications, 10000);
-    </script>
+        pollTimer = setInterval(fetchNotifications, 10000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNotifications);
+    } else {
+        initNotifications();
+    }
+})();
+
+// ==================== ALERT & UI HELPERS ====================
+function showAlertMessage(message, type) {
+    var alertContainer = document.getElementById('dynamicAlertContainer');
+    if (!alertContainer) return;
+    
+    var alertDiv = document.createElement('div');
+    alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+    alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display=\'none\'">&times;</button>';
+    
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alertDiv);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    setTimeout(function() {
+        if (alertDiv && alertDiv.parentElement) {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+            }, 500);
+        }
+    }, 3000);
+}
+
+function autoCloseSessionAlerts() {
+    var sessionAlerts = document.querySelectorAll('.session-alert');
+    sessionAlerts.forEach(function(alert) {
+        setTimeout(function() {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alert && alert.parentElement) alert.remove();
+            }, 500);
+        }, 3000);
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToastMessage(message, bgColor) {
+    var toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.style.background = bgColor || '#28a745';
+    toast.innerHTML = '<i class="fas fa-info-circle"></i> ' + message;
+    document.body.appendChild(toast);
+    setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
+}
+
+// ==================== DASHBOARD CHARTS & TABLE ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // Stock by Category Chart
+    var categoryData = [];
+    try { 
+        var categoryEl = document.getElementById('categoryData'); 
+        if(categoryEl) categoryData = JSON.parse(categoryEl.getAttribute('data-categories') || '[]'); 
+    } catch(e) { 
+        console.error('Category data error:', e); 
+    }
+    
+    var stockChartCanvas = document.getElementById('stockChart');
+    if (stockChartCanvas && categoryData && categoryData.length > 0) {
+        var labels = [], data = [], totalProducts = 0;
+        var colors = ['#2c6e62','#3a8f7e','#48b09a','#5cc4ac','#70d8be','#1a5c52','#4a7c72','#6b9c92','#8bbcb2','#a3d4ca'];
+        
+        for (var i = 0; i < categoryData.length; i++) {
+            labels.push(categoryData[i].category_name);
+            var count = categoryData[i].products_count || 0;
+            data.push(count);
+            totalProducts += count;
+        }
+        
+        new Chart(stockChartCanvas.getContext('2d'), { 
+            type: 'pie', 
+            data: { 
+                labels: labels, 
+                datasets: [{ 
+                    data: data, 
+                    backgroundColor: colors.slice(0, labels.length), 
+                    borderWidth: 0 
+                }] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: true, 
+                plugins: { 
+                    legend: { display: false }, 
+                    tooltip: { 
+                        callbacks: { 
+                            label: function(ctx) { 
+                                var p = totalProducts > 0 ? ((ctx.raw / totalProducts) * 100).toFixed(1) : 0; 
+                                return ctx.label + ': ' + ctx.raw + ' (' + p + '%)'; 
+                            } 
+                        } 
+                    } 
+                } 
+            } 
+        });
+        
+        var categoriesList = document.getElementById('categoriesList');
+        if(categoriesList) {
+            categoriesList.innerHTML = '';
+            for (var i = 0; i < labels.length; i++) {
+                var percentage = totalProducts > 0 ? ((data[i] / totalProducts) * 100).toFixed(1) : 0;
+                var categoryItem = document.createElement('div');
+                categoryItem.className = 'category-item';
+                categoryItem.innerHTML = '<div class="category-name"><div class="category-color" style="background:' + colors[i % colors.length] + '"></div><span>' + labels[i] + '</span></div><div class="category-stats">' + data[i] + ' (' + percentage + '%)</div>';
+                categoriesList.appendChild(categoryItem);
+            }
+        }
+    } else {
+        var pieSection = document.querySelector('.pie-chart-section');
+        if (pieSection) pieSection.style.display = 'none';
+        var categoriesList = document.getElementById('categoriesList');
+        if (categoriesList) {
+            categoriesList.style.cssText = 'display:flex; align-items:center; justify-content:center; width:100%; min-height:200px; color:#999; font-size:14px; text-align:center;';
+            categoriesList.innerHTML = '<div><i class="fas fa-chart-pie" style="font-size:40px; margin-bottom:10px; display:block; opacity:0.3;"></i>No category data</div>';
+        }
+    }
+
+    // Sales Performance Chart
+    var salesData = [];
+    try { 
+        var salesChartEl = document.getElementById('salesChartData'); 
+        if(salesChartEl) salesData = JSON.parse(salesChartEl.getAttribute('data-sales') || '[]'); 
+    } catch(e) { 
+        console.error('Sales data error:', e); 
+    }
+    
+    var salesChartCanvas = document.getElementById('salesPerformanceChart');
+    if (salesChartCanvas) {
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var salesValues = Array(12).fill(0);
+        for (var i = 0; i < salesData.length; i++) { 
+            if (salesData[i] && salesData[i].month) salesValues[salesData[i].month - 1] = salesData[i].total || 0; 
+        }
+        new Chart(salesChartCanvas.getContext('2d'), { 
+            type: 'line', 
+            data: { 
+                labels: months, 
+                datasets: [{ 
+                    label: 'Sales Revenue', 
+                    data: salesValues, 
+                    borderColor: '#2c6e62', 
+                    backgroundColor: 'rgba(44,110,98,0.1)', 
+                    borderWidth: 3, 
+                    fill: true, 
+                    tension: 0.3 
+                }] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: true, 
+                plugins: { 
+                    legend: { display: false }, 
+                    tooltip: { 
+                        callbacks: { 
+                            label: function(ctx) { 
+                                return '₱' + ctx.raw.toLocaleString(); 
+                            } 
+                        } 
+                    } 
+                } 
+            } 
+        });
+    }
+
+    // Search and Filter functionality
+    var searchInput = document.getElementById('searchInput');
+    var statusFilter = document.getElementById('statusFilter');
+    
+    function filterAndDisplay() {
+        var searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        var statusValue = statusFilter ? statusFilter.value : 'all';
+        var rows = document.querySelectorAll('#transactionsTableBody tr');
+        var visibleCount = 0;
+
+        rows.forEach(function(row) {
+            if (row.id === 'noResultsRow') return;
+
+            var product = (row.cells[2] ? row.cells[2].textContent : '').toLowerCase();
+            var category = (row.cells[3] ? row.cells[3].textContent : '').toLowerCase();
+            var status = (row.cells[6] ? row.cells[6].textContent : '').toLowerCase();
+            
+            var show = true;
+            if (statusValue !== 'all' && status !== statusValue) show = false;
+            if (searchTerm && product.indexOf(searchTerm) === -1 && category.indexOf(searchTerm) === -1) show = false;
+            
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        var tbody = document.getElementById('transactionsTableBody');
+        var noResultsRow = document.getElementById('noResultsRow');
+
+        if (visibleCount === 0) {
+            if (!noResultsRow) {
+                noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'noResultsRow';
+                noResultsRow.innerHTML = '<td colspan="8" style="text-align:center; padding:40px;">' +
+                    '<i class="fas fa-receipt" style="font-size:48px; color:#ccc;"></i>' +
+                    '<p>No transactions found</p></td>';
+                tbody.appendChild(noResultsRow);
+            }
+            noResultsRow.style.display = '';
+        } else {
+            if (noResultsRow) noResultsRow.style.display = 'none';
+        }
+    }
+    
+    if (searchInput) searchInput.addEventListener('keyup', filterAndDisplay);
+    if (statusFilter) statusFilter.addEventListener('change', filterAndDisplay);
+
+    // Initialize
+    autoCloseSessionAlerts();
+    renderPagination();
+});
+
+// ==================== TRANSACTION DETAILS ====================
+function viewSaleDetails(id) {
+    if (!id || id === '') { 
+        alert('No reference ID available for this transaction'); 
+        return; 
+    }
+    
+    var modal = document.getElementById('saleDetailsModal');
+    modal.classList.add('show');
+    document.getElementById('sale_detail_id').textContent = id;
+    document.getElementById('sale_cashier').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('sale_date_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('sale_status_display').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('sale_total').textContent = '₱0.00';
+    document.getElementById('sale_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading sale details...</td></tr>';
+    
+    fetch('/admin/sale/details/' + id, { 
+        headers: { 
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
+            'X-Requested-With': 'XMLHttpRequest', 
+            'Accept': 'application/json' 
+        }
+    })
+    .then(function(response) { 
+        if (!response.ok) throw new Error('HTTP ' + response.status); 
+        return response.json(); 
+    })
+    .then(function(sale) {
+        if (sale.error) throw new Error(sale.error);
+        document.getElementById('sale_cashier').textContent = sale.user?.fullname || 'N/A';
+        document.getElementById('sale_date_display').textContent = sale.sale_date || 'N/A';
+        
+        var statusClass = sale.status === 'completed' ? 'badge-success' : 'badge-warning';
+        var statusLabel = sale.status ? sale.status.charAt(0).toUpperCase() + sale.status.slice(1) : 'Unknown';
+        document.getElementById('sale_status_display').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
+        document.getElementById('sale_total').textContent = '₱' + parseFloat(sale.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 });
+        
+        var details = sale.sale_details || [];
+        var totalUnits = 0;
+        for (var i = 0; i < details.length; i++) totalUnits += details[i].quantity;
+        document.getElementById('sale_items_count').textContent = '(' + details.length + ' product type' + (details.length !== 1 ? 's' : '') + ', ' + totalUnits + ' unit' + (totalUnits !== 1 ? 's' : '') + ')';
+        
+        if (details.length === 0) { 
+            document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>'; 
+            return; 
+        }
+        
+        var html = '';
+        for (var i = 0; i < details.length; i++) {
+            var item = details[i];
+            html += '<tr>' +
+                '<td>' + (i + 1) + '</td>' +
+                '<td>' + escapeHtml(item.product?.product_name || 'N/A') + '</td>' +
+                '<td style="text-align:center">' + item.quantity + '</td>' +
+                '<td style="text-align:right">₱' + parseFloat(item.price).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                '<td style="text-align:right">₱' + parseFloat(item.subtotal).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                '</tr>';
+        }
+        document.getElementById('sale_items_table').innerHTML = html;
+    })
+    .catch(function(err) { 
+        console.error('Sale details error:', err); 
+        document.getElementById('sale_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error: ' + err.message + '</td></tr>'; 
+    });
+}
+
+function viewPurchaseDetails(id) {
+    if (!id || id === '') { 
+        alert('No reference ID available for this purchase'); 
+        return; 
+    }
+    
+    var modal = document.getElementById('purchaseDetailsModal');
+    modal.classList.add('show');
+    document.getElementById('purchase_id').textContent = id;
+    document.getElementById('purchase_supplier').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('purchase_date').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('purchase_batch').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('purchase_status').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    document.getElementById('purchase_total').textContent = '₱0.00';
+    document.getElementById('purchase_items_table').innerHTML = '<tr class="spinner-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading purchase details...</td></tr>';
+    
+    fetch('/admin/purchase/details/' + id, { 
+        headers: { 
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
+            'X-Requested-With': 'XMLHttpRequest', 
+            'Accept': 'application/json' 
+        }
+    })
+    .then(function(response) { 
+        if (!response.ok) throw new Error('HTTP ' + response.status); 
+        return response.json(); 
+    })
+    .then(function(data) {
+        if (data.error) throw new Error(data.error);
+        
+        document.getElementById('purchase_supplier').textContent = data.supplier_name || 'N/A';
+        document.getElementById('purchase_date').textContent = data.order_date || 'N/A';
+        document.getElementById('purchase_batch').textContent = data.batch_number || 'N/A';
+        
+        var statusClass = data.status === 'completed' ? 'badge-success' : (data.status === 'pending' ? 'badge-warning' : 'badge');
+        var statusLabel = data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Unknown';
+        document.getElementById('purchase_status').innerHTML = '<span class="' + statusClass + '">' + statusLabel + '</span>';
+        
+        var items = [];
+        var total = 0;
+        
+        if (data.items && data.items.length > 0) {
+            items = data.items;
+            total = data.total_amount || 0;
+        } else if (data.product_name) {
+            items = [{
+                product_name: data.product_name,
+                quantity: data.quantity || 0,
+                cost_price: data.cost_price || 0,
+                total: data.total || 0
+            }];
+            total = data.total || 0;
+        }
+        
+        if (items.length === 0) { 
+            document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.6);">No items found</td></tr>'; 
+        } else {
+            var itemsHtml = '';
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                itemsHtml += '<tr>' +
+                    '<td>' + (i + 1) + '</td>' +
+                    '<td>' + escapeHtml(item.product_name || 'N/A') + '</td>' +
+                    '<td style="text-align:center">' + (item.quantity || 0) + '</td>' +
+                    '<td style="text-align:right">₱' + parseFloat(item.cost_price || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                    '<td style="text-align:right">₱' + parseFloat(item.total || 0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</td>' +
+                '</tr>';
+            }
+            document.getElementById('purchase_items_table').innerHTML = itemsHtml;
+        }
+        
+        document.getElementById('purchase_total').textContent = '₱' + parseFloat(total).toLocaleString(undefined, { minimumFractionDigits: 2 });
+    })
+    .catch(function(err) { 
+        console.error('Purchase details error:', err); 
+        document.getElementById('purchase_items_table').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6b6b;"><i class="fas fa-exclamation-circle"></i> Error: ' + err.message + '</td></tr>'; 
+    });
+}
+
+// ==================== MODAL CONTROLS ====================
+var saleModal = document.getElementById('saleDetailsModal');
+var closeSaleModal = document.getElementById('close_sale_modal');
+var purchaseModal = document.getElementById('purchaseDetailsModal');
+var closePurchaseModal = document.getElementById('close_purchase_modal');
+
+if (closeSaleModal) closeSaleModal.onclick = function() { saleModal.classList.remove('show'); };
+if (saleModal) saleModal.onclick = function(e) { if (e.target === saleModal) saleModal.classList.remove('show'); };
+if (closePurchaseModal) closePurchaseModal.onclick = function() { purchaseModal.classList.remove('show'); };
+if (purchaseModal) purchaseModal.onclick = function(e) { if (e.target === purchaseModal) purchaseModal.classList.remove('show'); };
+
+// ==================== CUSTOM PAGINATION ====================
+function renderPagination() {
+    var currentPage = parseInt(document.getElementById('currentPage').value);
+    var lastPage = parseInt(document.getElementById('lastPage').value);
+    var paginationContainer = document.getElementById('customPagination');
+    
+    if (!paginationContainer || lastPage <= 1) return;
+    
+    var html = '<div class="custom-pagination">';
+    
+    if (currentPage > 1) {
+        html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
+    } else {
+        html += '<span class="page-disabled">&lt;</span>';
+    }
+    
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(lastPage, currentPage + 2);
+    
+    if (currentPage <= 3) endPage = Math.min(lastPage, 5);
+    if (currentPage >= lastPage - 2) startPage = Math.max(1, lastPage - 4);
+    
+    if (startPage > 1) {
+        html += '<a href="#" class="page-link" data-page="1">1</a>';
+        if (startPage > 2) html += '<span class="page-dots">...</span>';
+    }
+    
+    for (var i = startPage; i <= endPage; i++) {
+        if (i === currentPage) {
+            html += '<span class="page-active">' + i + '</span>';
+        } else {
+            html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
+        }
+    }
+    
+    if (endPage < lastPage) {
+        if (endPage < lastPage - 1) html += '<span class="page-dots">...</span>';
+        html += '<a href="#" class="page-link" data-page="' + lastPage + '">' + lastPage + '</a>';
+    }
+    
+    if (currentPage < lastPage) {
+        html += '<a href="#" class="page-link" data-page="' + (currentPage + 1) + '">&gt;</a>';
+    } else {
+        html += '<span class="page-disabled">&gt;</span>';
+    }
+    
+    html += '</div>';
+    paginationContainer.innerHTML = html;
+    
+    var pageLinks = document.querySelectorAll('.page-link');
+    for (var i = 0; i < pageLinks.length; i++) {
+        pageLinks[i].addEventListener('click', function(e) {
+            e.preventDefault();
+            var page = this.getAttribute('data-page');
+            if (page) {
+                var url = new URL(window.location.href);
+                url.searchParams.set('page', page);
+                window.location.href = url.toString();
+            }
+        });
+    }
+}
+</script>
 </body>
 </html>

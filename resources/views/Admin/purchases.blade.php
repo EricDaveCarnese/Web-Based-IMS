@@ -1442,803 +1442,672 @@
     </div>
 
     <script>
+// ==================== GLOBAL VARIABLES ====================
+var markAsRead, createPurchaseOrder, editProductAndReduceStock;
 
-    function showAlertMessage(message, type) {
-        var alertContainer = document.getElementById('dynamicAlertContainer');
-            if (!alertContainer) return;
-                
-            var alertDiv = document.createElement('div');
-            alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
-            alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display = \'none\'">&times;</button>';
-                
-            alertContainer.innerHTML = '';
-            alertContainer.appendChild(alertDiv);
-                
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-                
-            setTimeout(function() {
-                if (alertDiv && alertDiv.parentElement) {
-                    alertDiv.style.opacity = '0';
-                    alertDiv.style.transition = 'opacity 0.5s ease';
-                        setTimeout(function() {
-                        if (alertDiv && alertDiv.parentElement) alertDiv.remove();
-                    }, 500);
-                }
-            }, 3000);
-        }
+// ==================== NOTIFICATION SYSTEM ====================
+(function() {
+    var CSRF = '';
+    var lastUnreadCount = -1;
+    var pollTimer = null;
 
-        function autoCloseSessionAlerts() {
-            var sessionAlerts = document.querySelectorAll('.session-alert');
-            sessionAlerts.forEach(function(alert) {
-                setTimeout(function() {
-                    alert.style.opacity = '0';
-                    alert.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        if (alert && alert.parentElement) alert.remove();
-                    }, 500);
-                }, 3000);
-            });
-        }
+    function getCSRF() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) CSRF = meta.content;
+        return CSRF;
+    }
 
-        //  UTILITY FUNCTIONS
-        function escapeHtml(text) {
-            if (!text) return '';
-            var div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+    function fetchNotifications() {
+        getCSRF();
 
-        function showToast(message, bgColor) {
-            var existing = document.querySelector('.toast-message');
-            if (existing) existing.remove();
-            var toast = document.createElement('div');
-            toast.className = 'toast-message';
-            toast.style.background = bgColor || '#28a745';
-            toast.innerHTML = '<i class="fas fa-info-circle"></i> ' + message;
-            document.body.appendChild(toast);
-            setTimeout(function () {
-                if (toast.parentElement) toast.remove();
-            }, 3000);
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            var supplierSelect = document.getElementById('supplier_select');
-            var productSelect = document.getElementById('product_select');
-            var costPriceInput = document.getElementById('cost_price_input');
-            var priceWarningDiv = document.getElementById('priceWarning');
-            var dueDateInput = document.getElementById('due_date_input');
-            var quantityInput = document.getElementById('quantity_input');
-
-            var allProductOptions = [];
-            if (productSelect) {
-                for (var i = 0; i < productSelect.options.length; i++) {
-                    allProductOptions.push({
-                        value: productSelect.options[i].value,
-                        text: productSelect.options[i].text,
-                        price: productSelect.options[i].getAttribute('data-price'),
-                        productName:
-                            productSelect.options[i].getAttribute('data-product-name'),
-                        supplierId:
-                            productSelect.options[i].getAttribute('data-supplier-id'),
-                        supplierName:
-                            productSelect.options[i].getAttribute('data-supplier-name'),
-                    });
-                }
+        fetch('/admin/stock-reports/notifications', {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (!data.success) return;
 
-            var originalProductPrice = 0;
-            var currentProductName = '';
+            updateBell(data.unread_count);
 
-            //FILTER PRODUCTS BY SUPPLIER 
-            function filterProductsBySupplier() {
-                if (!productSelect || !supplierSelect) return;
-                var selectedSupplierId = supplierSelect.value;
-                productSelect.innerHTML = '';
-                var hasProducts = false;
-                for (var i = 0; i < allProductOptions.length; i++) {
-                    var product = allProductOptions[i];
-                    if (
-                        !selectedSupplierId ||
-                        product.supplierId == selectedSupplierId
-                    ) {
-                        var option = document.createElement('option');
-                        option.value = product.value;
-                        option.text = product.text;
-                        option.setAttribute('data-price', product.price);
-                        option.setAttribute('data-product-name', product.productName);
-                        option.setAttribute('data-supplier-id', product.supplierId);
-                        option.setAttribute('data-supplier-name', product.supplierName);
-                        productSelect.appendChild(option);
-                        hasProducts = true;
-                    }
-                }
-                var defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.text = 'Select Product';
-                defaultOption.selected = true;
-                productSelect.insertBefore(defaultOption, productSelect.firstChild);
-                if (costPriceInput) {
-                    costPriceInput.value = '';
-                    originalProductPrice = 0;
-                }
-                if (priceWarningDiv) priceWarningDiv.style.display = 'none';
-                if (!hasProducts && selectedSupplierId) {
-                    productSelect.innerHTML = '';
-                    var noProductOption = document.createElement('option');
-                    noProductOption.value = '';
-                    noProductOption.text = '-- No products found for this supplier --';
-                    noProductOption.disabled = true;
-                    noProductOption.selected = true;
-                    productSelect.appendChild(noProductOption);
-                }
-            }
-
-            //AUTO-FILL SUPPLIER AND PRICE FROM PRODUCT
-            function autoFillSupplierFromProduct() {
-                if (!productSelect || !supplierSelect) return;
-                var selectedOption = productSelect.options[productSelect.selectedIndex];
-                if (!selectedOption || !selectedOption.value) return;
-                var productSupplierId = selectedOption.getAttribute('data-supplier-id');
-                var productSupplierName =
-                    selectedOption.getAttribute('data-supplier-name');
-                var productPrice = selectedOption.getAttribute('data-price');
-                var productName = selectedOption.getAttribute('data-product-name');
-                if (productSupplierId) {
-                    for (var i = 0; i < supplierSelect.options.length; i++) {
-                        if (supplierSelect.options[i].value == productSupplierId) {
-                            supplierSelect.selectedIndex = i;
-                            showToast( 'Supplier auto-filled: ' +
-                                (productSupplierName || 'Supplier'), '#17a2b8',
-                            );
-                            break;
-                        }
-                    }
-                }
-                if (productPrice) {
-                    originalProductPrice = parseFloat(productPrice);
-                    currentProductName = productName;
-                    costPriceInput.value = productPrice;
-                    costPriceInput.style.borderColor = '#28a745';
-                    setTimeout(function () {
-                        costPriceInput.style.borderColor = '#e2e8f0';
-                    }, 2000);
-                    showToast( 'Price auto-filled: ₱' +
-                            parseFloat(productPrice).toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                            }), '#17a2b8',
-                    );
-                }
-                if (priceWarningDiv) priceWarningDiv.style.display = 'none';
-            }
-
-            //PRICE COMPARISON WARNING 
-            function updatePriceWarning(enteredPrice, originalPrice, productName) {
-                if (!priceWarningDiv) return;
-                if (
-                    enteredPrice &&
-                    originalPrice &&
-                    parseFloat(enteredPrice) !== parseFloat(originalPrice)
-                ) {
-                    priceWarningDiv.style.display = 'block';
-                    if (parseFloat(enteredPrice) > parseFloat(originalPrice)) {
-                        priceWarningDiv.className = 'price-warning higher';
-                        priceWarningDiv.innerHTML = '<i class="fas fa-arrow-up"></i> Price INCREASED: ₱' +
-                            parseFloat(enteredPrice).toLocaleString() + ' vs current ₱' +
-                            parseFloat(originalPrice).toLocaleString() + ' (+' +
-                            (parseFloat(enteredPrice) - parseFloat(originalPrice)).toLocaleString() + ')';
-                    } else {
-                        priceWarningDiv.className = 'price-warning lower';
-                        priceWarningDiv.innerHTML = '<i class="fas fa-arrow-down"></i> Price DROP: ₱' +
-                            parseFloat(enteredPrice).toLocaleString() + ' vs current ₱' +
-                            parseFloat(originalPrice).toLocaleString() + ' (Save ₱' +
-                            (parseFloat(originalPrice) - parseFloat(enteredPrice)).toLocaleString() + ')';
-                    }
-                } else if (
-                    enteredPrice &&
-                    originalPrice &&
-                    parseFloat(enteredPrice) === parseFloat(originalPrice)) 
-                {
-                    priceWarningDiv.style.display = 'block';
-                    priceWarningDiv.className = 'price-warning';
-                    priceWarningDiv.innerHTML = '<i class="fas fa-check-circle"></i> Price matches current product price (₱' +
-                        parseFloat(originalPrice).toLocaleString() + ')';
-                } else {
-                    priceWarningDiv.style.display = 'none';
-                }
-            }
-
-            if (supplierSelect)
-                supplierSelect.addEventListener('change', filterProductsBySupplier);
-            if (productSelect)
-                productSelect.addEventListener('change', autoFillSupplierFromProduct);
-            if (costPriceInput) {
-                costPriceInput.addEventListener('input', function () {
-                    updatePriceWarning(
-                        this.value,
-                        originalProductPrice,
-                        currentProductName,
-                    );
-                });
-            }
-
-            //AUTO-OPEN MODAL FROM STOCK REPORT
-            function checkAndOpenModalFromStockReport() {
-                var urlParams = new URLSearchParams(window.location.search);
-                var openModalParam = urlParams.get('open_modal');
-                var productIdParam = urlParams.get('product_id');
-                var productNameParam = urlParams.get('product_name');
-                var reportIdParam = urlParams.get('report_id');
-                var prefillProductId = sessionStorage.getItem('prefill_product_id');
-                var prefillProductName = sessionStorage.getItem('prefill_product_name');
-                var prefillReportId = sessionStorage.getItem('prefill_report_id');
-                var prefillFromStockReport = sessionStorage.getItem(
-                    'prefill_from_stock_report',
-                );
-                var finalProductId = productIdParam || prefillProductId;
-                var finalProductName = productNameParam || prefillProductName;
-                var finalReportId = reportIdParam || prefillReportId;
-                if ((openModalParam === '1' || finalProductId) && finalProductId) {
-                    var modal = document.getElementById('modal_container');
-                    var reportIdInput = document.getElementById('report_id_input');
-                    if (modal) {
-                        modal.classList.add('show');
-                        setTimeout(function () {
-                            if (productSelect) {
-                                filterProductsBySupplier();
-                                for (var i = 0; i < productSelect.options.length; i++) {
-                                    if (
-                                        productSelect.options[i].value == finalProductId ) 
-                                    {
-                                        productSelect.selectedIndex = i;
-                                        var changeEvent = new Event('change');
-                                        productSelect.dispatchEvent(changeEvent);
-                                        break;
-                                    }
-                                }
-                            }
-                            if (reportIdInput && finalReportId)
-                                reportIdInput.value = finalReportId;
-                            var modalBody = document.querySelector( '#modal_container .modal-body', );
-                            var existingNote = modalBody ? modalBody.querySelector('.prefill-notice') : null;
-                            if (modalBody && !existingNote) {
-                                var productNameSpan = document.createElement('div');
-                                productNameSpan.className = 'prefill-notice';
-                                productNameSpan.innerHTML = '<i class="fas fa-info-circle"></i> <strong>' +
-                                    (prefillFromStockReport === 'true' ? 'Creating purchase order from Stock Report' : 'Creating purchase order') + ' for: ' +
-                                    (finalProductName || 'Product') + '</strong>';
-                                modalBody.insertBefore(
-                                    productNameSpan,
-                                    modalBody.firstChild,
-                                );
-                            }
-                            showToast( 'Product pre-filled: ' + (finalProductName || 'Product'), '#28a745', );
-                        }, 300);
-                    }
-                    sessionStorage.removeItem('prefill_product_id');
-                    sessionStorage.removeItem('prefill_product_name');
-                    sessionStorage.removeItem('prefill_report_id');
-                    sessionStorage.removeItem('prefill_from_stock_report');
-                    var newUrl = window.location.pathname;
-                    window.history.replaceState({}, document.title, newUrl);
-                }
-            }
-
-            if (dueDateInput) {
-                var tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                var yyyy = tomorrow.getFullYear();
-                var mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-                var dd = String(tomorrow.getDate()).padStart(2, '0');
-                dueDateInput.min = yyyy + '-' + mm + '-' + dd;
-            }
-
-            var allPurchaseOrders = [];
-            var purchaseOrdersDataEl = document.getElementById('purchaseOrdersData');
-            if (purchaseOrdersDataEl) {
-                try {
-                    var purchasesJson =
-                        purchaseOrdersDataEl.getAttribute('data-purchases');
-                    if (purchasesJson) {
-                        allPurchaseOrders = JSON.parse(purchasesJson);
-                    }
-                } catch (e) {
-                    console.error('Error parsing purchase orders:', e);
-                }
-            }
-
-            var allSuppliers = [];
-            var supplierDataElement = document.getElementById('supplierData');
-            if (supplierDataElement) {
-                try {
-                    allSuppliers = JSON.parse(
-                        supplierDataElement.getAttribute('data-suppliers'),
-                    );
-                } catch (e) {
-                    allSuppliers = [];
-                }
-            }
-
-            var searchInput = document.getElementById('searchInput');
-            var autocompleteDropdown = document.getElementById('autocompleteDropdown');
-            var searchTimeout;
-
-            window.showSuggestions = function () {
-                if (!searchInput) return;
-                var query = searchInput.value.trim().toLowerCase();
-                if (query.length === 0) {
-                    if (autocompleteDropdown)
-                        autocompleteDropdown.classList.remove('show');
-                    return;
-                }
-
-                var matches = [];
-                var isNumber = /^\d+$/.test(query);
-
-                if (allPurchaseOrders && allPurchaseOrders.length > 0) {
-                    for (var i = 0; i < allPurchaseOrders.length; i++) {
-                        var po = allPurchaseOrders[i];
-                        if (!po) continue;
-                        var poNumber = String(po.id || '');
-                        var batchNumber = (po.batch_number || '').toLowerCase();
-                        var supplierName = (po.supplier_name || '').toLowerCase();
-
-                        if (isNumber && poNumber.includes(query)) {
-                            matches.push({
-                                type: 'po',
-                                id: po.id,
-                                value: '#' + po.id,
-                                label: 'PO #' + po.id,
-                                batch: po.batch_number,
-                                supplier: po.supplier_name,
-                            });
-                        } else if (batchNumber.includes(query)) {
-                            matches.push({
-                                type: 'batch',
-                                id: po.id,
-                                value: po.batch_number,
-                                label: 'Batch: ' + po.batch_number,
-                                batch: po.batch_number,
-                                supplier: po.supplier_name,
-                            });
-                        } else if (supplierName.includes(query)) {
-                            matches.push({
-                                type: 'supplier',
-                                id: po.id,
-                                value: po.supplier_name,
-                                label: 'Supplier: ' + po.supplier_name,
-                                batch: po.batch_number,
-                                supplier: po.supplier_name,
-                            });
-                        }
-                        if (matches.length >= 10) break;
-                    }
-                }
-
-                if (allSuppliers && allSuppliers.length > 0) {
-                    for (var i = 0; i < allSuppliers.length; i++) {
-                        var supplier = allSuppliers[i];
-                        if (!supplier) continue;
-                        var supplierName = (supplier.supplier_name || '').toLowerCase();
-                        if (
-                            supplierName.includes(query) &&
-                            !matches.some(function (m) {
-                                return m.value === supplier.supplier_name;
-                            })
-                        ) {
-                            matches.push({
-                                type: 'supplier_only',
-                                id: supplier.id,
-                                value: supplier.supplier_name,
-                                label: 'Supplier: ' + supplier.supplier_name,
-                                batch: null,
-                                supplier: supplier.supplier_name,
-                            });
-                        }
-                        if (matches.length >= 10) break;
-                    }
-                }
-
-                if (matches.length > 0 && autocompleteDropdown) {
-                    var html = '';
-                    for (var i = 0; i < matches.length; i++) {
-                        var m = matches[i];
-                        var highlightedValue = m.value.replace(
-                            new RegExp( '(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi', ), '<strong>$1</strong>',
-                        );
-                        html += '<div class="autocomplete-item" onclick="selectPOSuggestion(\'' +
-                            m.value.replace(/'/g, "\\'") + '\')"><div> ' +
-                            highlightedValue + '</div></div>';
-                    }
-                    autocompleteDropdown.innerHTML = html;
-                    autocompleteDropdown.classList.add('show');
-                } else if (autocompleteDropdown) {
-                    autocompleteDropdown.innerHTML = '<div class="no-results">No results found matching "' +
-                        escapeHtml(query) + '"</div>';
-                    autocompleteDropdown.classList.add('show');
-                }
-            };
-
-            window.selectPOSuggestion = function (value) {
-                if (searchInput) searchInput.value = value;
-                if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
-                performSearch();
-            };
-
-            window.performSearch = function () {
-                if (!searchInput) return;
-                var query = searchInput.value.trim();
-                var url = new URL(window.location.href);
-                if (query) {
-                    url.searchParams.set('search', query);
-                } else {
-                    url.searchParams.delete('search');
-                }
-                url.searchParams.set('page', '1');
-                window.location.href = url.toString();
-            };
-
-            if (searchInput) {
-                searchInput.addEventListener('input', function () {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(window.showSuggestions, 300);
-                });
-                document.addEventListener('click', function (e) {
-                    if (
-                        autocompleteDropdown &&
-                        searchInput &&
-                        !searchInput.contains(e.target) &&
-                        !autocompleteDropdown.contains(e.target)
-                    ) {
-                        autocompleteDropdown.classList.remove('show');
-                    }
-                });
-                searchInput.addEventListener('keypress', function (e) {
-                    if (e.key === 'Enter') {
-                        if (autocompleteDropdown)
-                            autocompleteDropdown.classList.remove('show');
-                        performSearch();
-                    }
-                });
-            }
-
-            //MODAL CONTROLS
-            var openModal = document.getElementById('open_modal');
-            var modalContainer = document.getElementById('modal_container');
-            var closeModalBtn = document.getElementById('close_modal');
-            if (openModal) {
-                openModal.onclick = function () {
-                    if (supplierSelect) supplierSelect.value = '';
-                    if (productSelect) filterProductsBySupplier();
-                    if (costPriceInput) costPriceInput.value = '';
-                    if (dueDateInput) dueDateInput.value = '';
-                    if (quantityInput) quantityInput.value = '';
-                    if (priceWarningDiv) priceWarningDiv.style.display = 'none';
-                    originalProductPrice = 0;
-                    modalContainer.classList.add('show');
-                };
-            }
-            if (closeModalBtn)
-                closeModalBtn.onclick = function () {
-                    modalContainer.classList.remove('show');
-                };
-            if (modalContainer)
-                modalContainer.onclick = function (e) {
-                    if (e.target === modalContainer)
-                        modalContainer.classList.remove('show');
-                };
-
-            //VIEW DETAILS MODAL
-            var viewDetailsModal = document.getElementById('view_details_modal');
-            var closeDetailsModal = document.getElementById('close_details_modal');
-            if (closeDetailsModal)
-                closeDetailsModal.onclick = function () {
-                    viewDetailsModal.classList.remove('show');
-                };
-            if (viewDetailsModal)
-                viewDetailsModal.onclick = function (e) {
-                    if (e.target === viewDetailsModal)
-                        viewDetailsModal.classList.remove('show');
-                };
-
-            window.viewPurchaseDetails = function (id) {
-                viewDetailsModal.classList.add('show');
-                document.getElementById('purchase_detail_id').innerHTML = id;
-
-                document.getElementById('detail_batch_number').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                document.getElementById('detail_supplier').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                document.getElementById('detail_order_date').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                document.getElementById('detail_due_date').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                document.getElementById('detail_product').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                document.getElementById('detail_quantity').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                document.getElementById('detail_cost').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                document.getElementById('detail_total').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                document.getElementById('detail_status').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                document.getElementById('cancel_info_container').style.display = 'none';
-                document.getElementById('price_drop_container').style.display = 'none';
-
-                fetch('/admin/purchase/details/' + id, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                })
-                    .then(function (response) {
-                        return response.json();
-                    })
-                    .then(function (data) {
-                        if (data.error) {
-                            document.getElementById('detail_batch_number').innerHTML =
-                                'Error loading';
-                            return;
-                        }
-
-                        document.getElementById('detail_batch_number').innerHTML = data.batch_number || 'N/A';
-                        document.getElementById('detail_supplier').innerHTML = data.supplier_name || 'N/A';
-                        document.getElementById('detail_order_date').innerHTML = data.order_date || 'N/A';
-                        document.getElementById('detail_due_date').innerHTML = data.due_date || 'N/A';
-                        document.getElementById('detail_product').innerHTML = data.product_name || 'N/A';
-                        document.getElementById('detail_quantity').innerHTML = data.quantity || 0;
-                        document.getElementById('detail_cost').innerHTML = '₱' +
-                            parseFloat(data.cost_price || 0).toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                            });
-                        document.getElementById('detail_total').innerHTML = '₱' +
-                            parseFloat(data.total || 0).toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                            });
-
-                        var statusBadge = '';
-                        if (data.status === 'completed')
-                            statusBadge =
-                                '<span class="badge-success">Completed</span>';
-                        else if (data.status === 'pending')
-                            statusBadge = '<span class="badge-warning">Pending</span>';
-                        else statusBadge = '<span class="badge-danger">Canceled</span>';
-                        document.getElementById('detail_status').innerHTML =
-                            statusBadge;
-
-                        if (
-                            data.status === 'pending' &&
-                            data.due_date &&
-                            data.due_date !== 'Not set' ) {
-                            document.getElementById('cancel_info_text').innerHTML = '<i class="fas fa-info-circle"></i> Cancellation available after: ' + data.due_date;
-                            document.getElementById('cancel_info_container' ,).style.display = 'block';
-                        }
-                    })
-                    .catch(function (error) {
-                        console.error('Error:', error);
-                        document.getElementById('detail_batch_number').innerHTML =
-                            'Error loading details';
-                    });
-            };
-
-            //CUSTOM PAGINATION
-            function renderPagination() {
-                var currentPage = parseInt(
-                    document.getElementById('currentPage').value,
-                );
-                var lastPage = parseInt(document.getElementById('lastPage').value);
-                var paginationContainer = document.getElementById('customPagination');
-                if (!paginationContainer || lastPage <= 1) return;
-                var html = '<div class="custom-pagination">';
-                if (currentPage > 1) {
-                    html += '<a href="#" class="page-link" data-page="' + (currentPage - 1) + '">&lt;</a>';
-                } else {
-                    html += '<span class="page-disabled">&lt;</span>';
-                }
-                var startPage = Math.max(1, currentPage - 2);
-                var endPage = Math.min(lastPage, currentPage + 2);
-                if (currentPage <= 3) {
-                    endPage = Math.min(lastPage, 5);
-                }
-                if (currentPage >= lastPage - 2) {
-                    startPage = Math.max(1, lastPage - 4);
-                }
-                if (startPage > 1) {
-                    html += '<a href="#" class="page-link" data-page="1">1</a>';
-                    if (startPage > 2) {
-                        html += '<span class="page-dots">...</span>';
-                    }
-                }
-                for (var i = startPage; i <= endPage; i++) {
-                    if (i === currentPage) {
-                        html += '<span class="page-active">' + i + '</span>';
-                    } else {
-                        html += '<a href="#" class="page-link" data-page="' + i + '">' + i + '</a>';
-                    }
-                }
-                if (endPage < lastPage) {
-                    if (endPage < lastPage - 1) {
-                        html += '<span class="page-dots">...</span>';
-                    }
-                    html += '<a href="#" class="page-link" data-page="' +
-                        lastPage + '">' +
-                        lastPage + '</a>';
-                }
-                if (currentPage < lastPage) {
-                    html += '<a href="#" class="page-link" data-page="' +
-                        (currentPage + 1) + '">&gt;</a>';
-                } else {
-                    html += '<span class="page-disabled">&gt;</span>';
-                }
-                html += '</div>';
-                paginationContainer.innerHTML = html;
-                var pageLinks = document.querySelectorAll('.page-link');
-                for (var i = 0; i < pageLinks.length; i++) {
-                    pageLinks[i].addEventListener('click', function (e) {
-                        e.preventDefault();
-                        var page = this.getAttribute('data-page');
-                        if (page) {
-                            var urlParams = new URLSearchParams(window.location.search);
-                            urlParams.set('page', page);
-                            window.location.href =
-                                window.location.pathname + '?' + urlParams.toString();
-                        }
-                    });
-                }
-            }
-            renderPagination();
-
-            setTimeout(checkAndOpenModalFromStockReport, 500);
-
-            function fetchNotifications() {
-                fetch('/admin/stock-reports/notifications', {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                })
-                    .then(function (response) {
-                        return response.json();
-                    })
-                    .then(function (data) {
-                        if (data.success) {
-                            updateNotificationBell(data.unread_count);
-                            renderNotificationDropdown(data.notifications);
-                        }
-                    })
-                    .catch(function (error) {
-                        console.error('Error:', error);
-                    });
-            }
-
-            function updateNotificationBell(count) {
-                var badge = document.querySelector('.notification-badge');
-                if (badge) {
-                    badge.style.display = count > 0 ? 'flex' : 'none';
-                    if (count > 0) badge.textContent = count;
-                }
-            }
-
-            function renderNotificationDropdown(notifications) {
-                var list = document.getElementById('notificationList');
-                if (!list) return;
-                if (!notifications || notifications.length === 0) {
-                    list.innerHTML =
-                        '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i><p>No pending stock reports</p></div>';
-                    return;
-                }
-                var html = '';
-                for (var i = 0; i < notifications.length; i++) {
-                    var notif = notifications[i];
-                    var isDamage =
-                        notif.message && notif.message.includes('DAMAGE REPORT');
-                    var isSystemAlert = notif.user_name === 'System (Auto Alert)';
-                    var isOutOfStock = notif.current_stock === 0;
-                    var stockColor = isOutOfStock ? '#dc3545' : 
-                        notif.current_stock <= notif.min_stock_level  ? '#fd7e14'  : '#28a745';
-                    var actionButton = '';
-
-                    if (isDamage) {
-                        if (notif.is_resolved) {
-                            actionButton =
-                                '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
-                        } else {
-                            var damageQty = notif.damage_quantity || 1;
-                            actionButton = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' +
-                                notif.product_id + ", '" +
-                                escapeHtml(notif.product_name).replace(/'/g, "\\'") + "', " +
-                                damageQty + ', ' +
-                                notif.id + ')"><i class="fas fa-edit"></i> Edit & Reduce (' +
-                                damageQty + ' units)</button>';
-                        }
-                    } else {
-                        actionButton = '<button class="btn-order" onclick="createPurchaseOrder(' +
-                            notif.product_id + ", '" +
-                            escapeHtml(notif.product_name).replace(/'/g, "\\'") + "', " +
-                            notif.id + ')"><i class="fas fa-shopping-cart"></i> ' +
-                            (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
-                    }
-                    html += `
-                    <div class="notification-item unread" data-id="${notif.id}">
-                        <div class="notification-title">
-                            <strong>${escapeHtml(notif.product_name)}</strong>
-                            <span class="notification-time">${notif.time_ago}</span>
-                        </div>
-                        <div class="notification-message">
-                            <strong>Reported by: </strong>${escapeHtml(notif.user_name)}<br>
-                            <strong>Current Stock: </strong>${notif.current_stock} units (Min: ${notif.min_stock_level})<br>
-                            <small>${escapeHtml(notif.message.substring(0, 100))}${notif.message.length > 100 ? '...' : ''}</small>
-                        </div>
-                        <div class="notification-buttons">
-                            ${actionButton}
-                            <button class="btn-read" onclick="markAsRead(${notif.id})"><i class="fas fa-check"></i> Mark Read</button>
-                        </div>
-                    </div>
-                `;
-                }
-                list.innerHTML = html;
-            }
-
-            function markAsRead(reportId) {
-                fetch('{{ route("admin.stock.report.read") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ report_id: reportId })
-                })
-                .then(function(response) { return response.json(); })
-                .then(function(data) {
-                    if (data.success) {
-                        var item = document.querySelector('.notification-item[data-id="' + reportId + '"]');
-                        if (item) {
-                            item.style.opacity = '0';
-                            item.style.transition = 'opacity 0.3s ease';
-                            setTimeout(function() {
-                                item.remove();
-                                var list = document.getElementById('notificationList');
-                                if (list && list.querySelectorAll('.notification-item').length === 0) {
-                                    list.innerHTML = '<div class="no-notifications"><i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i><p>No pending stock reports</p></div>';
-                                }
-                            }, 300);
-                        }
-                        fetchNotifications();
-                    } else {
-                        alert('Failed to mark as read: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(function(error) { console.error('Error:', error); });
-            }
-
-            //FIXED FUNCTIONS FOR NOTIFICATION BUTTONS
-            window.createPurchaseOrder = function (productId, productName, reportId) {
-                if (confirm('Create purchase order for "' + productName + '"?')) {
-                    sessionStorage.setItem('prefill_product_id', productId);
-                    sessionStorage.setItem('prefill_product_name', productName);
-                    sessionStorage.setItem('prefill_report_id', reportId);
-                    sessionStorage.setItem('prefill_from_stock_report', 'true');
-                    window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId + '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
-                }
-            };
-            window.editProductAndReduceStock = function ( productId, productName, damageQuantity, reportId,) 
-                {
-                if (confirm( 'Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.', )) 
-                { 
-                    window.location.href = '/admin/products?edit_damage=1&product_id=' + productId + '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
-                }
-            };
-            window.markAsRead = markAsRead;
-            //NOTIFICATION BELL TOGGLE
-            var bell = document.getElementById('notificationBell');
             var dropdown = document.getElementById('notificationDropdown');
-            if (bell) {
-                bell.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    dropdown.classList.toggle('show');
-                    if (dropdown.classList.contains('show')) fetchNotifications();
-                });
+            var isOpen = dropdown && dropdown.classList.contains('show');
+
+            if (data.unread_count !== lastUnreadCount || isOpen) {
+                renderDropdown(data.notifications);
+                lastUnreadCount = data.unread_count;
             }
-            document.addEventListener('click', function () {
-                if (dropdown) dropdown.classList.remove('show');
-            });
-            
-            autoCloseSessionAlerts();
-            renderPagination();
-            fetchNotifications();
-            setInterval(fetchNotifications, 10000);
+        })
+        .catch(function(error) {
+            console.error('Notification fetch error:', error);
         });
-    </script>
+    }
+
+    function updateBell(count) {
+        var bell = document.getElementById('notificationBell');
+        if (!bell) return;
+
+        var badge = bell.querySelector('.notification-badge');
+        
+        if (!badge && count > 0) {
+            badge = document.createElement('span');
+            badge.className = 'notification-badge';
+            bell.appendChild(badge);
+        }
+
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    function renderDropdown(notifs) {
+        var list = document.getElementById('notificationList');
+        if (!list) return;
+
+        if (!notifs || notifs.length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < notifs.length; i++) {
+            var n = notifs[i];
+            var isDamage = n.is_damage || (n.message && n.message.indexOf('DAMAGE REPORT') !== -1);
+            var isResolved = n.is_resolved || n.status === 'resolved';
+            var isSystemAlert = n.user_name === 'System (Auto Alert)';
+            var dqty = n.damage_quantity || 1;
+            var safeName = (n.product_name || '').replace(/'/g, "\\'");
+
+            var actionBtn = '';
+            if (isDamage) {
+                if (isResolved) {
+                    actionBtn = '<span class="resolved-badge"><i class="fas fa-check-circle"></i> Resolved</span>';
+                } else {
+                    actionBtn = '<button class="btn-edit-damage" onclick="editProductAndReduceStock(' +
+                        n.product_id + ',\'' + safeName + '\',' + dqty + ',' + n.id +
+                        ')"><i class="fas fa-edit"></i> Edit &amp; Reduce (' + dqty + ' units)</button>';
+                }
+            } else {
+                actionBtn = '<button class="btn-order" onclick="createPurchaseOrder(' +
+                    n.product_id + ',\'' + safeName + '\',' + n.id +
+                    ')"><i class="fas fa-shopping-cart"></i> ' + (isSystemAlert ? 'Restock Now' : 'Create PO') + '</button>';
+            }
+
+            var stockLabel = (n.current_stock === 0)
+                ? '<span style="color:#dc3545;font-weight:bold;">OUT OF STOCK</span>'
+                : n.current_stock + ' units';
+
+            var shortMsg = (n.message || '').substring(0, 100);
+            if ((n.message || '').length > 100) shortMsg += '...';
+
+            html += '<div class="notification-item unread" data-nid="' + n.id + '">' +
+                '<div class="notification-title">' +
+                '<strong>' + escapeHtml(n.product_name) + '</strong>' +
+                '<span class="notification-time">' + (n.time_ago || '') + '</span>' +
+                '</div>' +
+                '<div class="notification-message">' +
+                '<strong>Reported by: </strong>' + escapeHtml(n.user_name) + '<br>' +
+                '<strong>Current Stock: </strong>' + stockLabel + ' (Min: ' + n.min_stock_level + ')<br>' +
+                '<small>' + escapeHtml(shortMsg) + '</small>' +
+                '</div>' +
+                '<div class="notification-buttons">' +
+                actionBtn +
+                '<button class="btn-read" onclick="markAsRead(' + n.id + ')">' +
+                '<i class="fas fa-check"></i> Mark Read</button>' +
+                '</div>' +
+                '</div>';
+        }
+        list.innerHTML = html;
+    }
+
+    // ========== GLOBAL FUNCTIONS ==========
+    markAsRead = function(reportId) {
+        getCSRF();
+
+        fetch('/admin/stock-report/mark-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ report_id: reportId })
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                var item = document.querySelector('.notification-item[data-nid="' + reportId + '"]');
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transition = 'opacity 0.3s ease';
+                    setTimeout(function() {
+                        if (item.parentElement) item.remove();
+                        checkEmptyList();
+                    }, 300);
+                }
+
+                lastUnreadCount = -1;
+                fetchNotifications();
+            } else {
+                alert('Failed: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(function(error) {
+            console.error('Mark as read error:', error);
+            alert('Network error. Please try again.');
+        });
+    };
+
+    createPurchaseOrder = function(productId, productName, reportId) {
+        if (confirm('Create purchase order for "' + productName + '"?')) {
+            sessionStorage.setItem('prefill_product_id', productId);
+            sessionStorage.setItem('prefill_product_name', productName);
+            sessionStorage.setItem('prefill_report_id', reportId);
+            sessionStorage.setItem('prefill_from_stock_report', 'true');
+            window.location.href = '/admin/purchases?open_modal=1&product_id=' + productId +
+                '&product_name=' + encodeURIComponent(productName) + '&report_id=' + reportId;
+        }
+    };
+
+    editProductAndReduceStock = function(productId, productName, damageQuantity, reportId) {
+        if (confirm('Product: ' + productName + '\nDamaged Quantity: ' + damageQuantity + ' units\n\nClick OK to edit product and reduce stock by ' + damageQuantity + ' units.')) {
+            window.location.href = '/admin/products?edit_damage=1&product_id=' + productId +
+                '&damage_qty=' + damageQuantity + '&report_id=' + reportId;
+        }
+    };
+
+    function checkEmptyList() {
+        var list = document.getElementById('notificationList');
+        if (list && list.querySelectorAll('.notification-item').length === 0) {
+            list.innerHTML = '<div class="no-notifications">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;margin-bottom:10px;display:block;"></i>' +
+                '<p>No pending stock reports</p></div>';
+        }
+    }
+
+    // ========== INIT ==========
+    function initNotifications() {
+        var bell = document.getElementById('notificationBell');
+        var dropdown = document.getElementById('notificationDropdown');
+
+        if (bell && dropdown) {
+            bell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                if (dropdown.classList.contains('show')) {
+                    lastUnreadCount = -1;
+                    fetchNotifications();
+                }
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (dropdown && bell && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        if (pollTimer) clearInterval(pollTimer);
+        fetchNotifications();
+        pollTimer = setInterval(fetchNotifications, 10000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNotifications);
+    } else {
+        initNotifications();
+    }
+})();
+
+// ==================== HELPER FUNCTIONS ====================
+function showAlertMessage(message, type) {
+    var alertContainer = document.getElementById('dynamicAlertContainer');
+    if (!alertContainer) return;
+    
+    var alertDiv = document.createElement('div');
+    alertDiv.className = type === 'success' ? 'alert-success' : 'alert-error';
+    alertDiv.innerHTML = message + '<button type="button" class="close-btn" onclick="this.parentElement.style.display=\'none\'">&times;</button>';
+    
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(alertDiv);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    setTimeout(function() {
+        if (alertDiv && alertDiv.parentElement) {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alertDiv && alertDiv.parentElement) alertDiv.remove();
+            }, 500);
+        }
+    }, 3000);
+}
+
+function autoCloseSessionAlerts() {
+    var sessionAlerts = document.querySelectorAll('.session-alert');
+    sessionAlerts.forEach(function(alert) {
+        setTimeout(function() {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 0.5s ease';
+            setTimeout(function() {
+                if (alert && alert.parentElement) alert.remove();
+            }, 500);
+        }, 3000);
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(message, bgColor) {
+    var existing = document.querySelector('.toast-message');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.style.background = bgColor || '#28a745';
+    toast.innerHTML = '<i class="fas fa-info-circle"></i> ' + message;
+    document.body.appendChild(toast);
+    setTimeout(function() { if (toast.parentElement) toast.remove(); }, 3000);
+}
+
+// ==================== PURCHASES PAGE LOGIC ====================
+document.addEventListener('DOMContentLoaded', function() {
+    var supplierSelect = document.getElementById('supplier_select');
+    var productSelect = document.getElementById('product_select');
+    var costPriceInput = document.getElementById('cost_price_input');
+    var priceWarningDiv = document.getElementById('priceWarning');
+    var dueDateInput = document.getElementById('due_date_input');
+    var quantityInput = document.getElementById('quantity_input');
+
+    var allProductOptions = [];
+    if (productSelect) {
+        for (var i = 0; i < productSelect.options.length; i++) {
+            allProductOptions.push({
+                value: productSelect.options[i].value,
+                text: productSelect.options[i].text,
+                price: productSelect.options[i].getAttribute('data-price'),
+                productName: productSelect.options[i].getAttribute('data-product-name'),
+                supplierId: productSelect.options[i].getAttribute('data-supplier-id'),
+                supplierName: productSelect.options[i].getAttribute('data-supplier-name')
+            });
+        }
+    }
+
+    var originalProductPrice = 0;
+    var currentProductName = '';
+
+    function filterProductsBySupplier() {
+        if (!productSelect || !supplierSelect) return;
+        var selectedSupplierId = supplierSelect.value;
+        productSelect.innerHTML = '';
+        var hasProducts = false;
+        for (var i = 0; i < allProductOptions.length; i++) {
+            var product = allProductOptions[i];
+            if (!selectedSupplierId || product.supplierId == selectedSupplierId) {
+                var option = document.createElement('option');
+                option.value = product.value;
+                option.text = product.text;
+                option.setAttribute('data-price', product.price);
+                option.setAttribute('data-product-name', product.productName);
+                option.setAttribute('data-supplier-id', product.supplierId);
+                option.setAttribute('data-supplier-name', product.supplierName);
+                productSelect.appendChild(option);
+                hasProducts = true;
+            }
+        }
+        var defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.text = 'Select Product';
+        defaultOption.selected = true;
+        productSelect.insertBefore(defaultOption, productSelect.firstChild);
+        if (costPriceInput) { costPriceInput.value = ''; originalProductPrice = 0; }
+        if (priceWarningDiv) priceWarningDiv.style.display = 'none';
+        if (!hasProducts && selectedSupplierId) {
+            productSelect.innerHTML = '';
+            var noProductOption = document.createElement('option');
+            noProductOption.value = '';
+            noProductOption.text = '-- No products found for this supplier --';
+            noProductOption.disabled = true;
+            noProductOption.selected = true;
+            productSelect.appendChild(noProductOption);
+        }
+    }
+
+    function autoFillSupplierFromProduct() {
+        if (!productSelect || !supplierSelect) return;
+        var selectedOption = productSelect.options[productSelect.selectedIndex];
+        if (!selectedOption || !selectedOption.value) return;
+        var productSupplierId = selectedOption.getAttribute('data-supplier-id');
+        var productSupplierName = selectedOption.getAttribute('data-supplier-name');
+        var productPrice = selectedOption.getAttribute('data-price');
+        var productName = selectedOption.getAttribute('data-product-name');
+        if (productSupplierId) {
+            for (var i = 0; i < supplierSelect.options.length; i++) {
+                if (supplierSelect.options[i].value == productSupplierId) {
+                    supplierSelect.selectedIndex = i;
+                    showToast('Supplier auto-filled: ' + (productSupplierName || 'Supplier'), '#17a2b8');
+                    break;
+                }
+            }
+        }
+        if (productPrice) {
+            originalProductPrice = parseFloat(productPrice);
+            currentProductName = productName;
+            costPriceInput.value = productPrice;
+            costPriceInput.style.borderColor = '#28a745';
+            setTimeout(function() { costPriceInput.style.borderColor = '#e2e8f0'; }, 2000);
+            showToast('Price auto-filled: ₱' + parseFloat(productPrice).toLocaleString(undefined, {minimumFractionDigits: 2}), '#17a2b8');
+        }
+        if (priceWarningDiv) priceWarningDiv.style.display = 'none';
+    }
+
+    function updatePriceWarning(enteredPrice, originalPrice, productName) {
+        if (!priceWarningDiv) return;
+        if (enteredPrice && originalPrice && parseFloat(enteredPrice) !== parseFloat(originalPrice)) {
+            priceWarningDiv.style.display = 'block';
+            if (parseFloat(enteredPrice) > parseFloat(originalPrice)) {
+                priceWarningDiv.className = 'price-warning higher';
+                priceWarningDiv.innerHTML = '<i class="fas fa-arrow-up"></i> Price INCREASED: ₱' + parseFloat(enteredPrice).toLocaleString() + ' vs current ₱' + parseFloat(originalPrice).toLocaleString();
+            } else {
+                priceWarningDiv.className = 'price-warning lower';
+                priceWarningDiv.innerHTML = '<i class="fas fa-arrow-down"></i> Price DROP: ₱' + parseFloat(enteredPrice).toLocaleString() + ' vs current ₱' + parseFloat(originalPrice).toLocaleString();
+            }
+        } else if (enteredPrice && originalPrice && parseFloat(enteredPrice) === parseFloat(originalPrice)) {
+            priceWarningDiv.style.display = 'block';
+            priceWarningDiv.className = 'price-warning';
+            priceWarningDiv.innerHTML = '<i class="fas fa-check-circle"></i> Price matches current (₱' + parseFloat(originalPrice).toLocaleString() + ')';
+        } else {
+            priceWarningDiv.style.display = 'none';
+        }
+    }
+
+    if (supplierSelect) supplierSelect.addEventListener('change', filterProductsBySupplier);
+    if (productSelect) productSelect.addEventListener('change', autoFillSupplierFromProduct);
+    if (costPriceInput) {
+        costPriceInput.addEventListener('input', function() {
+            updatePriceWarning(this.value, originalProductPrice, currentProductName);
+        });
+    }
+
+    // Auto-open modal from stock report
+    function checkAndOpenModalFromStockReport() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var openModalParam = urlParams.get('open_modal');
+        var productIdParam = urlParams.get('product_id');
+        var productNameParam = urlParams.get('product_name');
+        var reportIdParam = urlParams.get('report_id');
+        var prefillProductId = sessionStorage.getItem('prefill_product_id');
+        var prefillProductName = sessionStorage.getItem('prefill_product_name');
+        var prefillReportId = sessionStorage.getItem('prefill_report_id');
+        var prefillFromStockReport = sessionStorage.getItem('prefill_from_stock_report');
+        var finalProductId = productIdParam || prefillProductId;
+        var finalProductName = productNameParam || prefillProductName;
+        var finalReportId = reportIdParam || prefillReportId;
+        
+        if ((openModalParam === '1' || finalProductId) && finalProductId) {
+            var modal = document.getElementById('modal_container');
+            var reportIdInput = document.getElementById('report_id_input');
+            if (modal) {
+                modal.classList.add('show');
+                setTimeout(function() {
+                    if (productSelect) {
+                        filterProductsBySupplier();
+                        for (var i = 0; i < productSelect.options.length; i++) {
+                            if (productSelect.options[i].value == finalProductId) {
+                                productSelect.selectedIndex = i;
+                                productSelect.dispatchEvent(new Event('change'));
+                                break;
+                            }
+                        }
+                    }
+                    if (reportIdInput && finalReportId) reportIdInput.value = finalReportId;
+                    var modalBody = document.querySelector('#modal_container .modal-body');
+                    var existingNote = modalBody ? modalBody.querySelector('.prefill-notice') : null;
+                    if (modalBody && !existingNote) {
+                        var productNameSpan = document.createElement('div');
+                        productNameSpan.className = 'prefill-notice';
+                        productNameSpan.innerHTML = '<i class="fas fa-info-circle"></i> <strong>' + (prefillFromStockReport === 'true' ? 'Creating from Stock Report' : 'Creating purchase order') + ' for: ' + (finalProductName || 'Product') + '</strong>';
+                        modalBody.insertBefore(productNameSpan, modalBody.firstChild);
+                    }
+                    showToast('Product pre-filled: ' + (finalProductName || 'Product'), '#28a745');
+                }, 300);
+            }
+            sessionStorage.removeItem('prefill_product_id');
+            sessionStorage.removeItem('prefill_product_name');
+            sessionStorage.removeItem('prefill_report_id');
+            sessionStorage.removeItem('prefill_from_stock_report');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
+    if (dueDateInput) {
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        var yyyy = tomorrow.getFullYear();
+        var mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+        var dd = String(tomorrow.getDate()).padStart(2, '0');
+        dueDateInput.min = yyyy + '-' + mm + '-' + dd;
+    }
+
+    // Autocomplete
+    var allPurchaseOrders = [];
+    var purchaseOrdersDataEl = document.getElementById('purchaseOrdersData');
+    if (purchaseOrdersDataEl) {
+        try {
+            var purchasesJson = purchaseOrdersDataEl.getAttribute('data-purchases');
+            if (purchasesJson) allPurchaseOrders = JSON.parse(purchasesJson);
+        } catch(e) {}
+    }
+
+    var allSuppliers = [];
+    var supplierDataElement = document.getElementById('supplierData');
+    if (supplierDataElement) {
+        try { allSuppliers = JSON.parse(supplierDataElement.getAttribute('data-suppliers')); } catch(e) {}
+    }
+
+    var searchInput = document.getElementById('searchInput');
+    var autocompleteDropdown = document.getElementById('autocompleteDropdown');
+    var searchTimeout;
+
+    window.showSuggestions = function() {
+        if (!searchInput) return;
+        var query = searchInput.value.trim().toLowerCase();
+        if (query.length === 0) { if (autocompleteDropdown) autocompleteDropdown.classList.remove('show'); return; }
+
+        var matches = [];
+        if (allPurchaseOrders && allPurchaseOrders.length > 0) {
+            for (var i = 0; i < allPurchaseOrders.length; i++) {
+                var po = allPurchaseOrders[i];
+                if (!po) continue;
+                var batchNumber = (po.batch_number || '').toLowerCase();
+                var supplierName = (po.supplier_name || '').toLowerCase();
+                if (batchNumber.indexOf(query) !== -1) {
+                    matches.push({ value: po.batch_number, label: 'Batch: ' + po.batch_number });
+                } else if (supplierName.indexOf(query) !== -1) {
+                    matches.push({ value: po.supplier_name, label: 'Supplier: ' + po.supplier_name });
+                }
+                if (matches.length >= 10) break;
+            }
+        }
+        if (allSuppliers && allSuppliers.length > 0) {
+            for (var i = 0; i < allSuppliers.length; i++) {
+                var supplier = allSuppliers[i];
+                if (!supplier) continue;
+                var supplierName = (supplier.supplier_name || '').toLowerCase();
+                if (supplierName.indexOf(query) !== -1 && !matches.some(function(m) { return m.value === supplier.supplier_name; })) {
+                    matches.push({ value: supplier.supplier_name, label: 'Supplier: ' + supplier.supplier_name });
+                }
+                if (matches.length >= 10) break;
+            }
+        }
+
+        if (matches.length > 0 && autocompleteDropdown) {
+            var html = '';
+            for (var i = 0; i < matches.length; i++) {
+                var m = matches[i];
+                var highlightedValue = m.value.replace(new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<strong>$1</strong>');
+                var escapedValue = m.value.replace(/'/g, "\\'");
+                html += '<div class="autocomplete-item" onclick="selectPOSuggestion(\'' + escapedValue + '\')"><div>' + highlightedValue + '</div></div>';
+            }
+            autocompleteDropdown.innerHTML = html;
+            autocompleteDropdown.classList.add('show');
+        } else if (autocompleteDropdown) {
+            autocompleteDropdown.innerHTML = '<div class="no-results">No results found matching "' + escapeHtml(query) + '"</div>';
+            autocompleteDropdown.classList.add('show');
+        }
+    };
+
+    window.selectPOSuggestion = function(value) {
+        if (searchInput) searchInput.value = value;
+        if (autocompleteDropdown) autocompleteDropdown.classList.remove('show');
+        performSearch();
+    };
+
+    window.performSearch = function() {
+        if (!searchInput) return;
+        var query = searchInput.value.trim();
+        var url = new URL(window.location.href);
+        if (query) url.searchParams.set('search', query);
+        else url.searchParams.delete('search');
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    };
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(window.showSuggestions, 300); });
+        document.addEventListener('click', function(e) {
+            if (autocompleteDropdown && searchInput && !searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+                autocompleteDropdown.classList.remove('show');
+            }
+        });
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { if (autocompleteDropdown) autocompleteDropdown.classList.remove('show'); performSearch(); }
+        });
+    }
+
+    // Modal controls
+    var openModal = document.getElementById('open_modal');
+    var modalContainer = document.getElementById('modal_container');
+    var closeModalBtn = document.getElementById('close_modal');
+    if (openModal) {
+        openModal.onclick = function() {
+            if (supplierSelect) supplierSelect.value = '';
+            if (productSelect) filterProductsBySupplier();
+            if (costPriceInput) costPriceInput.value = '';
+            if (dueDateInput) dueDateInput.value = '';
+            if (quantityInput) quantityInput.value = '';
+            if (priceWarningDiv) priceWarningDiv.style.display = 'none';
+            originalProductPrice = 0;
+            modalContainer.classList.add('show');
+        };
+    }
+    if (closeModalBtn) closeModalBtn.onclick = function() { modalContainer.classList.remove('show'); };
+    if (modalContainer) modalContainer.onclick = function(e) { if (e.target === modalContainer) modalContainer.classList.remove('show'); };
+
+    // View details modal
+    var viewDetailsModal = document.getElementById('view_details_modal');
+    var closeDetailsModal = document.getElementById('close_details_modal');
+    if (closeDetailsModal) closeDetailsModal.onclick = function() { viewDetailsModal.classList.remove('show'); };
+    if (viewDetailsModal) viewDetailsModal.onclick = function(e) { if (e.target === viewDetailsModal) viewDetailsModal.classList.remove('show'); };
+
+    window.viewPurchaseDetails = function(id) {
+        viewDetailsModal.classList.add('show');
+        document.getElementById('purchase_detail_id').textContent = id;
+        document.getElementById('detail_batch_number').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('detail_supplier').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('detail_order_date').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('detail_due_date').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('detail_product').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('detail_quantity').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('detail_cost').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('detail_total').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('detail_status').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('cancel_info_container').style.display = 'none';
+
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var token = csrfMeta ? csrfMeta.content : '';
+
+        fetch('/admin/purchase/details/' + id, {
+            headers: { 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) { document.getElementById('detail_batch_number').textContent = 'Error'; return; }
+            document.getElementById('detail_batch_number').textContent = data.batch_number || 'N/A';
+            document.getElementById('detail_supplier').textContent = data.supplier_name || 'N/A';
+            document.getElementById('detail_order_date').textContent = data.order_date || 'N/A';
+            document.getElementById('detail_due_date').textContent = data.due_date || 'N/A';
+            document.getElementById('detail_product').textContent = data.product_name || 'N/A';
+            document.getElementById('detail_quantity').textContent = data.quantity || 0;
+            document.getElementById('detail_cost').textContent = '₱' + parseFloat(data.cost_price || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('detail_total').textContent = '₱' + parseFloat(data.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+            
+            var statusBadge = data.status === 'completed' ? '<span class="badge-completed">Completed</span>' : (data.status === 'pending' ? '<span class="badge-pending">Pending</span>' : '<span class="badge-canceled">Canceled</span>');
+            document.getElementById('detail_status').innerHTML = statusBadge;
+        })
+        .catch(function(e) { console.error(e); });
+    };
+
+    // Pagination
+    function renderPagination() {
+        var cur = parseInt(document.getElementById('currentPage').value);
+        var last = parseInt(document.getElementById('lastPage').value);
+        var cont = document.getElementById('customPagination');
+        if (!cont || last <= 1) return;
+        var html = '<div class="custom-pagination">';
+        html += cur > 1 ? '<a data-page="' + (cur-1) + '">&lt;</a>' : '<span>&lt;</span>';
+        var s = Math.max(1,cur-2), e = Math.min(last,cur+2);
+        if (cur<=3) e = Math.min(last,5);
+        if (cur>=last-2) s = Math.max(1,last-4);
+        if (s>1) { html += '<a data-page="1">1</a>'; if (s>2) html += '<span>...</span>'; }
+        for (var i=s;i<=e;i++) html += (i===cur) ? '<span class="page-active">'+i+'</span>' : '<a data-page="'+i+'">'+i+'</a>';
+        if (e<last) { if(e<last-1) html+='<span>...</span>'; html+='<a data-page="'+last+'">'+last+'</a>'; }
+        html += cur < last ? '<a data-page="' + (cur+1) + '">&gt;</a>' : '<span>&gt;</span>';
+        html += '</div>';
+        cont.innerHTML = html;
+        cont.querySelectorAll('a[data-page]').forEach(function(a){
+            a.onclick = function(e){
+                e.preventDefault();
+                var url = new URL(window.location.href);
+                url.searchParams.set('page', this.dataset.page);
+                window.location.href = url;
+            };
+        });
+    }
+
+    renderPagination();
+    autoCloseSessionAlerts();
+    setTimeout(checkAndOpenModalFromStockReport, 500);
+});
+</script>
 </body>
 </html>
