@@ -1563,208 +1563,251 @@
 
     <script>
     // Auto-hide alert message after 5 seconds
-    setTimeout(function() {
-        const alertMessage = document.getElementById('alertMessage');
-        if (alertMessage) {
-            alertMessage.style.animation = 'slideDown 0.3s ease reverse';
-            setTimeout(function() { alertMessage.style.display = 'none'; }, 300);
+setTimeout(function() {
+    var alertMessage = document.getElementById('alertMessage');
+    if (alertMessage) {
+        alertMessage.style.opacity = '0';
+        alertMessage.style.transition = 'opacity 0.3s ease';
+        setTimeout(function() { alertMessage.style.display = 'none'; }, 300);
+    }
+}, 5000);
+
+// Get all sections and nav links
+var sections = document.querySelectorAll('section');
+var navLinks = document.querySelectorAll('.nav-links a:not(.login-btn)');
+
+function updateActiveLinkOnScroll() {
+    var currentSection = '';
+    sections.forEach(function(section) {
+        var sectionTop = section.offsetTop;
+        var sectionHeight = section.clientHeight;
+        var scrollPosition = window.scrollY + 150;
+        if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+            currentSection = section.getAttribute('id');
         }
-    }, 5000);
-    
-    // Get all sections and nav links
-    const sections = document.querySelectorAll('section');
-    const navLinks = document.querySelectorAll('.nav-links a:not(.login-btn)');
-    
-    function updateActiveLinkOnScroll() {
-        let currentSection = '';
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.clientHeight;
-            const scrollPosition = window.scrollY + 150;
-            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                currentSection = section.getAttribute('id');
-            }
-        });
-        navLinks.forEach(link => {
+    });
+    navLinks.forEach(function(link) {
+        link.classList.remove('active');
+        var href = link.getAttribute('href');
+        if (href === '#' + currentSection) link.classList.add('active');
+    });
+    if (window.scrollY < 100) {
+        navLinks.forEach(function(link) {
             link.classList.remove('active');
-            const href = link.getAttribute('href');
-            if (href === `#${currentSection}`) link.classList.add('active');
+            if (link.getAttribute('href') === '#home') link.classList.add('active');
         });
-        if (window.scrollY < 100) {
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === '#home') link.classList.add('active');
-            });
-        }
     }
-    
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            navLinks.forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-            const targetId = this.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
-            if (targetSection) targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-    });
-    
-    window.addEventListener('scroll', updateActiveLinkOnScroll);
-    updateActiveLinkOnScroll();
-    
-    // Mobile Menu Toggle
-    const menuToggle = document.getElementById('menuToggle');
-    const navLinksContainer = document.getElementById('navLinks');
-    if (menuToggle) {
-        menuToggle.addEventListener('click', () => { navLinksContainer.classList.toggle('active'); });
-    }
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        link.addEventListener('click', () => { navLinksContainer.classList.remove('active'); });
-    });
+}
 
-    //PASSWORD TOGGLE EYE 
-    function initializePasswordToggles() {
-        document.querySelectorAll('.toggle-password').forEach(function(eyeIcon) {
-            eyeIcon.addEventListener('click', function() {
-                var targetId = this.getAttribute('data-target');
-                var passwordInput = document.getElementById(targetId);
-                if (passwordInput) {
-                    if (passwordInput.getAttribute('type') === 'password') {
-                        passwordInput.setAttribute('type', 'text');
-                        this.classList.remove('fa-eye-slash');
-                        this.classList.add('fa-eye');
-                    } else {
-                        passwordInput.setAttribute('type', 'password');
-                        this.classList.remove('fa-eye');
-                        this.classList.add('fa-eye-slash');
-                    }
+navLinks.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        navLinks.forEach(function(l) { l.classList.remove('active'); });
+        this.classList.add('active');
+        var targetId = this.getAttribute('href');
+        var targetSection = document.querySelector(targetId);
+        if (targetSection) targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+
+window.addEventListener('scroll', updateActiveLinkOnScroll);
+updateActiveLinkOnScroll();
+
+// Mobile Menu Toggle
+var menuToggle = document.getElementById('menuToggle');
+var navLinksContainer = document.getElementById('navLinks');
+if (menuToggle) {
+    menuToggle.addEventListener('click', function() { navLinksContainer.classList.toggle('active'); });
+}
+document.querySelectorAll('.nav-links a').forEach(function(link) {
+    link.addEventListener('click', function() { navLinksContainer.classList.remove('active'); });
+});
+
+// PASSWORD TOGGLE EYE 
+function initializePasswordToggles() {
+    document.querySelectorAll('.toggle-password').forEach(function(eyeIcon) {
+        eyeIcon.addEventListener('click', function() {
+            var targetId = this.getAttribute('data-target');
+            var passwordInput = document.getElementById(targetId);
+            if (passwordInput) {
+                if (passwordInput.getAttribute('type') === 'password') {
+                    passwordInput.setAttribute('type', 'text');
+                    this.classList.remove('fa-eye-slash');
+                    this.classList.add('fa-eye');
+                } else {
+                    passwordInput.setAttribute('type', 'password');
+                    this.classList.remove('fa-eye');
+                    this.classList.add('fa-eye-slash');
                 }
-            });
+            }
         });
-    }
+    });
+}
 
-    //INLINE PASSWORD MATCH VALIDATION 
-    function initPasswordMatchValidation() {
-        const passwordInput = document.getElementById('register_password');
-        const confirmInput = document.getElementById('register_password_confirm');
-        const errorDiv = document.getElementById('password-match-error');
+// ==================== PASSWORD MATCH VALIDATION WITH BUTTON DISABLE ====================
+function initPasswordMatchValidation() {
+    var passwordInput = document.getElementById('register_password');
+    var confirmInput = document.getElementById('register_password_confirm');
+    var errorDiv = document.getElementById('password-match-error');
+    var registerBtn = document.querySelector('#registerForm .btn');
 
-        function checkMatch() {
-            const password = passwordInput.value;
-            const confirm = confirmInput.value;
+    function checkMatch() {
+        var password = passwordInput.value;
+        var confirm = confirmInput.value;
 
-            if (confirm.length === 0) {
-                errorDiv.style.display = 'none';
-                confirmInput.style.borderColor = '#e2e9f0';
-                return;
+        // If confirm field is empty, reset everything
+        if (confirm.length === 0) {
+            errorDiv.style.display = 'none';
+            confirmInput.style.borderColor = '#e2e9f0';
+            confirmInput.style.boxShadow = '';
+            if (registerBtn) {
+                registerBtn.disabled = false;
+                registerBtn.style.opacity = '1';
+                registerBtn.style.cursor = 'pointer';
             }
-
-            if (password !== confirm) {
-                errorDiv.style.display = 'flex';
-                confirmInput.style.borderColor = '#dc3545';
-                confirmInput.style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.15)';
-            } else {
-                errorDiv.style.display = 'none';
-                confirmInput.style.borderColor = '#28a745';
-                confirmInput.style.boxShadow = '0 0 0 3px rgba(40, 167, 69, 0.15)';
-            }
+            return true;
         }
 
-        if (confirmInput) confirmInput.addEventListener('input', checkMatch);
-        if (passwordInput) passwordInput.addEventListener('input', function() {
-            if (confirmInput.value.length > 0) checkMatch();
-        });
-    }
-
-    //FORM VALIDATION ON SUBMIT
-    function validatePasswordMatch(event) {
-        const password = document.getElementById('register_password').value;
-        const confirmPassword = document.getElementById('register_password_confirm').value;
-        const errorDiv = document.getElementById('password-match-error');
-        
-        if (password !== confirmPassword) {
-            event.preventDefault();
+        // Check if passwords match
+        if (password !== confirm) {
+            // Passwords DON'T match - show error and DISABLE button
             errorDiv.style.display = 'flex';
-            document.getElementById('register_password_confirm').style.borderColor = '#dc3545';
-            document.getElementById('register_password_confirm').style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.15)';
-            document.getElementById('register_password_confirm').focus();
+            confirmInput.style.borderColor = '#dc3545';
+            confirmInput.style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.15)';
+            if (registerBtn) {
+                registerBtn.disabled = true;
+                registerBtn.style.opacity = '0.6';
+                registerBtn.style.cursor = 'not-allowed';
+            }
             return false;
-        }
-        return true;
-    }
-
-    //LOGIN MODAL FUNCTIONS 
-    const loginModal = document.getElementById('loginModal');
-    const loginModalContainer = document.getElementById('loginModalContainer');
-    let isModalRegisterMode = false;
-
-    function openLoginModal() {
-        loginModal.classList.add('show');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeLoginModal() {
-        loginModal.classList.remove('show');
-        document.body.style.overflow = '';
-        if (isModalRegisterMode) {
-            isModalRegisterMode = false;
-            loginModalContainer.classList.remove('register-mode');
-            modalSwitchBtn.textContent = 'Register Now';
+        } else {
+            // Passwords MATCH - hide error and ENABLE button
+            errorDiv.style.display = 'none';
+            confirmInput.style.borderColor = '#28a745';
+            confirmInput.style.boxShadow = '0 0 0 3px rgba(40, 167, 69, 0.15)';
+            if (registerBtn) {
+                registerBtn.disabled = false;
+                registerBtn.style.opacity = '1';
+                registerBtn.style.cursor = 'pointer';
+            }
+            return true;
         }
     }
 
-    function switchToRegister() {
-        if (isModalRegisterMode) return;
-        isModalRegisterMode = true;
-        loginModalContainer.classList.add('register-mode');
-        modalSwitchBtn.textContent = 'Back to Login';
-    }
+    if (confirmInput) confirmInput.addEventListener('input', checkMatch);
+    if (passwordInput) passwordInput.addEventListener('input', function() {
+        if (confirmInput.value.length > 0) checkMatch();
+    });
+}
 
-    function switchToLogin() {
-        if (!isModalRegisterMode) return;
+// FORM VALIDATION ON SUBMIT
+function validatePasswordMatch(event) {
+    var password = document.getElementById('register_password').value;
+    var confirmPassword = document.getElementById('register_password_confirm').value;
+    var errorDiv = document.getElementById('password-match-error');
+    
+    if (password !== confirmPassword) {
+        event.preventDefault();
+        errorDiv.style.display = 'flex';
+        document.getElementById('register_password_confirm').style.borderColor = '#dc3545';
+        document.getElementById('register_password_confirm').style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.15)';
+        document.getElementById('register_password_confirm').focus();
+        return false;
+    }
+    return true;
+}
+
+// ==================== LOGIN MODAL FUNCTIONS ====================
+var loginModal = document.getElementById('loginModal');
+var loginModalContainer = document.getElementById('loginModalContainer');
+var isModalRegisterMode = false;
+var modalSwitchBtn = document.getElementById('modalSwitchBtn');
+
+function openLoginModal() {
+    loginModal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLoginModal() {
+    loginModal.classList.remove('show');
+    document.body.style.overflow = '';
+    if (isModalRegisterMode) {
         isModalRegisterMode = false;
         loginModalContainer.classList.remove('register-mode');
         modalSwitchBtn.textContent = 'Register Now';
     }
-
-    function toggleModalMode() {
-        if (isModalRegisterMode) switchToLogin();
-        else switchToRegister();
+    // Reset register form on close
+    var registerBtn = document.querySelector('#registerForm .btn');
+    if (registerBtn) {
+        registerBtn.disabled = false;
+        registerBtn.style.opacity = '1';
+        registerBtn.style.cursor = 'pointer';
     }
+    var errorDiv = document.getElementById('password-match-error');
+    if (errorDiv) errorDiv.style.display = 'none';
+}
 
-    const modalSwitchBtn = document.getElementById('modalSwitchBtn');
-    if (modalSwitchBtn) modalSwitchBtn.addEventListener('click', toggleModalMode);
-
-    if (loginModal) {
-        loginModal.addEventListener('click', function(e) {
-            if (e.target === loginModal) closeLoginModal();
-        });
+function switchToRegister() {
+    if (isModalRegisterMode) return;
+    isModalRegisterMode = true;
+    loginModalContainer.classList.add('register-mode');
+    modalSwitchBtn.textContent = 'Back to Login';
+    // Reset register button when switching
+    var registerBtn = document.querySelector('#registerForm .btn');
+    if (registerBtn) {
+        registerBtn.disabled = false;
+        registerBtn.style.opacity = '1';
+        registerBtn.style.cursor = 'pointer';
     }
+    var errorDiv = document.getElementById('password-match-error');
+    if (errorDiv) errorDiv.style.display = 'none';
+}
 
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && loginModal && loginModal.classList.contains('show')) closeLoginModal();
+function switchToLogin() {
+    if (!isModalRegisterMode) return;
+    isModalRegisterMode = false;
+    loginModalContainer.classList.remove('register-mode');
+    modalSwitchBtn.textContent = 'Register Now';
+}
+
+function toggleModalMode() {
+    if (isModalRegisterMode) switchToLogin();
+    else switchToRegister();
+}
+
+if (modalSwitchBtn) modalSwitchBtn.addEventListener('click', toggleModalMode);
+
+if (loginModal) {
+    loginModal.addEventListener('click', function(e) {
+        if (e.target === loginModal) closeLoginModal();
     });
+}
 
-    document.getElementById('registerForm')?.addEventListener('submit', validatePasswordMatch);
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape' && loginModal && loginModal.classList.contains('show')) closeLoginModal();
+});
 
-    initializePasswordToggles();
-    initPasswordMatchValidation();
+document.getElementById('registerForm')?.addEventListener('submit', validatePasswordMatch);
 
-    document.addEventListener('DOMContentLoaded', function() {
-        var flags = document.getElementById('serverFlags');
-        if (flags) {
-            var hasErrors = flags.getAttribute('data-has-errors') === 'true';
-            var hasPasswordError = flags.getAttribute('data-has-password-error') === 'true';
-            var hasSessionError = flags.getAttribute('data-has-session-error') === 'true';
+// ==================== INITIALIZE EVERYTHING ====================
+initializePasswordToggles();
+initPasswordMatchValidation();
 
-            if (hasErrors || hasSessionError) {
-                openLoginModal();
-                if (hasPasswordError) {
-                    setTimeout(function() { switchToRegister(); }, 100);
-                }
+document.addEventListener('DOMContentLoaded', function() {
+    var flags = document.getElementById('serverFlags');
+    if (flags) {
+        var hasErrors = flags.getAttribute('data-has-errors') === 'true';
+        var hasPasswordError = flags.getAttribute('data-has-password-error') === 'true';
+        var hasSessionError = flags.getAttribute('data-has-session-error') === 'true';
+
+        if (hasErrors || hasSessionError) {
+            openLoginModal();
+            if (hasPasswordError) {
+                setTimeout(function() { switchToRegister(); }, 100);
             }
         }
-    });
+    }
+});
     </script>
     <div id="serverFlags"
          data-has-errors="{{ $errors->any() ? 'true' : 'false' }}"
