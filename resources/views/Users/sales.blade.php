@@ -330,7 +330,16 @@
             font-size: 12px; 
             margin-top: 5px; 
         }
-
+        .resolved-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
         .sales-status {
             display: flex; 
             justify-content: space-between; 
