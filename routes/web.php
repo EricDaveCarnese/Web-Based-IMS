@@ -85,32 +85,3 @@ Route::prefix('user')->middleware(['auth', 'role:user'])->name('user.')->group(f
 
     Route::post('/report-damage', [Management::class, 'reportDamage'])->name('report.damage');
 });
-Route::get('/fix-db-index', function() {
-    try {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
-        
-        // Step 1: Drop all foreign keys tied to the index
-        DB::statement('ALTER TABLE stock_reports DROP FOREIGN KEY stock_reports_product_id_foreign');
-        DB::statement('ALTER TABLE stock_reports DROP FOREIGN KEY stock_reports_purchase_id_foreign');
-        DB::statement('ALTER TABLE stock_reports DROP FOREIGN KEY stock_reports_user_id_foreign');
-        
-        // Step 2: Drop the problematic unique index
-        DB::statement('ALTER TABLE stock_reports DROP INDEX unique_pending_report');
-        
-        // Step 3: Re-add all foreign keys properly
-        DB::statement('ALTER TABLE stock_reports ADD CONSTRAINT stock_reports_product_id_foreign 
-            FOREIGN KEY (product_id) REFERENCES products(id)');
-        DB::statement('ALTER TABLE stock_reports ADD CONSTRAINT stock_reports_purchase_id_foreign 
-            FOREIGN KEY (purchase_id) REFERENCES purchases(id)');
-        DB::statement('ALTER TABLE stock_reports ADD CONSTRAINT stock_reports_user_id_foreign 
-            FOREIGN KEY (user_id) REFERENCES user_management(id)');
-        
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
-        
-        return 'Success! All fixed. Now delete this route and redeploy!';
-        
-    } catch (\Exception $e) {
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
-        return 'Error: ' . $e->getMessage();
-    }
-});
