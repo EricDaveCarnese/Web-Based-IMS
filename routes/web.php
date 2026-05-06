@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Management;
 use App\Http\Controllers\UserManagementController;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 // ==================== PUBLIC ROUTES ====================
