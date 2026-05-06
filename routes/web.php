@@ -84,3 +84,18 @@ Route::prefix('user')->middleware(['auth', 'role:user'])->name('user.')->group(f
 
     Route::post('/report-damage', [Management::class, 'reportDamage'])->name('report.damage');
 });
+Route::get('/fix-db-index', function() {
+    try {
+        $indexes = DB::select("SHOW INDEX FROM stock_reports");
+        $indexNames = array_column($indexes, 'Key_name');
+        
+        if (in_array('unique_pending_report', $indexNames)) {
+            DB::statement('ALTER TABLE stock_reports DROP INDEX unique_pending_report');
+            return 'Success! Index unique_pending_report dropped. Now delete this route!';
+        } else {
+            return 'Index not found. Available indexes: ' . implode(', ', $indexNames);
+        }
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
