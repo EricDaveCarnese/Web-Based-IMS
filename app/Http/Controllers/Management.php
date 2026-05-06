@@ -1750,22 +1750,35 @@ public function getUserPurchaseDetails($id)
 }
     public function markStockReportAsRead(Request $request)
 {
-    $report = StockReport::find($request->report_id);
-    if ($report) {
-        if ($report->status == 'pending') {
-            $report->status = 'read';
-            $report->save();
-
-            $this->logActivity(
-                'update', 'stock',
-                'Marked stock report as read — Product: ' . $report->product_name
-            );
-
-            return response()->json(['success' => true, 'message' => 'Report marked as read']);
+    try {
+        $report = StockReport::find($request->report_id);
+        
+        if (!$report) {
+            return response()->json(['success' => false, 'message' => 'Report not found']);
         }
-        return response()->json(['success' => false, 'message' => 'Report is already ' . $report->status]);
+
+        if ($report->status !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'Report is already ' . $report->status]);
+        }
+
+        // Use raw DB update to avoid any model constraint issues
+        \DB::table('stock_reports')
+            ->where('id', $request->report_id)
+            ->update(['status' => 'read']);
+
+        $this->logActivity(
+            'update', 'stock',
+            'Marked stock report as read — Product: ' . $report->product_name
+        );
+
+        return response()->json(['success' => true, 'message' => 'Report marked as read']);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false, 
+            'message' => $e->getMessage()
+        ], 500);
     }
-    return response()->json(['success' => false, 'message' => 'Report not found']);
 }
     public function markStockReportAsOrdered(Request $request)
     {

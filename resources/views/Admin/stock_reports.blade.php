@@ -1225,74 +1225,63 @@ var markAsRead, createPurchaseOrder, editProductAndReduceStock;
 
     // ========== GLOBAL FUNCTIONS ==========
     markAsRead = function(reportId) {
-    getCSRF();
+        getCSRF();
 
-    // Debug: check if CSRF is actually populated
-    if (!CSRF) {
-        alert('CSRF token missing. Please refresh the page.');
-        return;
-    }
-
-    fetch('/admin/stock-report/mark-read', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': CSRF,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ report_id: reportId })
-    })
-    .then(function(response) {
-        // Show actual HTTP error instead of generic "Network error"
-        if (!response.ok) {
-            return response.text().then(function(text) {
-                throw new Error('HTTP ' + response.status + ': ' + text.substring(0, 200));
-            });
-        }
-        return response.json();
-    })
-    .then(function(data) {
-        if (data.success) {
-            // ... rest of your existing success logic
-            var item = document.querySelector('.notification-item[data-nid="' + reportId + '"]');
-            if (item) {
-                item.style.opacity = '0';
-                item.style.transition = 'opacity 0.3s ease';
-                setTimeout(function() {
-                    if (item.parentElement) item.remove();
-                    checkEmptyList();
-                }, 300);
-            }
-
-            var buttons = document.querySelectorAll('.btn-mark-read');
-            for (var i = 0; i < buttons.length; i++) {
-                var btn = buttons[i];
-                var onclickAttr = btn.getAttribute('onclick') || '';
-                if (onclickAttr.indexOf(String(reportId)) !== -1) {
-                    var tr = btn.closest('tr');
-                    if (tr) {
-                        var tds = tr.querySelectorAll('td');
-                        if (tds.length >= 4) {
-                            tds[3].innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
-                        }
-                        btn.remove();
-                    }
-                    break;
+        fetch('/admin/stock-report/mark-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ report_id: reportId })
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                // Remove from bell dropdown
+                var item = document.querySelector('.notification-item[data-nid="' + reportId + '"]');
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transition = 'opacity 0.3s ease';
+                    setTimeout(function() {
+                        if (item.parentElement) item.remove();
+                        checkEmptyList();
+                    }, 300);
                 }
-            }
 
-            lastUnreadCount = -1;
-            fetchNotifications();
-        } else {
-            alert('Failed: ' + (data.message || 'Unknown error'));
-        }
-    })
-    .catch(function(error) {
-        console.error('Mark as read error:', error);
-        alert('Error: ' + error.message); // Now shows the actual error
-    });
-};
+                // Update table row
+                var buttons = document.querySelectorAll('.btn-mark-read');
+                for (var i = 0; i < buttons.length; i++) {
+                    var btn = buttons[i];
+                    var onclickAttr = btn.getAttribute('onclick') || '';
+                    if (onclickAttr.indexOf(String(reportId)) !== -1) {
+                        var tr = btn.closest('tr');
+                        if (tr) {
+                            var tds = tr.querySelectorAll('td');
+                            if (tds.length >= 4) {
+                                tds[3].innerHTML = '<span class="status-read"><i class="fas fa-eye"></i> Read</span>';
+                            }
+                            btn.remove();
+                        }
+                        break;
+                    }
+                }
+
+                lastUnreadCount = -1;
+                fetchNotifications();
+            } else {
+                alert('Failed: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(function(error) {
+            console.error('Mark as read error:', error);
+            alert('Network error. Please try again.');
+        });
+    };
 
     createPurchaseOrder = function(productId, productName, reportId) {
         if (confirm('Create purchase order for "' + productName + '"?')) {
