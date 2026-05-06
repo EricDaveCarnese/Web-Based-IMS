@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Management;
 use App\Http\Controllers\UserManagementController;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 // ==================== PUBLIC ROUTES ====================
 Route::get('/', [UserManagementController::class, 'showLoginForm'])->name('landing');
@@ -86,15 +87,19 @@ Route::prefix('user')->middleware(['auth', 'role:user'])->name('user.')->group(f
 });
 Route::get('/fix-db-index', function() {
     try {
-        $indexes = DB::select("SHOW INDEX FROM stock_reports");
-        $indexNames = array_column($indexes, 'Key_name');
+        // Step 1: See all foreign keys on stock_reports
+        $foreignKeys = DB::select("
+            SELECT CONSTRAINT_NAME 
+            FROM information_schema.KEY_COLUMN_USAGE 
+            WHERE TABLE_NAME = 'stock_reports' 
+            AND TABLE_SCHEMA = DATABASE()
+            AND REFERENCED_TABLE_NAME IS NOT NULL
+        ");
         
-        if (in_array('unique_pending_report', $indexNames)) {
-            DB::statement('ALTER TABLE stock_reports DROP INDEX unique_pending_report');
-            return 'Success! Index unique_pending_report dropped. Now delete this route!';
-        } else {
-            return 'Index not found. Available indexes: ' . implode(', ', $indexNames);
-        }
+        $fkNames = array_column($foreignKeys, 'CONSTRAINT_NAME');
+        
+        return 'Foreign keys found: ' . implode(', ', $fkNames);
+        
     } catch (\Exception $e) {
         return 'Error: ' . $e->getMessage();
     }
