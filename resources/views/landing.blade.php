@@ -1568,7 +1568,7 @@ setTimeout(function() {
     if (alertMessage) {
         alertMessage.style.opacity = '0';
         alertMessage.style.transition = 'opacity 0.3s ease';
-        setTimeout(function() { alertMessage.style.display = 'none'; }, 300);
+        setTimeout(function() { alertMessage.style.display = 'none'; }, 500);
     }
 }, 5000);
 
@@ -1800,7 +1800,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var hasPasswordError = flags.getAttribute('data-has-password-error') === 'true';
         var hasSessionError = flags.getAttribute('data-has-session-error') === 'true';
 
-        if (hasErrors || hasSessionError) {
+        if (hasErrors && !hasSessionError) {
             openLoginModal();
             if (hasPasswordError) {
                 setTimeout(function() { switchToRegister(); }, 100);

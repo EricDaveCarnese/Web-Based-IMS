@@ -533,7 +533,17 @@ public function deleteProduct($id)
         $request->validate([
         'supplier_name'  => 'required|string|max:255',
         'email'          => 'required|email|unique:suppliers',
-        'contact_number' => 'required|regex:/^[\d\s\(\)\+-]+$/|min:7',
+        'contact_number' => [
+        'required',
+        'regex:/^[\d\s\(\)\+-]+$/',
+        function($attribute, $value, $fail) {
+            // Count only actual digits
+            $digitsOnly = preg_replace('/[^0-9]/', '', $value);
+            if (strlen($digitsOnly) < 7) {
+                $fail('The contact number must contain at least 7 digits.');
+            }
+        }
+    ],
         'address'        => 'required|string',
         'contact_person' => 'nullable|string|max:255',
     ], [

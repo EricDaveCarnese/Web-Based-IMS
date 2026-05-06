@@ -1171,15 +1171,24 @@
         </div>
 
         <div id="dynamicAlertContainer"></div>
-
+        @if($errors->any())
+            <div class="alert-error session-alert" style="margin: 10px 50px;">
+                <ul>
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+            </div>
+        @endif
         @if(session('success'))
-            <div class="alert-success sessionAlert">
+            <div class="alert-success session-alert">
                 {{ session('success') }}
                 <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="alert-error sessionAlert">
+            <div class="alert-error session-alert">
                 {{ session('error') }}
                 <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
             </div>

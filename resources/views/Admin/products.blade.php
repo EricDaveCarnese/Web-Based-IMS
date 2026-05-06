@@ -1002,7 +1002,7 @@
                         <div style="grid-column:1;">
                             <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Category</label>
                             <select name="category_id" required style="margin-bottom:12px;">
-                                <option value="">Select Category</option>
+                                <option value="" disabled selected hidden>--Select Category--</option>
                                 @foreach($categories as $c)
                                     <option value="{{ $c->id }}">{{ $c->category_name }}</option>
                                 @endforeach
@@ -1017,7 +1017,7 @@
                         <div style="grid-column:1;">
                             <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Supplier</label>
                             <select name="supplier_id" required style="margin-bottom:12px;">
-                                <option value="">Select Supplier</option>
+                                <option value="" disabled selected hidden>--Select Supplier--</option>
                                 @foreach($suppliers as $s)
                                     <option value="{{ $s->id }}">{{ $s->supplier_name }}</option>
                                 @endforeach
@@ -1074,7 +1074,7 @@
                             <div style="grid-column:1;">
                                 <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Category</label>
                                 <select name="category_id" id="edit_category_id" required style="margin-bottom:12px;">
-                                    <option value="">-- Select Category --</option>
+                                    <option value=""disabled selected hidden>--Select Category--</option>
                                     @foreach($categories as $c)
                                         <option value="{{ $c->id }}">{{ $c->category_name }}</option>
                                     @endforeach
@@ -1089,7 +1089,7 @@
                             <div style="grid-column:1;">
                                 <label style="color:rgba(151,205,200,0.85);font-size:12px;margin-bottom:4px;display:block;">Supplier</label>
                                 <select name="supplier_id" id="edit_supplier_id" required style="margin-bottom:12px;">
-                                    <option value="">-- Select Supplier --</option>
+                                    <option value=""disabled selected hidden>--Select Supplier--</option>
                                     @foreach($suppliers as $s)
                                         <option value="{{ $s->id }}">{{ $s->supplier_name }}</option>
                                     @endforeach

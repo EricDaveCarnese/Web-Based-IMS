@@ -1244,7 +1244,7 @@
                                 @endforeach
                             </select>
                             <select name="product_id" id="product_select" required >
-                                <option value="">Select Product</option>
+                                <option value="" disabled selected hidden>--Select Product--</option>
                                 @foreach ($products as $product)
                                     <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-product-name="{{ $product->product_name }}" data-supplier-id="{{ $product->supplier_id }}" data-supplier-name="{{ $product->supplier->supplier_name ?? '' }}" >
                                         {{ $product->product_name }} (Current Stock: {{ $product->quantity }}) - ₱{{ number_format($product->price, 2) }}

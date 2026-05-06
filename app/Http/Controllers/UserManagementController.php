@@ -89,7 +89,7 @@ class UserManagementController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()
+            return redirect()->route('landing')
                 ->withErrors($validator)
                 ->withInput();
         }
@@ -97,7 +97,7 @@ class UserManagementController extends Controller
         $user = UserManagement::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return redirect()->back()
+            return redirect()->route('landing')
                 ->with('error', 'Invalid credentials. Please try again.')
                 ->withInput();
         }
