@@ -1303,7 +1303,7 @@
             </div>
         </div>
         <div class="hero-image">
-            <img src="{{ asset('photos/Dashboard.png') }}" alt="Dashboard Preview" />
+            <img src="{{ asset('photos/DashboardPage.png') }}" alt="Dashboard Preview" />
         </div>
     </section>
 
