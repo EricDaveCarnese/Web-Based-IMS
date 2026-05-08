@@ -1014,7 +1014,7 @@
         <div class="options">
             <div class="search-container">
                 <div class="search-wrapper">
-                    <input type="text" id="searchLog" class="search-input" placeholder="Search by user, description, or IP address..." autocomplete="off" value="{{ request('search') }}">
+                    <input type="text" id="searchLog" class="search-input" placeholder="Search by user or description..." autocomplete="off" value="{{ request('search') }}">
                     <button class="search-btn" onclick="applyFilters()">
                         <i class="fas fa-search"></i>
                     </button>
